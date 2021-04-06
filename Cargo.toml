@@ -1,0 +1,11 @@
+[package]
+name = "rmdslides"
+version = "0.1.0"
+authors = ["Olle Wreede <olle@wreede.se>"]
+edition = "2018"
+
+[dependencies]
+colorsys = "0.6.3"
+macroquad = "0.3.0-alpha.17"
+markdown = { git = "https://github.com/johannhof/markdown.rs" }
+nanoserde = "0.1.25"
