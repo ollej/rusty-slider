@@ -1,20 +1,55 @@
-# Hello World!
+# Rmdslides
 
-This is the first slide
+A small tool to display markdown files as a slideshow.
 
-Line 2
+---
 
-Line 3
+# Markdown
 
-Line 4
+Only supports headers and paragraphs for simplicity.
 
-Line 5
+Text between horizontal lines will be a slide.
 
-Lorem ipsum dolor sit amet, consectectur adipiscing elit.
+---
 
+# Theme
 
---------
+Colors and font can be configured in a json file.
 
-# Another slide!
+---
 
-This is the second slide
+# Rust + Macroquad
+
+Developed with Rust and the macroquad game library.
+
+---
+
+# Cross-platform
+
+Supports Windows, MacOS, Linux and web.
+
+---
+
+# Controls
+
+Left/right keys switches between previous and next slide.
+
+Escape quits the slideshow.
+
+---
+
+# Usage
+
+Create a markdown file called slides.md in current dir.
+
+Optionally add a theme.json in current dir.
+
+---
+
+# TODO
+
+Add shaders and transitions.
+
+Support image to set backround image of slide.
+
+More theme options: font size, default background image
