@@ -38,6 +38,8 @@ Left/right keys switches between previous and next slide.
 
 Escape quits the slideshow.
 
+Space toggles the shader.
+
 ---
 
 # Usage
@@ -50,7 +52,7 @@ Optionally add a theme.json in current dir.
 
 # TODO
 
-Add shaders and transitions.
+Add transitions.
 
 Support image syntax to set backround image of slide.
 
