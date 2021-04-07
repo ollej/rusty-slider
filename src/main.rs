@@ -3,6 +3,8 @@ use colorsys::Rgb;
 use macroquad::prelude::*;
 use markdown::{Block, Span};
 use nanoserde::DeJson;
+use std::path::PathBuf;
+use structopt::StructOpt;
 
 struct Slide {
     content: Vec<Block>,
@@ -36,8 +38,18 @@ impl Slides {
         }
     }
 
-    async fn load(path: String, theme: Theme, font: Font) -> Self {
-        let markdown = load_string(&path).await.unwrap();
+    async fn load(slides_path: Option<PathBuf>, theme: Theme, font: Font) -> Self {
+        let path = match slides_path {
+            Some(p) => p.as_path().to_str().unwrap().to_owned(),
+            None => "slides.md".to_string(),
+        };
+        let markdown = match load_string(&path).await {
+            Ok(tokens) => tokens,
+            Err(_) => {
+                eprintln!("Couldn't parse markdown document: {}", path);
+                std::process::exit(1);
+            }
+        };
         let tokens = markdown::tokenize(&markdown);
         let slides = Self::build_slides(tokens);
         Self::from_slides(slides, theme, font)
@@ -162,8 +174,12 @@ impl Default for Theme {
 }
 
 impl Theme {
-    async fn load() -> Self {
-        match load_string("theme.json").await {
+    async fn load(theme_path: Option<PathBuf>) -> Self {
+        let path = match theme_path {
+            Some(p) => p.as_path().to_str().unwrap().to_owned(),
+            None => "theme.json".to_string(),
+        };
+        match load_string(&path).await {
             Ok(json) => DeJson::deserialize_json(&json).unwrap(),
             Err(_) => Theme::default(),
         }
@@ -194,6 +210,20 @@ impl Theme {
     }
 }
 
+#[derive(StructOpt, Debug)]
+#[structopt(
+    name = "rmdslides",
+    about = "A small tool to display markdown files as a slideshow."
+)]
+struct CliOptions {
+    /// Markdown files with slides text, defaults to slides.md
+    #[structopt(short, long, parse(from_os_str))]
+    pub slides: Option<PathBuf>,
+    /// File with theme options, defaults to theme.json
+    #[structopt(short, long, parse(from_os_str))]
+    pub theme: Option<PathBuf>,
+}
+
 fn window_conf() -> Conf {
     Conf {
         window_title: "Rmdslider".to_owned(),
@@ -204,7 +234,8 @@ fn window_conf() -> Conf {
 
 #[macroquad::main(window_conf())]
 async fn main() {
-    let theme = Theme::load().await;
+    let opt = CliOptions::from_args();
+    let theme = Theme::load(opt.theme).await;
     debug!(
         "background_color: {:?} text_color: {:?} heading_color{:?}",
         theme.background_color(),
@@ -212,7 +243,7 @@ async fn main() {
         theme.heading_color(),
     );
     let font = load_ttf_font(&theme.font).await;
-    let mut slides = Slides::load("slides.md".to_string(), theme, font).await;
+    let mut slides = Slides::load(opt.slides, theme, font).await;
 
     loop {
         if is_key_pressed(KeyCode::Escape) {
