@@ -21,19 +21,31 @@ struct Slides {
     active_slide: usize,
     theme: Theme,
     font: Font,
+    background: Option<Texture2D>,
 }
 
 impl Slides {
-    fn from_slides(slides: Vec<Slide>, theme: Theme, font: Font) -> Slides {
+    fn from_slides(
+        slides: Vec<Slide>,
+        theme: Theme,
+        font: Font,
+        background: Option<Texture2D>,
+    ) -> Slides {
         Slides {
             slides,
             active_slide: 0,
             theme,
             font,
+            background,
         }
     }
 
-    async fn load(slides_path: Option<PathBuf>, theme: Theme, font: Font) -> Self {
+    async fn load(
+        slides_path: Option<PathBuf>,
+        theme: Theme,
+        font: Font,
+        background: Option<Texture2D>,
+    ) -> Self {
         let path = match slides_path {
             Some(p) => p.as_path().to_str().unwrap().to_owned(),
             None => "slides.md".to_string(),
@@ -47,7 +59,7 @@ impl Slides {
         };
         let tokens = markdown::tokenize(&markdown);
         let slides = Self::build_slides(tokens);
-        Self::from_slides(slides, theme, font)
+        Self::from_slides(slides, theme, font, background)
     }
 
     fn build_slides(tokens: Vec<Block>) -> Vec<Slide> {
@@ -83,7 +95,24 @@ impl Slides {
 
     fn draw(&mut self) {
         clear_background(self.theme.background_color());
+        self.draw_background(self.background);
         self.draw_slide(self.theme.vertical_offset);
+    }
+
+    fn draw_background(&self, background: Option<Texture2D>) {
+        match background {
+            Some(texture) => draw_texture_ex(
+                texture,
+                0.,
+                0.,
+                WHITE,
+                DrawTextureParams {
+                    dest_size: Some(vec2(screen_width(), screen_height())),
+                    ..Default::default()
+                },
+            ),
+            None => (),
+        };
     }
 
     fn draw_slide(&self, start_position: f32) {
@@ -151,6 +180,7 @@ impl Slides {
 #[derive(Clone, DeJson)]
 #[nserde(default)]
 pub struct Theme {
+    pub background_image: Option<String>,
     pub background_color: String,
     pub heading_color: String,
     pub text_color: String,
@@ -164,6 +194,7 @@ pub struct Theme {
 impl Default for Theme {
     fn default() -> Theme {
         Theme {
+            background_image: None,
             background_color: "#301934".to_string(),
             heading_color: "#b19cd9".to_string(),
             text_color: "#ffffff".to_string(),
@@ -252,7 +283,11 @@ async fn main() {
         theme.heading_color(),
     );
     let font = load_ttf_font(&theme.font).await;
-    let mut slides = Slides::load(opt.slides, theme, font).await;
+    let background = match &theme.background_image {
+        Some(path) => Some(load_texture(&path).await),
+        None => None,
+    };
+    let mut slides = Slides::load(opt.slides, theme, font, background).await;
 
     loop {
         if is_key_pressed(KeyCode::Escape) {

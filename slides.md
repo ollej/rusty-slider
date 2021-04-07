@@ -2,6 +2,8 @@
 
 A small tool to display markdown files as a slideshow.
 
+Use right key or left mouse button to go to next slide.
+
 ---
 
 # Markdown
@@ -50,6 +52,5 @@ Optionally add a theme.json in current dir.
 
 Add shaders and transitions.
 
-Support image to set backround image of slide.
+Support image syntax to set backround image of slide.
 
-More theme options: font size, default background image
