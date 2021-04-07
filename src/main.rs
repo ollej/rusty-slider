@@ -182,7 +182,13 @@ impl Theme {
             None => "theme.json".to_string(),
         };
         match load_string(&path).await {
-            Ok(json) => DeJson::deserialize_json(&json).unwrap(),
+            Ok(json) => match DeJson::deserialize_json(&json) {
+                Ok(theme) => theme,
+                Err(_) => {
+                    eprintln!("Couldn't parse theme file: {}", path);
+                    std::process::exit(2);
+                }
+            },
             Err(_) => Theme::default(),
         }
     }
