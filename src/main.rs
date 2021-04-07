@@ -25,7 +25,7 @@ impl Slides {
     const HEADER_SIZE: u16 = 80;
     const TEXT_SIZE: u16 = 40;
     const START_POSITION: f32 = 20.;
-    const LINE_HEIGHT: f32 = 1.2;
+    const LINE_HEIGHT: f32 = 2.0;
 
     fn from_slides(slides: Vec<Slide>, theme: Theme, font: Font) -> Slides {
         Slides {
@@ -92,45 +92,52 @@ impl Slides {
         }
     }
 
-    fn draw_header(&self, spans: &Vec<Span>, size: usize, position: f32) -> f32 {
-        let size = Self::HEADER_SIZE - (size as u16 * 2);
-        let new_position = position + size as f32 * Self::LINE_HEIGHT;
+    fn draw_header(&self, spans: &Vec<Span>, header_size: usize, position: f32) -> f32 {
+        let font_size = Self::HEADER_SIZE - (header_size as u16 * 2);
+        let mut new_position = position;
         for span in spans.iter() {
             match span {
                 Span::Text(text) => {
-                    self.draw_text(text, self.theme.heading_color(), size, new_position)
+                    new_position =
+                        self.draw_text(text, self.theme.heading_color(), font_size, new_position)
                 }
                 _ => (),
             }
         }
-        return new_position;
+        new_position
     }
 
     fn draw_paragraph(&self, spans: &Vec<Span>, position: f32) -> f32 {
-        let size = Self::TEXT_SIZE;
-        let new_position = position + size as f32 * Self::LINE_HEIGHT;
+        let font_size = Self::TEXT_SIZE;
+        let mut new_position = position;
         for span in spans.iter() {
             match span {
                 Span::Text(text) => {
-                    self.draw_text(text, self.theme.text_color(), size, new_position)
+                    new_position =
+                        self.draw_text(text, self.theme.text_color(), font_size, new_position)
                 }
                 _ => (),
             }
         }
-        return new_position;
+        new_position
     }
 
-    fn draw_text(&self, text: &String, color: Color, font_size: u16, position: f32) {
+    fn draw_text(&self, text: &String, color: Color, font_size: u16, position: f32) -> f32 {
         let text_params = TextParams {
             font: self.font,
             font_size: font_size,
             font_scale: 1.,
             color: color,
         };
-        //debug!("pos: {} text: {}", position, text);
         let dimensions = measure_text(text, Some(self.font), font_size, 1.);
         let hpos = screen_width() / 2. - dimensions.width / 2.;
-        draw_text_ex(text, hpos, position, text_params);
+        let vpos = position + font_size as f32 * Self::LINE_HEIGHT;
+        //debug!(
+        //    "font_size: {}, position: {} hpos: {} vpos: {} height: {} offest_y: {} text: {}",
+        //    font_size, position, hpos, vpos, dimensions.height, dimensions.offset_y, text
+        //);
+        draw_text_ex(text, hpos, vpos, text_params);
+        vpos
     }
 }
 
