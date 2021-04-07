@@ -1,0 +1,6 @@
+#!/usr/bin/env sh
+
+cargo build --release --target wasm32-unknown-unknown
+mkdir -p demo
+cp target/wasm32-unknown-unknown/release/rmdslides.wasm demo/
+cp -pR slides.md theme.json Amble-Regular.ttf demo/

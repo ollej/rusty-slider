@@ -1,0 +1,51 @@
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>Rmdslides</title>
+    <!-- Global site tag (gtag.js) - Google Analytics -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-BN0HCD51VR"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+
+      gtag('config', 'G-BN0HCD51VR');
+    </script>
+    <meta name="application-name" content="Rmdslides">
+    <meta name="viewport" content="viewport-fit=cover, user-scalable=no, width=device-width, initial-scale=1, maximum-scale=1, shrink-to-fit=no">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <link rel="manifest" href="manifest.json">
+    <style>
+      html,
+      body,
+      canvas {
+        margin: 0px;
+        padding: 0px;
+        width: 100%;
+        height: 100%;
+        overflow: hidden;
+        position: absolute;
+        background: black;
+        z-index: 0;
+      }
+      @media screen and (min-width: 320px) and (max-width: 767px) and (orientation: portrait) {
+        html {
+          transform: rotate(-90deg);
+          transform-origin: left top;
+          width: 100vh;
+          overflow-x: hidden;
+          position: absolute;
+          top: 100%;
+          left: 0;
+        }
+      }
+    </style>
+</head>
+<body>
+    <canvas id="glcanvas" tabindex='1'></canvas>
+    <script src="gl.js"></script>
+    <script>load("rmdslides.wasm");</script>
+</body>
+</html>

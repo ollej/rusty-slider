@@ -1,0 +1,4 @@
+#!/usr/bin/env sh
+
+# Build for Android
+docker run --rm -v $(pwd)":/root/src" -w /root/src notfl3/cargo-apk cargo apk build

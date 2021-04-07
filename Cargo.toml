@@ -9,3 +9,15 @@ colorsys = "0.6.3"
 macroquad = "0.3.0-alpha.17"
 markdown = { git = "https://github.com/johannhof/markdown.rs" }
 nanoserde = "0.1.25"
+
+# Doesn't work with android build
+[profile.dev.package.'*']
+opt-level = 3
+
+[package.metadata.scripts]
+build-web = "bin/build-web"
+serve-web = "bin/serve-web"
+build-win = "bin/build-win"
+build-mac = "bin/build-mac"
+build-apk = "bin/build-apk"
+build-linux = "bin/build-linux"
