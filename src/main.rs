@@ -128,7 +128,9 @@ impl Slides {
             color: color,
         };
         //debug!("pos: {} text: {}", position, text);
-        draw_text_ex(text, 40., position, text_params);
+        let dimensions = measure_text(text, Some(self.font), font_size, 1.);
+        let hpos = screen_width() / 2. - dimensions.width / 2.;
+        draw_text_ex(text, hpos, position, text_params);
     }
 }
 
