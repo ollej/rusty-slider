@@ -1,4 +1,4 @@
-# Rmdslides
+# Rusty Slider
 
 A small tool to display markdown files as a slideshow.
 
@@ -12,7 +12,7 @@ back and forth between slides.
 
 ## Demo
 
-Try out [Rmdslides online](https://ollej.github.io/rmdslides/demo/).
+Try out [Rusty Slider online](https://ollej.github.io/rusty-slider/demo/).
 
 ## Theme
 

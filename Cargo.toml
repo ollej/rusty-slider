@@ -1,5 +1,5 @@
 [package]
-name = "rmdslides"
+name = "rusty-slider"
 version = "0.1.0"
 authors = ["Olle Wreede <olle@wreede.se>"]
 edition = "2018"

@@ -256,7 +256,7 @@ impl Theme {
 
 #[derive(StructOpt, Debug)]
 #[structopt(
-    name = "rmdslides",
+    name = "rusty-slider",
     about = "A small tool to display markdown files as a slideshow."
 )]
 struct CliOptions {
@@ -270,7 +270,7 @@ struct CliOptions {
 
 fn window_conf() -> Conf {
     Conf {
-        window_title: "Rmdslider".to_owned(),
+        window_title: "Rusty Slider".to_owned(),
         fullscreen: true,
         ..Default::default()
     }

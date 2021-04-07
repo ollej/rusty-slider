@@ -1,4 +1,4 @@
-# Rmdslides
+# Rusty Slider
 
 A small tool to display markdown files as a slideshow.
 
