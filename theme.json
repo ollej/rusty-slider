@@ -5,5 +5,6 @@
     "font": "Amble-Regular.ttf",
     "font_size_header": 80,
     "font_size_text": 40,
-    "vertical_offset": 50.0
+    "vertical_offset": 20.0,
+    "line_height": 2.0
 }

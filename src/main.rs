@@ -24,8 +24,6 @@ struct Slides {
 }
 
 impl Slides {
-    const LINE_HEIGHT: f32 = 2.0;
-
     fn from_slides(slides: Vec<Slide>, theme: Theme, font: Font) -> Slides {
         Slides {
             slides,
@@ -140,7 +138,7 @@ impl Slides {
         };
         let dimensions = measure_text(text, Some(self.font), font_size, 1.);
         let hpos = screen_width() / 2. - dimensions.width / 2.;
-        let vpos = position + font_size as f32 * Self::LINE_HEIGHT;
+        let vpos = position + font_size as f32 * self.theme.line_height;
         //debug!(
         //    "font_size: {}, position: {} hpos: {} vpos: {} height: {} offest_y: {} text: {}",
         //    font_size, position, hpos, vpos, dimensions.height, dimensions.offset_y, text
@@ -160,6 +158,7 @@ pub struct Theme {
     pub font_size_header: u16,
     pub font_size_text: u16,
     pub vertical_offset: f32,
+    pub line_height: f32,
 }
 
 impl Default for Theme {
@@ -172,6 +171,7 @@ impl Default for Theme {
             font_size_header: 80,
             font_size_text: 40,
             vertical_offset: 20.0,
+            line_height: 2.0,
         }
     }
 }
