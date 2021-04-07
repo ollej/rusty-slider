@@ -2,6 +2,10 @@
 
 A small tool to display markdown files as a slideshow.
 
+## Demo
+
+Try out [Rusty Slider online](https://ollej.github.io/rusty-slider/demo/).
+
 ## Usage
 
 The file `slides.md` will be read and split into slides on
@@ -9,10 +13,6 @@ horizontal lines: `---`
 
 Use left and right arrow keys or left and right mouse button to move
 back and forth between slides.
-
-## Demo
-
-Try out [Rusty Slider online](https://ollej.github.io/rusty-slider/demo/).
 
 ## Theme
 
