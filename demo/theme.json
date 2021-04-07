@@ -1,6 +1,11 @@
 {
+    "background_image": "background.png",
     "background_color": "#301934",
     "heading_color": "#b19cd9",
     "text_color": "#ffffff",
-    "font": "Amble-Regular.ttf"
+    "font": "Amble-Regular.ttf",
+    "font_size_header": 80,
+    "font_size_text": 40,
+    "vertical_offset": 20.0,
+    "line_height": 2.0
 }
