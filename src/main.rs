@@ -1,4 +1,6 @@
 extern crate markdown;
+pub mod shaders;
+
 use colorsys::Rgb;
 use macroquad::prelude::*;
 use markdown::{Block, Span};
@@ -189,6 +191,7 @@ pub struct Theme {
     pub font_size_text: u16,
     pub vertical_offset: f32,
     pub line_height: f32,
+    pub shader: bool,
 }
 
 impl Default for Theme {
@@ -203,6 +206,7 @@ impl Default for Theme {
             font_size_text: 40,
             vertical_offset: 20.0,
             line_height: 2.0,
+            shader: true,
         }
     }
 }
@@ -287,7 +291,17 @@ async fn main() {
         Some(path) => Some(load_texture(&path).await),
         None => None,
     };
+    let mut shader_activated = theme.shader;
     let mut slides = Slides::load(opt.slides, theme, font, background).await;
+
+    let render_target = render_target(screen_width() as u32, screen_height() as u32);
+    set_texture_filter(render_target.texture, FilterMode::Linear);
+    let shader_material = load_material(
+        shaders::crt::VERTEX,
+        shaders::crt::FRAGMENT,
+        Default::default(),
+    )
+    .unwrap();
 
     loop {
         if is_key_pressed(KeyCode::Escape) {
@@ -299,8 +313,45 @@ async fn main() {
         if is_key_pressed(KeyCode::Right) || is_mouse_button_pressed(MouseButton::Left) {
             slides.next();
         }
+        if is_key_pressed(KeyCode::Space) {
+            shader_activated = !shader_activated;
+        }
 
-        slides.draw();
+        // build camera with following coordinate system:
+        // (0., 0)     .... (SCR_W, 0.)
+        // (0., SCR_H) .... (SCR_W, SCR_H)
+        if shader_activated {
+            let scr_w = screen_width();
+            let scr_h = screen_height();
+            set_camera(Camera2D {
+                zoom: vec2(1. / scr_w * 2., -1. / scr_h * 2.),
+                target: vec2(scr_w / 2., scr_h / 2.),
+                render_target: Some(render_target),
+                ..Default::default()
+            });
+
+            slides.draw();
+
+            set_default_camera();
+
+            clear_background(BLACK);
+            gl_use_material(shader_material);
+            draw_texture_ex(
+                render_target.texture,
+                0.,
+                0.,
+                WHITE,
+                DrawTextureParams {
+                    dest_size: Some(vec2(screen_width(), screen_height())),
+                    flip_y: true,
+                    ..Default::default()
+                },
+            );
+            gl_use_default_material();
+        } else {
+            set_default_camera();
+            slides.draw();
+        }
 
         next_frame().await
     }
