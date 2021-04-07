@@ -2,11 +2,17 @@
 
 A small tool to display markdown files as a slideshow.
 
+## Usage
+
 The file `slides.md` will be read and split into slides on
 horizontal lines: `---`
 
 Use left and right arrow keys or left and right mouse button to move
 back and forth between slides.
+
+## Demo
+
+Try out [Rmdslides online](https://ollej.github.io/rmdslides/demo/).
 
 ## Theme
 
