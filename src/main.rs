@@ -24,7 +24,6 @@ struct Slides {
 }
 
 impl Slides {
-    const START_POSITION: f32 = 20.;
     const LINE_HEIGHT: f32 = 2.0;
 
     fn from_slides(slides: Vec<Slide>, theme: Theme, font: Font) -> Slides {
@@ -86,7 +85,7 @@ impl Slides {
 
     fn draw(&mut self) {
         clear_background(self.theme.background_color());
-        self.draw_slide(Self::START_POSITION);
+        self.draw_slide(self.theme.vertical_offset);
     }
 
     fn draw_slide(&self, start_position: f32) {
@@ -160,6 +159,7 @@ pub struct Theme {
     pub font: String,
     pub font_size_header: u16,
     pub font_size_text: u16,
+    pub vertical_offset: f32,
 }
 
 impl Default for Theme {
@@ -171,6 +171,7 @@ impl Default for Theme {
             font: "Amble-Regular.ttf".to_string(),
             font_size_header: 80,
             font_size_text: 40,
+            vertical_offset: 20.0,
         }
     }
 }
