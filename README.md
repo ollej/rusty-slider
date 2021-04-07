@@ -26,6 +26,8 @@ Create a file called `theme.json` to modify default display values.
     "heading_color": "#8f4d22",
     "text_color": "#cccccc",
     "font": "Amble-Regular.ttf"
+    "font_size_header": 80,
+    "font_size_text": 40
 }
 ```
 

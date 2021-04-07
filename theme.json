@@ -2,5 +2,7 @@
     "background_color": "#301934",
     "heading_color": "#b19cd9",
     "text_color": "#ffffff",
-    "font": "Amble-Regular.ttf"
+    "font": "Amble-Regular.ttf",
+    "font_size_header": 100,
+    "font_size_text": 20
 }

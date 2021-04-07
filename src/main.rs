@@ -24,8 +24,6 @@ struct Slides {
 }
 
 impl Slides {
-    const HEADER_SIZE: u16 = 80;
-    const TEXT_SIZE: u16 = 40;
     const START_POSITION: f32 = 20.;
     const LINE_HEIGHT: f32 = 2.0;
 
@@ -96,7 +94,7 @@ impl Slides {
         let mut new_position = start_position;
         for block in slide.content.iter() {
             new_position = match block {
-                Block::Header(spans, size) => self.draw_header(spans, *size, new_position),
+                Block::Header(spans, size) => self.draw_header(spans, size - 1, new_position),
                 Block::Paragraph(spans) => self.draw_paragraph(spans, new_position),
                 Block::UnorderedList(_items) => 0.,
                 _ => 0.,
@@ -105,7 +103,7 @@ impl Slides {
     }
 
     fn draw_header(&self, spans: &Vec<Span>, header_size: usize, position: f32) -> f32 {
-        let font_size = Self::HEADER_SIZE - (header_size as u16 * 2);
+        let font_size = self.theme.font_size_header - (header_size as u16 * 2);
         let mut new_position = position;
         for span in spans.iter() {
             match span {
@@ -120,7 +118,7 @@ impl Slides {
     }
 
     fn draw_paragraph(&self, spans: &Vec<Span>, position: f32) -> f32 {
-        let font_size = Self::TEXT_SIZE;
+        let font_size = self.theme.font_size_text;
         let mut new_position = position;
         for span in spans.iter() {
             match span {
@@ -160,6 +158,8 @@ pub struct Theme {
     pub heading_color: String,
     pub text_color: String,
     pub font: String,
+    pub font_size_header: u16,
+    pub font_size_text: u16,
 }
 
 impl Default for Theme {
@@ -169,6 +169,8 @@ impl Default for Theme {
             heading_color: "#b19cd9".to_string(),
             text_color: "#ffffff".to_string(),
             font: "Amble-Regular.ttf".to_string(),
+            font_size_header: 80,
+            font_size_text: 40,
         }
     }
 }
