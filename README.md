@@ -1,4 +1,6 @@
 # Rusty Slider
+[![Cross-compile](https://github.com/ollej/rusty-slider/actions/workflows/rust.yml/badge.svg?branch=main)](https://github.com/ollej/rusty-slider/actions/workflows/rust.yml)
+[![Release](https://github.com/ollej/rusty-slider/actions/workflows/release.yml/badge.svg?event=release)](https://github.com/ollej/rusty-slider/actions/workflows/release.yml)
 
 A small tool to display markdown files as a slideshow.
 
