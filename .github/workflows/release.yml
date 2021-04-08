@@ -76,4 +76,3 @@ jobs:
           file: ${{ matrix.config.zip_file }}
           asset_name: ${{ matrix.config.asset_name }}
           tag: ${{ github.ref }}
-          prerelease: true
