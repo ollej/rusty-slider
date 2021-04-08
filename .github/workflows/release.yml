@@ -15,18 +15,22 @@ jobs:
         config:
           - os: ubuntu-latest
             artifact_name: rusty-slider
+            zip_file: rusty-slider-linux.zip
             asset_name: rusty-slider-linux-$tag.zip
             target: 'x86_64-unknown-linux-gnu'
           - os: windows-latest
             artifact_name: rusty-slider.exe
+            zip_file: rusty-slider-windows.zip
             asset_name: rusty-slider-windows-$tag.zip
             target: 'x86_64-pc-windows-msvc'
           - os: macos-latest
             artifact_name: rusty-slider
+            zip_file: rusty-slider-macos.zip
             asset_name: rusty-slider-macos-$tag.zip
             target: 'x86_64-apple-darwin'
           - os: ubuntu-latest
             artifact_name: rusty-slider.wasm
+            zip_file: rusty-slider-wasm.zip
             asset_name: rusty-slider-wasm-$tag.zip
             target: 'wasm32-unknown-unknown'
         include:
@@ -58,18 +62,18 @@ jobs:
           args: --release --locked --all-targets --target=${{ matrix.config.target }}
       - name: Zip release archive
         if: runner.os == 'Linux'
-        run: zip -j ${{ matrix.config.asset_name }} Amble-Regular.ttf background.png slides.md theme.json target/${{ matrix.config.target }}/release/${{ matrix.config.artifact_name }}
+        run: zip -j ${{ matrix.config.zip_file }} Amble-Regular.ttf background.png slides.md theme.json target/${{ matrix.config.target }}/release/${{ matrix.config.artifact_name }}
       - name: Zip release archive
         if: runner.os == 'Windows'
-        run: 7z a -tzip ${{ matrix.config.asset_name }} Amble-Regular.ttf background.png slides.md theme.json target/${{ matrix.config.target }}/release/${{ matrix.config.artifact_name }}
+        run: 7z a -tzip ${{ matrix.config.zip_file }} Amble-Regular.ttf background.png slides.md theme.json target/${{ matrix.config.target }}/release/${{ matrix.config.artifact_name }}
       - name: Zip release archive
         if: runner.os == 'macOS'
-        run: 7z a -tzip ${{ matrix.config.asset_name }} Amble-Regular.ttf background.png slides.md theme.json target/${{ matrix.config.target }}/release/${{ matrix.config.artifact_name }}
+        run: 7z a -tzip ${{ matrix.config.zip_file }} Amble-Regular.ttf background.png slides.md theme.json target/${{ matrix.config.target }}/release/${{ matrix.config.artifact_name }}
       - name: Upload binaries to release
         uses: svenstaro/upload-release-action@v2
         with:
           repo_token: ${{ secrets.GITHUB_TOKEN }}
-          file: ${{ matrix.config.asset_name }}
+          file: ${{ matrix.config.zip_file }}
           asset_name: ${{ matrix.config.asset_name }}
           tag: ${{ github.ref }}
           prerelease: true
