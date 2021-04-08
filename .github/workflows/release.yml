@@ -15,8 +15,8 @@ jobs:
         config:
           - os: ubuntu-latest
             artifact_name: rusty-slider
-            zip_file: rusty-slider-linux.zip
-            asset_name: rusty-slider-linux-$tag.zip
+            zip_file: rusty-slider-linux.tar.gz
+            asset_name: rusty-slider-linux-$tag.tar.gz
             target: 'x86_64-unknown-linux-gnu'
           - os: windows-latest
             artifact_name: rusty-slider.exe
@@ -61,14 +61,14 @@ jobs:
           command: build
           args: --release --locked --all-targets --target=${{ matrix.config.target }}
       - name: Zip release archive
-        if: runner.os == 'Linux'
-        run: zip -j ${{ matrix.config.zip_file }} Amble-Regular.ttf background.png slides.md theme.json target/${{ matrix.config.target }}/release/${{ matrix.config.artifact_name }}
+        if: matrix.config.target == 'wasm32-unknown-unknown'
+        run: zip -j ${{ matrix.config.zip_file }} Amble-Regular.ttf background.png slides.md theme.json demo/index.html demo/gl.js demo/manifest.json target/${{ matrix.config.target }}/release/${{ matrix.config.artifact_name }}
       - name: Zip release archive
-        if: runner.os == 'Windows'
-        run: 7z a -tzip ${{ matrix.config.zip_file }} Amble-Regular.ttf background.png slides.md theme.json target/${{ matrix.config.target }}/release/${{ matrix.config.artifact_name }}
+        if: matrix.config.target == 'x86_64-unknown-linux-gnu'
+        run: tar -zcf ${{ matrix.config.zip_file }} Amble-Regular.ttf background.png slides.md theme.json -C target/${{ matrix.config.target }}/release/ ${{ matrix.config.artifact_name }}
       - name: Zip release archive
-        if: runner.os == 'macOS'
-        run: 7z a -tzip ${{ matrix.config.zip_file }} Amble-Regular.ttf background.png slides.md theme.json target/${{ matrix.config.target }}/release/${{ matrix.config.artifact_name }}
+        if: runner.os == 'Windows' || runner.os == 'macOS'
+        run: 7z a -tzip ${{ matrix.config.zip_file }} Amble-Regular.ttf background.png slides.md theme.json ./target/${{ matrix.config.target }}/release/${{ matrix.config.artifact_name }}
       - name: Upload binaries to release
         uses: svenstaro/upload-release-action@v2
         with:
