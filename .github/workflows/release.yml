@@ -15,19 +15,19 @@ jobs:
         config:
           - os: ubuntu-latest
             artifact_name: rusty-slider
-            asset_name: rusty-slider-linux-$tag
+            asset_name: rusty-slider-linux-$tag.zip
             target: 'x86_64-unknown-linux-gnu'
           - os: windows-latest
             artifact_name: rusty-slider.exe
-            asset_name: rusty-slider-windows-$tag
+            asset_name: rusty-slider-windows-$tag.zip
             target: 'x86_64-pc-windows-msvc'
           - os: macos-latest
             artifact_name: rusty-slider
-            asset_name: rusty-slider-macos-$tag
+            asset_name: rusty-slider-macos-$tag.zip
             target: 'x86_64-apple-darwin'
           - os: ubuntu-latest
             artifact_name: rusty-slider.wasm
-            asset_name: rusty-slider-wasm-$tag
+            asset_name: rusty-slider-wasm-$tag.zip
             target: 'wasm32-unknown-unknown'
         include:
           - os: ubuntu-latest
@@ -56,11 +56,20 @@ jobs:
         with:
           command: build
           args: --release --locked --all-targets --target=${{ matrix.config.target }}
+      - name: Zip release archive
+        if: runner.os == 'Linux'
+        run: zip -j ${{ matrix.config.asset_name }} Amble-Regular.ttf background.png slides.md theme.json target/${{ matrix.config.target }}/release/${{ matrix.config.artifact_name }}
+      - name: Zip release archive
+        if: runner.os == 'Windows'
+        run: 7z a -tzip ${{ matrix.config.asset_name }} Amble-Regular.ttf background.png slides.md theme.json target/${{ matrix.config.target }}/release/${{ matrix.config.artifact_name }}
+      - name: Zip release archive
+        if: runner.os == 'macOS'
+        run: 7z a -tzip ${{ matrix.config.asset_name }} Amble-Regular.ttf background.png slides.md theme.json target/${{ matrix.config.target }}/release/${{ matrix.config.artifact_name }}
       - name: Upload binaries to release
         uses: svenstaro/upload-release-action@v2
         with:
           repo_token: ${{ secrets.GITHUB_TOKEN }}
-          file: target/${{ matrix.config.target }}/release/${{ matrix.config.artifact_name }}
+          file: ${{ matrix.config.asset_name }}
           asset_name: ${{ matrix.config.asset_name }}
           tag: ${{ github.ref }}
           prerelease: true
