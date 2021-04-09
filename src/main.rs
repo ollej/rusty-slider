@@ -3,10 +3,16 @@ pub mod shaders;
 
 use colorsys::Rgb;
 use macroquad::prelude::*;
+use macroquad::texture::Image;
 use markdown::{Block, Span};
 use nanoserde::DeJson;
 use std::path::PathBuf;
 use structopt::StructOpt;
+
+use silicon::formatter::ImageFormatterBuilder;
+use silicon::utils::init_syntect;
+use syntect::easy::HighlightLines;
+use syntect::util::LinesWithEndings;
 
 struct Slide {
     content: Vec<Block>,
@@ -124,6 +130,7 @@ impl Slides {
             new_position = match block {
                 Block::Header(spans, size) => self.draw_header(spans, size - 1, new_position),
                 Block::Paragraph(spans) => self.draw_paragraph(spans, new_position),
+                Block::CodeBlock(language, code) => self.draw_code(language, code, new_position),
                 Block::UnorderedList(_items) => 0.,
                 _ => 0.,
             }
@@ -176,6 +183,61 @@ impl Slides {
         //);
         draw_text_ex(text, hpos, vpos, text_params);
         vpos
+    }
+
+    fn draw_code(&self, language: &Option<String>, code: &String, position: f32) -> f32 {
+        let code_texture = CodeImage::new(language, code).texture();
+        let font_size = self.theme.font_size_text;
+        let vpos = position + font_size as f32;
+        draw_texture_ex(
+            code_texture,
+            screen_width() / 2. - code_texture.width() / 2.,
+            vpos,
+            WHITE,
+            DrawTextureParams {
+                ..Default::default()
+            },
+        );
+        vpos + code_texture.height()
+    }
+}
+
+struct CodeImage {
+    pub language: Option<String>,
+    pub code: String,
+}
+
+impl CodeImage {
+    fn new(language: &Option<String>, code: &String) -> CodeImage {
+        CodeImage {
+            language: language.to_owned(),
+            code: code.to_owned(),
+        }
+    }
+
+    fn texture(&self) -> Texture2D {
+        let (ps, ts) = init_syntect();
+        let syntax = match &self.language {
+            Some(language) => ps.find_syntax_by_token(&language),
+            None => ps.find_syntax_by_first_line(&self.code),
+        }
+        .unwrap_or_else(|| ps.find_syntax_plain_text());
+        let theme = &ts.themes["Dracula"];
+        let mut h = HighlightLines::new(syntax, &theme);
+        let highlight = LinesWithEndings::from(&self.code)
+            .map(|line| h.highlight(line, &ps))
+            .collect::<Vec<_>>();
+        let mut formatter = ImageFormatterBuilder::new()
+            .font(vec![("Hack", 26.0)])
+            .build()
+            .unwrap();
+        let image_buffer = formatter.format(&highlight, &theme).into_rgba8();
+        let image = Image {
+            width: image_buffer.width() as u16,
+            height: image_buffer.height() as u16,
+            bytes: image_buffer.into_raw(),
+        };
+        load_texture_from_image(&image)
     }
 }
 
@@ -317,12 +379,13 @@ async fn main() {
             shader_activated = !shader_activated;
         }
 
+        let scr_w = screen_width();
+        let scr_h = screen_height();
+
         // build camera with following coordinate system:
         // (0., 0)     .... (SCR_W, 0.)
         // (0., SCR_H) .... (SCR_W, SCR_H)
         if shader_activated {
-            let scr_w = screen_width();
-            let scr_h = screen_height();
             set_camera(Camera2D {
                 zoom: vec2(1. / scr_w * 2., -1. / scr_h * 2.),
                 target: vec2(scr_w / 2., scr_h / 2.),

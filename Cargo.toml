@@ -3,13 +3,23 @@ name = "rusty-slider"
 version = "0.1.0"
 authors = ["Olle Wreede <olle@wreede.se>"]
 edition = "2018"
+license = "MIT"
+description = "A small tool to display markdown files as a slideshow."
+repository = "https://github.com/ollej/rusty-slider"
+homepage = "https://ollej.github.io/rusty-slider/"
+readme = "README.md"
+categories = ["command-line-utilities"]
+keywords = ["markdown", "slide", "presentation", "graphics", "wasm"]
 
 [dependencies]
 colorsys = "0.6.3"
+image = "0.23.14"
 macroquad = "0.3.0-alpha.17"
 markdown = { git = "https://github.com/johannhof/markdown.rs" }
 nanoserde = "0.1.25"
+silicon = "0.4.1"
 structopt = "0.3.21"
+syntect = "4.5.0"
 
 # Doesn't work with android build
 [profile.dev.package.'*']
