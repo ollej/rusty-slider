@@ -4,14 +4,26 @@
 
 A small tool to display markdown files as a slideshow.
 
+![Screenshot](https://ollej.github.io/rusty-slider/screenshot.png)
+
 ## Demo
 
 Try out [Rusty Slider online](https://ollej.github.io/rusty-slider/demo/).
+
+## Download
+
+Rusty Slider is available for multiple platforms, such as Windows, 
+Linuxi, and MacOS. Download the latest binary build from github:
+
+ * https://github.com/ollej/rusty-slider/releases/
 
 ## Usage
 
 The file `slides.md` will be read and split into slides on
 horizontal lines: `---`
+
+At the moment, the only markdown supported is headers, paragraphs and
+code blocks.
 
 Use left and right arrow keys or left and right mouse button to move
 back and forth between slides.
@@ -19,6 +31,9 @@ back and forth between slides.
 ## Theme
 
 Create a file called `theme.json` to modify default display values.
+
+If you make your own theme file, and want to share it, I'd be happy
+to add it to the release.
 
 ### Example theme.json
 
@@ -35,6 +50,28 @@ Create a file called `theme.json` to modify default display values.
     "line_height": 2.0,
     "shader": true
 }
+```
+
+## Command line options
+
+Use `--slides` to set path to a markdown file with slides.
+
+Use `--theme` to set path to a theme json file.
+
+```
+rusty-slider 0.1.0
+A small tool to display markdown files as a slideshow.
+
+USAGE:
+    rusty-slider [OPTIONS]
+
+FLAGS:
+    -h, --help       Prints help information
+    -V, --version    Prints version information
+
+OPTIONS:
+    -s, --slides <slides>    Markdown files with slides text, defaults to slides.md
+    -t, --theme <theme>      File with theme options, defaults to theme.json
 ```
 
 ## License
