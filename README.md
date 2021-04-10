@@ -15,7 +15,7 @@ Try out [Rusty Slider online](https://ollej.github.io/rusty-slider/demo/).
 Rusty Slider is available for multiple platforms, such as Windows, 
 Linuxi, and MacOS. Download the latest binary build from github:
 
- * https://github.com/ollej/rusty-slider/releases/
+[https://github.com/ollej/rusty-slider/releases/](https://github.com/ollej/rusty-slider/releases/)
 
 ## Usage
 
