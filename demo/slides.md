@@ -32,6 +32,21 @@ Supports Windows, MacOS, Linux and web.
 
 ---
 
+# Code
+
+Code blocks will be rendered with syntax highlighting.
+
+```rust
+let shader_material = load_material(
+    shaders::crt::VERTEX,
+    shaders::crt::FRAGMENT,
+    Default::default(),
+)
+.unwrap();
+```
+
+---
+
 # Controls
 
 Left/right keys switches between previous and next slide.
