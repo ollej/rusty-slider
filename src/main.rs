@@ -5,11 +5,12 @@ use colorsys::Rgb;
 use macroquad::prelude::*;
 use markdown::{Block, Span};
 use nanoserde::DeJson;
+use std::collections::HashMap;
 use std::path::PathBuf;
 use structopt::StructOpt;
 
 use syntect::easy::HighlightLines;
-use syntect::highlighting::{Style, ThemeSet};
+use syntect::highlighting::ThemeSet;
 use syntect::parsing::SyntaxSet;
 use syntect::util::LinesWithEndings;
 
@@ -28,8 +29,8 @@ struct Slides {
     active_slide: usize,
     theme: Theme,
     font: Font,
-    code_font: Font,
     background: Option<Texture2D>,
+    code_blocks: CodeBlocks,
 }
 
 impl Slides {
@@ -40,13 +41,19 @@ impl Slides {
         code_font: Font,
         background: Option<Texture2D>,
     ) -> Slides {
+        let code_blocks = CodeBlocks::new(
+            code_font,
+            theme.code_font_size.to_owned(),
+            theme.code_line_height.to_owned(),
+            theme.code_background_color().to_owned(),
+        );
         Slides {
             slides,
             active_slide: 0,
             theme,
             font,
-            code_font,
             background,
+            code_blocks,
         }
     }
 
@@ -126,14 +133,24 @@ impl Slides {
         };
     }
 
-    fn draw_slide(&self, start_position: f32) {
+    fn draw_slide(&mut self, start_position: f32) {
         let slide = &self.slides[self.active_slide];
         let mut new_position = start_position;
         for block in slide.content.iter() {
             new_position = match block {
                 Block::Header(spans, size) => self.draw_header(spans, size - 1, new_position),
                 Block::Paragraph(spans) => self.draw_paragraph(spans, new_position),
-                Block::CodeBlock(language, code) => self.draw_code(language, code, new_position),
+                Block::CodeBlock(language, code) => {
+                    match self.code_blocks.get_code_block(
+                        language.to_owned(),
+                        code.to_owned(),
+                        new_position,
+                        self.active_slide,
+                    ) {
+                        Some(code_block) => code_block.draw(),
+                        None => new_position,
+                    }
+                }
                 Block::UnorderedList(_items) => 0.,
                 _ => 0.,
             }
@@ -187,109 +204,79 @@ impl Slides {
         draw_text_ex(text, hpos, vpos, text_params);
         vpos
     }
-
-    fn draw_code(&self, language: &Option<String>, code: &String, position: f32) -> f32 {
-        // TODO: Store highlighted tokens
-        let code_highlighter = CodeHighlighter::new(
-            language,
-            code,
-            self.code_font,
-            self.theme.code_font_size,
-            self.theme.code_line_height,
-            self.theme.code_background_color(),
-            position,
-        );
-        code_highlighter.draw()
-    }
 }
 
-struct CodeBox {
-    width: f32,
-    height: f32,
-    line_count: usize,
-    partials: Vec<(f32, f32, Color, String)>,
-}
-
-impl CodeBox {
-    const BOX_PADDING: f32 = 20.;
-    const BOX_MARGIN: f32 = 20.;
-
-    fn width_with_padding(&self) -> f32 {
-        self.width + Self::BOX_PADDING * 2.
-    }
-
-    fn height_with_padding(&self) -> f32 {
-        self.height + Self::BOX_PADDING * 2.
-    }
-
-    fn height_with_margin(&self) -> f32 {
-        self.height + Self::BOX_PADDING * 2. + Self::BOX_MARGIN * 2.
-    }
-}
-
-struct CodeHighlighter {
-    language: Option<String>,
-    code: String,
+struct CodeBlocks {
+    ps: SyntaxSet,
+    ts: ThemeSet,
     font: Font,
     font_size: u16,
     line_height: f32,
     background_color: Color,
-    start_position: f32,
+    blocks: HashMap<String, CodeBlock>,
 }
 
-impl CodeHighlighter {
+impl CodeBlocks {
     const SYNTAX_THEME: &'static str = "Solarized (dark)";
     const TAB_SPACES: &'static str = "    ";
 
-    fn new(
-        language: &Option<String>,
-        code: &String,
-        font: Font,
-        font_size: u16,
-        line_height: f32,
-        background_color: Color,
-        start_position: f32,
-    ) -> Self {
+    fn new(font: Font, font_size: u16, line_height: f32, background_color: Color) -> Self {
         Self {
-            language: language.to_owned(),
-            code: code.to_owned(),
+            ps: SyntaxSet::load_defaults_newlines(),
+            ts: ThemeSet::load_defaults(),
+            blocks: HashMap::new(),
             font,
             font_size,
             line_height,
             background_color,
-            start_position,
         }
     }
 
-    fn draw(&self) -> f32 {
-        let code_box = self.build_code_box();
-        let mut hpos = screen_width() / 2. - code_box.width_with_padding() / 2.;
-        let mut vpos = self.start_position + CodeBox::BOX_MARGIN * 2.;
-        let bottom_position = self.start_position + code_box.height_with_margin();
-        draw_rectangle(
-            hpos,
-            vpos,
-            code_box.width_with_padding(),
-            code_box.height_with_padding(),
-            self.background_color,
-        );
-        hpos += CodeBox::BOX_PADDING;
-        vpos += CodeBox::BOX_PADDING - self.font_size as f32 * (self.line_height - 1.);
-        for (x, y, color, text) in code_box.partials {
-            let text_params = TextParams {
-                font: self.font,
-                font_size: self.font_size,
-                font_scale: 1.,
-                color: color,
-            };
-            draw_text_ex(&text, hpos + x, vpos + y, text_params);
+    fn get_code_block(
+        &mut self,
+        language: Option<String>,
+        code: String,
+        start_position: f32,
+        slide_number: usize,
+    ) -> Option<&CodeBlock> {
+        let key = format!("{}-{}", slide_number, start_position);
+        if !self.blocks.contains_key(&key) {
+            let code_block = self.build_code_block(language, code, start_position);
+            self.blocks.insert(key.to_owned(), code_block);
         }
-        bottom_position
+        return self.blocks.get(&key);
     }
 
-    fn build_code_box(&self) -> CodeBox {
+    fn build_code_block(
+        &self,
+        language: Option<String>,
+        code: String,
+        start_position: f32,
+    ) -> CodeBlock {
+        let code_box = self.build_code_box(language, code);
+        CodeBlock {
+            code_box,
+            start_position: start_position,
+            font: self.font,
+            font_size: self.font_size,
+            line_height: self.line_height,
+            background_color: self.background_color,
+        }
+    }
+
+    fn build_code_box(&self, language: Option<String>, code: String) -> CodeBox {
+        let syntax = match language {
+            Some(lang) => self.ps.find_syntax_by_token(&lang),
+            None => self.ps.find_syntax_by_first_line(&code),
+        }
+        .unwrap_or_else(|| self.ps.find_syntax_plain_text());
+        let theme = &self.ts.themes[Self::SYNTAX_THEME];
+        let mut h = HighlightLines::new(syntax, &theme);
+        let lines = LinesWithEndings::from(&code)
+            .map(|line| h.highlight(line, &self.ps))
+            .collect::<Vec<_>>();
+
         let mut partials = vec![];
-        let lines = self.syntax_highlight();
         let mut code_width: f32 = 0.;
         let mut code_height: f32 = 0.;
         let line_height = self.font_size as f32 * self.line_height;
@@ -320,26 +307,67 @@ impl CodeHighlighter {
         CodeBox {
             width: code_width,
             height: code_height,
-            line_count: lines.len(),
             partials,
         }
     }
+}
 
-    fn syntax_highlight(&self) -> Vec<Vec<(Style, &str)>> {
-        // TODO: Should only be defined once
-        let ps = SyntaxSet::load_defaults_newlines();
-        let ts = ThemeSet::load_defaults();
+struct CodeBlock {
+    code_box: CodeBox,
+    start_position: f32,
+    font: Font,
+    font_size: u16,
+    line_height: f32,
+    background_color: Color,
+}
 
-        let syntax = match &self.language {
-            Some(language) => ps.find_syntax_by_token(&language),
-            None => ps.find_syntax_by_first_line(&self.code),
+impl CodeBlock {
+    fn draw(&self) -> f32 {
+        let mut hpos = screen_width() / 2. - self.code_box.width_with_padding() / 2.;
+        let mut vpos = self.start_position + CodeBox::BOX_MARGIN * 2.;
+        let bottom_position = self.start_position + self.code_box.height_with_margin();
+        draw_rectangle(
+            hpos,
+            vpos,
+            self.code_box.width_with_padding(),
+            self.code_box.height_with_padding(),
+            self.background_color,
+        );
+        hpos += CodeBox::BOX_PADDING;
+        vpos += CodeBox::BOX_PADDING - self.font_size as f32 * (self.line_height - 1.);
+        for (x, y, color, text) in &self.code_box.partials {
+            let text_params = TextParams {
+                font: self.font,
+                font_size: self.font_size,
+                font_scale: 1.,
+                color: color.to_owned(),
+            };
+            draw_text_ex(&text, hpos + x, vpos + y, text_params);
         }
-        .unwrap_or_else(|| ps.find_syntax_plain_text());
-        let theme = &ts.themes[Self::SYNTAX_THEME];
-        let mut h = HighlightLines::new(syntax, &theme);
-        return LinesWithEndings::from(&self.code)
-            .map(|line| h.highlight(line, &ps))
-            .collect::<Vec<_>>();
+        bottom_position
+    }
+}
+
+struct CodeBox {
+    width: f32,
+    height: f32,
+    partials: Vec<(f32, f32, Color, String)>,
+}
+
+impl CodeBox {
+    const BOX_PADDING: f32 = 20.;
+    const BOX_MARGIN: f32 = 20.;
+
+    fn width_with_padding(&self) -> f32 {
+        self.width + Self::BOX_PADDING * 2.
+    }
+
+    fn height_with_padding(&self) -> f32 {
+        self.height + Self::BOX_PADDING * 2.
+    }
+
+    fn height_with_margin(&self) -> f32 {
+        self.height + Self::BOX_PADDING * 2. + Self::BOX_MARGIN * 2.
     }
 }
 
