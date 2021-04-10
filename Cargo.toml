@@ -27,5 +27,7 @@ opt-level = 3
 
 [package.metadata.scripts]
 build-web = "bin/build-web"
+build-linux = "bin/build-linux"
+build-win = "bin/build-win"
 serve-web = "bin/serve-web"
 build-apk = "bin/build-apk"

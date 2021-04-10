@@ -1,0 +1,12 @@
+#!/usr/bin/env sh
+
+set -euo pipefail
+
+# Build for Linux
+TARGET=x86_64-unknown-linux-gnu
+export CARGO_TARGET_X86_64_UNKNOWN_LINUX_GNU_LINKER=x86_64-unknown-linux-gnu-gcc
+cargo build --release --target $TARGET
+
+# Package Linux tar ball
+APP=rusty-slider
+tar -zcf "target/$APP-linux.tar.gz" Hack-Regular.ttf Amble-Regular.ttf background.png slides.md theme.json -C target/$TARGET/release/ $APP
