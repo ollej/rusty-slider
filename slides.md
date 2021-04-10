@@ -37,12 +37,12 @@ Supports Windows, MacOS, Linux and web.
 Code blocks will be rendered with syntax highlighting.
 
 ```rust
-    let shader_material = load_material(
-        shaders::crt::VERTEX,
-        shaders::crt::FRAGMENT,
-        Default::default(),
-    )
-    .unwrap();
+let shader_material = load_material(
+    shaders::crt::VERTEX,
+    shaders::crt::FRAGMENT,
+    Default::default(),
+)
+.unwrap();
 ```
 
 ---

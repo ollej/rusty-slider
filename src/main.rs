@@ -3,15 +3,14 @@ pub mod shaders;
 
 use colorsys::Rgb;
 use macroquad::prelude::*;
-use macroquad::texture::Image;
 use markdown::{Block, Span};
 use nanoserde::DeJson;
 use std::path::PathBuf;
 use structopt::StructOpt;
 
-use silicon::formatter::ImageFormatterBuilder;
-use silicon::utils::init_syntect;
 use syntect::easy::HighlightLines;
+use syntect::highlighting::{Style, ThemeSet};
+use syntect::parsing::SyntaxSet;
 use syntect::util::LinesWithEndings;
 
 struct Slide {
@@ -29,6 +28,7 @@ struct Slides {
     active_slide: usize,
     theme: Theme,
     font: Font,
+    code_font: Font,
     background: Option<Texture2D>,
 }
 
@@ -37,6 +37,7 @@ impl Slides {
         slides: Vec<Slide>,
         theme: Theme,
         font: Font,
+        code_font: Font,
         background: Option<Texture2D>,
     ) -> Slides {
         Slides {
@@ -44,6 +45,7 @@ impl Slides {
             active_slide: 0,
             theme,
             font,
+            code_font,
             background,
         }
     }
@@ -52,6 +54,7 @@ impl Slides {
         slides_path: Option<PathBuf>,
         theme: Theme,
         font: Font,
+        code_font: Font,
         background: Option<Texture2D>,
     ) -> Self {
         let path = match slides_path {
@@ -67,7 +70,7 @@ impl Slides {
         };
         let tokens = markdown::tokenize(&markdown);
         let slides = Self::build_slides(tokens);
-        Self::from_slides(slides, theme, font, background)
+        Self::from_slides(slides, theme, font, code_font, background)
     }
 
     fn build_slides(tokens: Vec<Block>) -> Vec<Slide> {
@@ -186,58 +189,157 @@ impl Slides {
     }
 
     fn draw_code(&self, language: &Option<String>, code: &String, position: f32) -> f32 {
-        let code_texture = CodeImage::new(language, code).texture();
-        let font_size = self.theme.font_size_text;
-        let vpos = position + font_size as f32;
-        draw_texture_ex(
-            code_texture,
-            screen_width() / 2. - code_texture.width() / 2.,
-            vpos,
-            WHITE,
-            DrawTextureParams {
-                ..Default::default()
-            },
+        // TODO: Store highlighted tokens
+        let code_highlighter = CodeHighlighter::new(
+            language,
+            code,
+            self.code_font,
+            self.theme.code_font_size,
+            self.theme.code_line_height,
+            self.theme.code_background_color(),
+            position,
         );
-        vpos + code_texture.height()
+        code_highlighter.draw()
     }
 }
 
-struct CodeImage {
-    pub language: Option<String>,
-    pub code: String,
+struct CodeBox {
+    width: f32,
+    height: f32,
+    line_count: usize,
+    partials: Vec<(f32, f32, Color, String)>,
 }
 
-impl CodeImage {
-    fn new(language: &Option<String>, code: &String) -> CodeImage {
-        CodeImage {
+impl CodeBox {
+    const BOX_PADDING: f32 = 20.;
+    const BOX_MARGIN: f32 = 20.;
+
+    fn width_with_padding(&self) -> f32 {
+        self.width + Self::BOX_PADDING * 2.
+    }
+
+    fn height_with_padding(&self) -> f32 {
+        self.height + Self::BOX_PADDING * 2.
+    }
+
+    fn height_with_margin(&self) -> f32 {
+        self.height + Self::BOX_PADDING * 2. + Self::BOX_MARGIN * 2.
+    }
+}
+
+struct CodeHighlighter {
+    language: Option<String>,
+    code: String,
+    font: Font,
+    font_size: u16,
+    line_height: f32,
+    background_color: Color,
+    start_position: f32,
+}
+
+impl CodeHighlighter {
+    const SYNTAX_THEME: &'static str = "Solarized (dark)";
+    const TAB_SPACES: &'static str = "    ";
+
+    fn new(
+        language: &Option<String>,
+        code: &String,
+        font: Font,
+        font_size: u16,
+        line_height: f32,
+        background_color: Color,
+        start_position: f32,
+    ) -> Self {
+        Self {
             language: language.to_owned(),
             code: code.to_owned(),
+            font,
+            font_size,
+            line_height,
+            background_color,
+            start_position,
         }
     }
 
-    fn texture(&self) -> Texture2D {
-        let (ps, ts) = init_syntect();
+    fn draw(&self) -> f32 {
+        let code_box = self.build_code_box();
+        let mut hpos = screen_width() / 2. - code_box.width_with_padding() / 2.;
+        let mut vpos = self.start_position + CodeBox::BOX_MARGIN * 2.;
+        let bottom_position = self.start_position + code_box.height_with_margin();
+        draw_rectangle(
+            hpos,
+            vpos,
+            code_box.width_with_padding(),
+            code_box.height_with_padding(),
+            self.background_color,
+        );
+        hpos += CodeBox::BOX_PADDING;
+        vpos += CodeBox::BOX_PADDING - self.font_size as f32 * (self.line_height - 1.);
+        for (x, y, color, text) in code_box.partials {
+            let text_params = TextParams {
+                font: self.font,
+                font_size: self.font_size,
+                font_scale: 1.,
+                color: color,
+            };
+            draw_text_ex(&text, hpos + x, vpos + y, text_params);
+        }
+        bottom_position
+    }
+
+    fn build_code_box(&self) -> CodeBox {
+        let mut partials = vec![];
+        let lines = self.syntax_highlight();
+        let mut code_width: f32 = 0.;
+        let mut code_height: f32 = 0.;
+        let line_height = self.font_size as f32 * self.line_height;
+        for (lineno, tokens) in lines.iter().enumerate() {
+            let mut line_width: f32 = 0.;
+            code_height += line_height;
+            for (style, text) in tokens {
+                let text = text.trim_end_matches('\n').replace('\t', Self::TAB_SPACES);
+                if text.is_empty() {
+                    continue;
+                }
+
+                let dimensions = measure_text(&text, Some(self.font), self.font_size, 1.);
+                let c = style.foreground;
+
+                partials.push((
+                    line_width,
+                    line_height * (lineno + 1) as f32,
+                    Color::from_rgba(c.r, c.g, c.b, c.a),
+                    text.to_owned(),
+                ));
+
+                line_width += dimensions.width;
+                code_width = code_width.max(line_width);
+            }
+        }
+
+        CodeBox {
+            width: code_width,
+            height: code_height,
+            line_count: lines.len(),
+            partials,
+        }
+    }
+
+    fn syntax_highlight(&self) -> Vec<Vec<(Style, &str)>> {
+        // TODO: Should only be defined once
+        let ps = SyntaxSet::load_defaults_newlines();
+        let ts = ThemeSet::load_defaults();
+
         let syntax = match &self.language {
             Some(language) => ps.find_syntax_by_token(&language),
             None => ps.find_syntax_by_first_line(&self.code),
         }
         .unwrap_or_else(|| ps.find_syntax_plain_text());
-        let theme = &ts.themes["Dracula"];
+        let theme = &ts.themes[Self::SYNTAX_THEME];
         let mut h = HighlightLines::new(syntax, &theme);
-        let highlight = LinesWithEndings::from(&self.code)
+        return LinesWithEndings::from(&self.code)
             .map(|line| h.highlight(line, &ps))
             .collect::<Vec<_>>();
-        let mut formatter = ImageFormatterBuilder::new()
-            .font(vec![("Hack", 26.0)])
-            .build()
-            .unwrap();
-        let image_buffer = formatter.format(&highlight, &theme).into_rgba8();
-        let image = Image {
-            width: image_buffer.width() as u16,
-            height: image_buffer.height() as u16,
-            bytes: image_buffer.into_raw(),
-        };
-        load_texture_from_image(&image)
     }
 }
 
@@ -253,6 +355,10 @@ pub struct Theme {
     pub font_size_text: u16,
     pub vertical_offset: f32,
     pub line_height: f32,
+    pub code_font: String,
+    pub code_font_size: u16,
+    pub code_line_height: f32,
+    pub code_background_color: String,
     pub shader: bool,
 }
 
@@ -268,6 +374,10 @@ impl Default for Theme {
             font_size_text: 40,
             vertical_offset: 20.0,
             line_height: 2.0,
+            code_font: "Hack-Regular.ttf".to_string(),
+            code_font_size: 20,
+            code_line_height: 1.2,
+            code_background_color: "#002b36".to_string(),
             shader: true,
         }
     }
@@ -301,6 +411,10 @@ impl Theme {
 
     fn text_color(&self) -> Color {
         Self::from_hex(self.text_color.to_owned(), WHITE)
+    }
+
+    fn code_background_color(&self) -> Color {
+        Self::from_hex(self.code_background_color.to_owned(), BLACK)
     }
 
     fn from_hex(color: String, default: Color) -> Color {
@@ -348,13 +462,15 @@ async fn main() {
         theme.text_color(),
         theme.heading_color(),
     );
-    let font = load_ttf_font(&theme.font).await;
+    let text_font = load_ttf_font(&theme.font).await;
+    debug!("code_font: {}", theme.code_font);
+    let code_font = load_ttf_font(&theme.code_font).await;
     let background = match &theme.background_image {
         Some(path) => Some(load_texture(&path).await),
         None => None,
     };
     let mut shader_activated = theme.shader;
-    let mut slides = Slides::load(opt.slides, theme, font, background).await;
+    let mut slides = Slides::load(opt.slides, theme, text_font, code_font, background).await;
 
     let render_target = render_target(screen_width() as u32, screen_height() as u32);
     set_texture_filter(render_target.texture, FilterMode::Linear);

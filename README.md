@@ -48,6 +48,10 @@ to add it to the release.
     "font_size_text": 40,
     "vertical_offset": 20.0,
     "line_height": 2.0,
+    "code_font": "Hack-Regular.ttf",
+    "code_font_size": 20,
+    "code_line_height": 1.2,
+    "code_background_color": "#002b36",
     "shader": true
 }
 ```
@@ -77,3 +81,5 @@ OPTIONS:
 ## License
 
 Copyright 2021 Olle Wreede, released under the MIT License.
+
+Fonts are copyrighted by their respective designers.
