@@ -9,4 +9,4 @@ cargo build --release --target $TARGET
 
 # Package Linux tar ball
 APP=rusty-slider
-tar -zcf "target/$APP-linux.tar.gz" Hack-Regular.ttf Amble-Regular.ttf background.png slides.md theme.json -C target/$TARGET/release/ $APP
+tar -zcf "target/$APP-linux.tar.gz" Hack-Regular.ttf Amble-Regular.ttf background.png slides.md theme.json rusty.json -C target/$TARGET/release/ $APP

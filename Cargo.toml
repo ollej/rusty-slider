@@ -20,6 +20,7 @@ nanoserde = "0.1.25"
 structopt = "0.3.21"
 syntect = { version = "4.5", default-features = false, features = ["default-fancy"]}
 getrandom = { version = "0.2", features = ["js"] }
+quad-url = "0.1.0"
 
 # Doesn't work with android build
 [profile.dev.package.'*']

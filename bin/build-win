@@ -8,4 +8,4 @@ cargo build --release --target $TARGET
 
 # Package windows zip
 APP=rusty-slider
-zip -jq target/$APP-win.zip target/$TARGET/release/$APP.exe Hack-Regular.ttf Amble-Regular.ttf background.png slides.md theme.json
+zip -jq target/$APP-win.zip target/$TARGET/release/$APP.exe Hack-Regular.ttf Amble-Regular.ttf background.png slides.md theme.json rusty.json

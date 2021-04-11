@@ -5,6 +5,7 @@ use colorsys::Rgb;
 use macroquad::prelude::*;
 use markdown::{Block, Span};
 use nanoserde::DeJson;
+use quad_url::get_program_parameters;
 use std::collections::HashMap;
 use std::path::PathBuf;
 use structopt::StructOpt;
@@ -482,7 +483,8 @@ fn window_conf() -> Conf {
 
 #[macroquad::main(window_conf())]
 async fn main() {
-    let opt = CliOptions::from_args();
+    let opt = CliOptions::from_iter(get_program_parameters().iter());
+
     let theme = Theme::load(opt.theme).await;
     debug!(
         "background_color: {:?} text_color: {:?} heading_color{:?}",
