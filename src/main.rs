@@ -3,7 +3,7 @@ pub mod shaders;
 
 use colorsys::Rgb;
 use macroquad::prelude::*;
-use markdown::{Block, Span};
+use markdown::{Block, ListItem, Span};
 use nanoserde::DeJson;
 use quad_url::get_program_parameters;
 use std::collections::HashMap;
@@ -152,22 +152,51 @@ impl Slides {
                         None => new_position,
                     }
                 }
-                Block::UnorderedList(_items) => 0.,
+                Block::UnorderedList(items) => self.draw_list(items, new_position),
                 _ => 0.,
             }
         }
     }
 
+    fn draw_list(&self, items: &Vec<ListItem>, position: f32) -> f32 {
+        let mut max_width: f32 = 0.;
+        let mut list: Vec<String> = vec![];
+        for item in items.iter() {
+            match item {
+                ListItem::Simple(spans) => {
+                    let text = format!("• {}", self.convert_spans(spans));
+                    let dimensions =
+                        measure_text(&text, Some(self.font), self.theme.font_size_text, 1.);
+                    max_width = max_width.max(dimensions.width);
+                    list.push(text);
+                }
+                _ => (),
+            };
+        }
+        let mut new_position = position;
+        let hpos = screen_width() / 2. - max_width / 2.;
+        for text in list {
+            new_position = self.draw_text(
+                &text,
+                self.theme.text_color(),
+                self.theme.font_size_text,
+                new_position,
+                Some(hpos),
+            );
+        }
+        new_position
+    }
+
     fn draw_header(&self, spans: &Vec<Span>, header_size: usize, position: f32) -> f32 {
         let font_size = self.theme.font_size_header - (header_size as u16 * 2);
         let text = self.convert_spans(spans);
-        self.draw_text(&text, self.theme.heading_color(), font_size, position)
+        self.draw_text(&text, self.theme.heading_color(), font_size, position, None)
     }
 
     fn draw_paragraph(&self, spans: &Vec<Span>, position: f32) -> f32 {
         let font_size = self.theme.font_size_text;
         let text = self.convert_spans(spans);
-        self.draw_text(&text, self.theme.text_color(), font_size, position)
+        self.draw_text(&text, self.theme.text_color(), font_size, position, None)
     }
 
     fn convert_spans(&self, spans: &Vec<Span>) -> String {
@@ -184,7 +213,14 @@ impl Slides {
         line
     }
 
-    fn draw_text(&self, text: &String, color: Color, font_size: u16, position: f32) -> f32 {
+    fn draw_text(
+        &self,
+        text: &String,
+        color: Color,
+        font_size: u16,
+        vposition: f32,
+        hposition: Option<f32>,
+    ) -> f32 {
         let text_params = TextParams {
             font: self.font,
             font_size: font_size,
@@ -192,8 +228,11 @@ impl Slides {
             color: color,
         };
         let dimensions = measure_text(text, Some(self.font), font_size, 1.);
-        let hpos = screen_width() / 2. - dimensions.width / 2.;
-        let vpos = position + font_size as f32 * self.theme.line_height;
+        let hpos = match hposition {
+            Some(pos) => pos,
+            None => screen_width() / 2. - dimensions.width / 2.,
+        };
+        let vpos = vposition + font_size as f32 * self.theme.line_height;
         //debug!(
         //    "font_size: {}, position: {} hpos: {} vpos: {} height: {} offest_y: {} text: {}",
         //    font_size, position, hpos, vpos, dimensions.height, dimensions.offset_y, text
