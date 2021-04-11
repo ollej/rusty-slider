@@ -160,32 +160,28 @@ impl Slides {
 
     fn draw_header(&self, spans: &Vec<Span>, header_size: usize, position: f32) -> f32 {
         let font_size = self.theme.font_size_header - (header_size as u16 * 2);
-        let mut new_position = position;
-        for span in spans.iter() {
-            match span {
-                Span::Text(text) => {
-                    new_position =
-                        self.draw_text(text, self.theme.heading_color(), font_size, new_position)
-                }
-                _ => (),
-            }
-        }
-        new_position
+        let text = self.convert_spans(spans);
+        self.draw_text(&text, self.theme.heading_color(), font_size, position)
     }
 
     fn draw_paragraph(&self, spans: &Vec<Span>, position: f32) -> f32 {
         let font_size = self.theme.font_size_text;
-        let mut new_position = position;
+        let text = self.convert_spans(spans);
+        self.draw_text(&text, self.theme.text_color(), font_size, position)
+    }
+
+    fn convert_spans(&self, spans: &Vec<Span>) -> String {
+        let mut line = "".to_string();
         for span in spans.iter() {
-            match span {
-                Span::Text(text) => {
-                    new_position =
-                        self.draw_text(text, self.theme.text_color(), font_size, new_position)
-                }
-                _ => (),
-            }
+            line = match span {
+                Span::Text(text) => format!("{} {}", line, text),
+                Span::Code(text) => format!("{} '{}'", line, text),
+                Span::Emphasis(spans) => format!("{}{}", line, self.convert_spans(spans)),
+                Span::Strong(spans) => format!("{}{}", line, self.convert_spans(spans)),
+                _ => line,
+            };
         }
-        new_position
+        line
     }
 
     fn draw_text(&self, text: &String, color: Color, font_size: u16, position: f32) -> f32 {
