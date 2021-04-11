@@ -152,7 +152,10 @@ impl Slides {
                         None => new_position,
                     }
                 }
-                Block::UnorderedList(items) => self.draw_list(items, new_position),
+                Block::UnorderedList(items) => {
+                    self.draw_list(items, new_position, Some(&self.theme.bullet))
+                }
+                Block::OrderedList(items, _) => self.draw_list(items, new_position, None),
                 _ => 0.,
             }
         }
@@ -170,13 +173,17 @@ impl Slides {
         self.draw_text(&text, self.theme.text_color(), font_size, position, None)
     }
 
-    fn draw_list(&self, items: &Vec<ListItem>, position: f32) -> f32 {
+    fn draw_list(&self, items: &Vec<ListItem>, position: f32, bullet: Option<&String>) -> f32 {
         let mut max_width: f32 = 0.;
         let mut list: Vec<String> = vec![];
-        for item in items.iter() {
+        for (index, item) in items.iter().enumerate() {
             match item {
                 ListItem::Simple(spans) => {
-                    let text = format!("{} {}", self.theme.bullet, self.convert_spans(spans));
+                    let item_bullet = match bullet {
+                        Some(b) => b.to_owned(),
+                        None => format!("{}.", index + 1),
+                    };
+                    let text = format!("{} {}", item_bullet, self.convert_spans(spans));
                     let dimensions =
                         measure_text(&text, Some(self.font), self.theme.font_size_text, 1.);
                     max_width = max_width.max(dimensions.width);

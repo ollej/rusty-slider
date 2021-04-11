@@ -9,7 +9,7 @@ Use right key or left mouse button to go to next slide.
 # Markdown
 
 * Slides are written in markdown.
-* Supports headers, paragraphs, unordered lists and code blocks.
+* Supports headers, paragraphs, lists and code blocks.
 * Text between horizontal lines will be a slide.
 
 ---
@@ -61,15 +61,21 @@ Space toggles the shader.
 
 # Usage
 
-Create a markdown file called slides.md in `assets` directory.
-
-Optionally add a theme.json in `assets` directory.
+1. Create a markdown file called slides.md in `assets` directory.
+1. Optionally add a theme.json in `assets` directory.
 
 ---
 
-# TODO
+# Possible improvements
 
 Add transitions.
 
 Support image syntax to set backround image of slide.
 
+---
+
+# License
+
+Copyright 2021 Olle Wreede
+
+Released under the MIT license.

@@ -22,8 +22,8 @@ Linux, and MacOS. Download the latest binary build from github:
 The file `slides.md` will be read and split into slides on
 horizontal lines: `---`
 
-At the moment, the only markdown supported is headers, paragraphs,
-code blocks, and unordered lists.
+At the moment, the markdown supported is headers, paragraphs,
+code blocks, and simple lists. Emphasis and strong will be ignored.
 
 Use left and right arrow keys or left and right mouse button to move
 back and forth between slides.
@@ -64,7 +64,7 @@ Use `--slides` to set path to a markdown file with slides.
 Use `--theme` to set path to a theme json file.
 
 ```
-rusty-slider 0.1.0
+rusty-slider 0.3.0
 A small tool to display markdown files as a slideshow.
 
 USAGE:
