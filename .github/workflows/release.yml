@@ -62,7 +62,7 @@ jobs:
           args: --release --locked --all-targets --target=${{ matrix.config.target }}
       - name: Zip release archive
         if: matrix.config.target == 'wasm32-unknown-unknown'
-        run: zip -j ${{ matrix.config.zip_file }} demo/* target/${{ matrix.config.target }}/release/${{ matrix.config.artifact_name }} ; zip -j ${{ matrix.config.zip_file }} assets/*
+        run: zip -j ${{ matrix.config.zip_file }} demo/*.js demo/*.json demo/*.html target/${{ matrix.config.target }}/release/${{ matrix.config.artifact_name }} ; zip -u ${{ matrix.config.zip_file }} assets/*
       - name: Zip release archive
         if: matrix.config.target == 'x86_64-unknown-linux-gnu'
         run: tar -zcf ${{ matrix.config.zip_file }} assets/ -C target/${{ matrix.config.target }}/release/ ${{ matrix.config.artifact_name }}
