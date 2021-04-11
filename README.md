@@ -69,16 +69,16 @@ rusty-slider 0.3.0
 A small tool to display markdown files as a slideshow.
 
 USAGE:
-    rusty-slider [OPTIONS]
+rusty-slider [OPTIONS]
 
 FLAGS:
-    -h, --help       Prints help information
-    -V, --version    Prints version information
+-h, --help       Prints help information
+-V, --version    Prints version information
 
 OPTIONS:
-    -a, --automatic <automatic>    Automatically switch slides every N seconds [default: 0]
-    -s, --slides <slides>          Markdown files with slides text, defaults to assets/slides.md
-    -t, --theme <theme>            File with theme options, defaults to assets/theme.json
+-a, --automatic <automatic>    Automatically switch slides every N seconds [default: 0]
+-s, --slides <slides>          Markdown files with slides text [default: assets/slides.md]
+-t, --theme <theme>            File with theme options [default: assets/theme.json]
 ```
 
 ## License

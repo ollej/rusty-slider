@@ -64,17 +64,14 @@ impl Slides {
     }
 
     async fn load(
-        slides_path: Option<PathBuf>,
+        slides_path: PathBuf,
         theme: Theme,
         automatic: u32,
         font: Font,
         code_font: Font,
         background: Option<Texture2D>,
     ) -> Self {
-        let path = match slides_path {
-            Some(p) => p.as_path().to_str().unwrap().to_owned(),
-            None => "assets/slides.md".to_string(),
-        };
+        let path = slides_path.as_path().to_str().unwrap().to_owned();
         let markdown = match load_string(&path).await {
             Ok(tokens) => tokens,
             Err(_) => {
@@ -470,11 +467,8 @@ impl Default for Theme {
 }
 
 impl Theme {
-    async fn load(theme_path: Option<PathBuf>) -> Self {
-        let path = match theme_path {
-            Some(p) => p.as_path().to_str().unwrap().to_owned(),
-            None => "assets/theme.json".to_string(),
-        };
+    async fn load(theme_path: PathBuf) -> Self {
+        let path = theme_path.as_path().to_str().unwrap().to_owned();
         debug!("Theme path: {}", path);
         match load_string(&path).await {
             Ok(json) => match DeJson::deserialize_json(&json) {
@@ -523,12 +517,12 @@ impl Theme {
     about = "A small tool to display markdown files as a slideshow."
 )]
 struct CliOptions {
-    /// Markdown files with slides text, defaults to assets/slides.md
-    #[structopt(short, long, parse(from_os_str))]
-    pub slides: Option<PathBuf>,
-    /// File with theme options, defaults to assets/theme.json
-    #[structopt(short, long, parse(from_os_str))]
-    pub theme: Option<PathBuf>,
+    /// Markdown files with slides text.
+    #[structopt(short, long, parse(from_os_str), default_value = "assets/slides.md")]
+    pub slides: PathBuf,
+    /// File with theme options.
+    #[structopt(short, long, parse(from_os_str), default_value = "assets/theme.json")]
+    pub theme: PathBuf,
     /// Automatically switch slides every N seconds.
     #[structopt(short, long, default_value = "0")]
     pub automatic: u32,
