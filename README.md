@@ -13,7 +13,7 @@ Try out [Rusty Slider online](https://ollej.github.io/rusty-slider/demo/).
 ## Download
 
 Rusty Slider is available for multiple platforms, such as Windows, 
-Linuxi, and MacOS. Download the latest binary build from github:
+Linux, and MacOS. Download the latest binary build from github:
 
 [https://github.com/ollej/rusty-slider/releases/](https://github.com/ollej/rusty-slider/releases/)
 
@@ -22,15 +22,15 @@ Linuxi, and MacOS. Download the latest binary build from github:
 The file `slides.md` will be read and split into slides on
 horizontal lines: `---`
 
-At the moment, the only markdown supported is headers, paragraphs and
-code blocks.
+At the moment, the only markdown supported is headers, paragraphs,
+code blocks, and unordered lists.
 
 Use left and right arrow keys or left and right mouse button to move
 back and forth between slides.
 
 ## Theme
 
-Create a file called `theme.json` to modify default display values.
+Create a file called `assets/theme.json` to modify default display values.
 
 If you make your own theme file, and want to share it, I'd be happy
 to add it to the release.
@@ -75,8 +75,8 @@ FLAGS:
     -V, --version    Prints version information
 
 OPTIONS:
-    -s, --slides <slides>    Markdown files with slides text, defaults to slides.md
-    -t, --theme <theme>      File with theme options, defaults to theme.json
+    -s, --slides <slides>    Markdown files with slides text, defaults to assets/slides.md
+    -t, --theme <theme>      File with theme options, defaults to assets/theme.json
 ```
 
 ## License

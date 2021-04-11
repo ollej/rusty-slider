@@ -503,10 +503,10 @@ impl Theme {
     about = "A small tool to display markdown files as a slideshow."
 )]
 struct CliOptions {
-    /// Markdown files with slides text, defaults to slides.md
+    /// Markdown files with slides text, defaults to assets/slides.md
     #[structopt(short, long, parse(from_os_str))]
     pub slides: Option<PathBuf>,
-    /// File with theme options, defaults to theme.json
+    /// File with theme options, defaults to assets/theme.json
     #[structopt(short, long, parse(from_os_str))]
     pub theme: Option<PathBuf>,
 }
