@@ -62,13 +62,13 @@ jobs:
           args: --release --locked --all-targets --target=${{ matrix.config.target }}
       - name: Zip release archive
         if: matrix.config.target == 'wasm32-unknown-unknown'
-        run: zip -j ${{ matrix.config.zip_file }} Hack-Regular.ttf Amble-Regular.ttf background.png slides.md theme.json rusty.json demo/index.html demo/gl.js demo/manifest.json target/${{ matrix.config.target }}/release/${{ matrix.config.artifact_name }}
+        run: zip -j ${{ matrix.config.zip_file }} demo/* target/${{ matrix.config.target }}/release/${{ matrix.config.artifact_name }} ; zip -j ${{ matrix.config.zip_file }} assets/*
       - name: Zip release archive
         if: matrix.config.target == 'x86_64-unknown-linux-gnu'
-        run: tar -zcf ${{ matrix.config.zip_file }} Hack-Regular.ttf Amble-Regular.ttf background.png slides.md theme.json rusty.json -C target/${{ matrix.config.target }}/release/ ${{ matrix.config.artifact_name }}
+        run: tar -zcf ${{ matrix.config.zip_file }} assets/ -C target/${{ matrix.config.target }}/release/ ${{ matrix.config.artifact_name }}
       - name: Zip release archive
         if: runner.os == 'Windows' || runner.os == 'macOS'
-        run: 7z a -tzip ${{ matrix.config.zip_file }} Hack-Regular.ttf Amble-Regular.ttf background.png slides.md theme.json rusty.json ./target/${{ matrix.config.target }}/release/${{ matrix.config.artifact_name }}
+        run: 7z a -tzip ${{ matrix.config.zip_file }} assets/* ./target/${{ matrix.config.target }}/release/${{ matrix.config.artifact_name }}
       - name: Upload binaries to release
         uses: svenstaro/upload-release-action@v2
         with:

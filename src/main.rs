@@ -67,7 +67,7 @@ impl Slides {
     ) -> Self {
         let path = match slides_path {
             Some(p) => p.as_path().to_str().unwrap().to_owned(),
-            None => "slides.md".to_string(),
+            None => "assets/slides.md".to_string(),
         };
         let markdown = match load_string(&path).await {
             Ok(tokens) => tokens,
@@ -398,12 +398,12 @@ impl Default for Theme {
             background_color: "#301934".to_string(),
             heading_color: "#b19cd9".to_string(),
             text_color: "#ffffff".to_string(),
-            font: "Amble-Regular.ttf".to_string(),
+            font: "assets/Amble-Regular.ttf".to_string(),
             font_size_header: 80,
             font_size_text: 40,
             vertical_offset: 20.0,
             line_height: 2.0,
-            code_font: "Hack-Regular.ttf".to_string(),
+            code_font: "assets/Hack-Regular.ttf".to_string(),
             code_font_size: 20,
             code_line_height: 1.2,
             code_background_color: "#002b36".to_string(),
@@ -416,8 +416,9 @@ impl Theme {
     async fn load(theme_path: Option<PathBuf>) -> Self {
         let path = match theme_path {
             Some(p) => p.as_path().to_str().unwrap().to_owned(),
-            None => "theme.json".to_string(),
+            None => "assets/theme.json".to_string(),
         };
+        debug!("Theme path: {}", path);
         match load_string(&path).await {
             Ok(json) => match DeJson::deserialize_json(&json) {
                 Ok(theme) => theme,

@@ -1,0 +1,16 @@
+{
+    "background_image": "assets/background.png",
+    "background_color": "#301934",
+    "heading_color": "#b19cd9",
+    "text_color": "#ffffff",
+    "font": "assets/Amble-Regular.ttf",
+    "font_size_header": 80,
+    "font_size_text": 40,
+    "vertical_offset": 20.0,
+    "line_height": 2.0,
+    "code_font": "assets/Hack-Regular.ttf",
+    "code_font_size": 20,
+    "code_line_height": 1.2,
+    "code_background_color": "#002b36",
+    "shader": true
+}
