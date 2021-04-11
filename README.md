@@ -28,6 +28,8 @@ code blocks, and simple lists. Emphasis and strong will be ignored.
 Use left and right arrow keys or left and right mouse button to move
 back and forth between slides.
 
+Use flag `automatic` to automatically switch slide every N seconds.
+
 ## Theme
 
 Create a file called `assets/theme.json` to modify default display values.
@@ -59,9 +61,8 @@ to add it to the release.
 
 ## Command line options
 
-Use `--slides` to set path to a markdown file with slides.
-
-Use `--theme` to set path to a theme json file.
+The command line options can also be used as URL arguments to the
+web demo.
 
 ```
 rusty-slider 0.3.0
@@ -75,8 +76,9 @@ FLAGS:
     -V, --version    Prints version information
 
 OPTIONS:
-    -s, --slides <slides>    Markdown files with slides text, defaults to assets/slides.md
-    -t, --theme <theme>      File with theme options, defaults to assets/theme.json
+    -a, --automatic <automatic>    Automatically switch slides every N seconds [default: 0]
+    -s, --slides <slides>          Markdown files with slides text, defaults to assets/slides.md
+    -t, --theme <theme>            File with theme options, defaults to assets/theme.json
 ```
 
 ## License

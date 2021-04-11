@@ -28,6 +28,8 @@ impl Slide {
 struct Slides {
     slides: Vec<Slide>,
     active_slide: usize,
+    time: f32,
+    automatic: f32,
     theme: Theme,
     font: Font,
     background: Option<Texture2D>,
@@ -38,6 +40,7 @@ impl Slides {
     fn from_slides(
         slides: Vec<Slide>,
         theme: Theme,
+        automatic: f32,
         font: Font,
         code_font: Font,
         background: Option<Texture2D>,
@@ -51,6 +54,8 @@ impl Slides {
         Slides {
             slides,
             active_slide: 0,
+            automatic,
+            time: 0.,
             theme,
             font,
             background,
@@ -61,6 +66,7 @@ impl Slides {
     async fn load(
         slides_path: Option<PathBuf>,
         theme: Theme,
+        automatic: u32,
         font: Font,
         code_font: Font,
         background: Option<Texture2D>,
@@ -78,7 +84,7 @@ impl Slides {
         };
         let tokens = markdown::tokenize(&markdown);
         let slides = Self::build_slides(tokens);
-        Self::from_slides(slides, theme, font, code_font, background)
+        Self::from_slides(slides, theme, automatic as f32, font, code_font, background)
     }
 
     fn build_slides(tokens: Vec<Block>) -> Vec<Slide> {
@@ -102,17 +108,24 @@ impl Slides {
 
     fn next(&mut self) {
         if self.active_slide < (self.slides.len() - 1) {
+            self.time = 0.;
             self.active_slide += 1;
         }
     }
 
     fn prev(&mut self) {
         if self.active_slide > 0 {
+            self.time = 0.;
             self.active_slide -= 1;
         }
     }
 
-    fn draw(&mut self) {
+    fn draw(&mut self, delta: f32) {
+        if self.automatic > 0. && self.time > self.automatic {
+            self.next();
+        } else {
+            self.time += delta;
+        }
         clear_background(self.theme.background_color());
         self.draw_background(self.background);
         self.draw_slide(self.theme.vertical_offset);
@@ -516,6 +529,9 @@ struct CliOptions {
     /// File with theme options, defaults to assets/theme.json
     #[structopt(short, long, parse(from_os_str))]
     pub theme: Option<PathBuf>,
+    /// Automatically switch slides every N seconds.
+    #[structopt(short, long, default_value = "0")]
+    pub automatic: u32,
 }
 
 fn window_conf() -> Conf {
@@ -545,7 +561,15 @@ async fn main() {
         None => None,
     };
     let mut shader_activated = theme.shader;
-    let mut slides = Slides::load(opt.slides, theme, text_font, code_font, background).await;
+    let mut slides = Slides::load(
+        opt.slides,
+        theme,
+        opt.automatic,
+        text_font,
+        code_font,
+        background,
+    )
+    .await;
 
     let render_target = render_target(screen_width() as u32, screen_height() as u32);
     set_texture_filter(render_target.texture, FilterMode::Linear);
@@ -584,7 +608,7 @@ async fn main() {
                 ..Default::default()
             });
 
-            slides.draw();
+            slides.draw(get_frame_time());
 
             set_default_camera();
 
@@ -604,7 +628,7 @@ async fn main() {
             gl_use_default_material();
         } else {
             set_default_camera();
-            slides.draw();
+            slides.draw(get_frame_time());
         }
 
         next_frame().await
