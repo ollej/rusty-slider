@@ -52,6 +52,7 @@ to add it to the release.
     "code_font_size": 20,
     "code_line_height": 1.2,
     "code_background_color": "#002b36",
+    "bullet": "•",
     "shader": true
 }
 ```

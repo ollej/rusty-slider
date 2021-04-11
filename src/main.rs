@@ -158,13 +158,25 @@ impl Slides {
         }
     }
 
+    fn draw_header(&self, spans: &Vec<Span>, header_size: usize, position: f32) -> f32 {
+        let font_size = self.theme.font_size_header - (header_size as u16 * 2);
+        let text = self.convert_spans(spans);
+        self.draw_text(&text, self.theme.heading_color(), font_size, position, None)
+    }
+
+    fn draw_paragraph(&self, spans: &Vec<Span>, position: f32) -> f32 {
+        let font_size = self.theme.font_size_text;
+        let text = self.convert_spans(spans);
+        self.draw_text(&text, self.theme.text_color(), font_size, position, None)
+    }
+
     fn draw_list(&self, items: &Vec<ListItem>, position: f32) -> f32 {
         let mut max_width: f32 = 0.;
         let mut list: Vec<String> = vec![];
         for item in items.iter() {
             match item {
                 ListItem::Simple(spans) => {
-                    let text = format!("• {}", self.convert_spans(spans));
+                    let text = format!("{} {}", self.theme.bullet, self.convert_spans(spans));
                     let dimensions =
                         measure_text(&text, Some(self.font), self.theme.font_size_text, 1.);
                     max_width = max_width.max(dimensions.width);
@@ -185,32 +197,6 @@ impl Slides {
             );
         }
         new_position
-    }
-
-    fn draw_header(&self, spans: &Vec<Span>, header_size: usize, position: f32) -> f32 {
-        let font_size = self.theme.font_size_header - (header_size as u16 * 2);
-        let text = self.convert_spans(spans);
-        self.draw_text(&text, self.theme.heading_color(), font_size, position, None)
-    }
-
-    fn draw_paragraph(&self, spans: &Vec<Span>, position: f32) -> f32 {
-        let font_size = self.theme.font_size_text;
-        let text = self.convert_spans(spans);
-        self.draw_text(&text, self.theme.text_color(), font_size, position, None)
-    }
-
-    fn convert_spans(&self, spans: &Vec<Span>) -> String {
-        let mut line = "".to_string();
-        for span in spans.iter() {
-            line = match span {
-                Span::Text(text) => format!("{} {}", line, text),
-                Span::Code(text) => format!("{} '{}'", line, text),
-                Span::Emphasis(spans) => format!("{}{}", line, self.convert_spans(spans)),
-                Span::Strong(spans) => format!("{}{}", line, self.convert_spans(spans)),
-                _ => line,
-            };
-        }
-        line
     }
 
     fn draw_text(
@@ -239,6 +225,20 @@ impl Slides {
         //);
         draw_text_ex(text, hpos, vpos, text_params);
         vpos
+    }
+
+    fn convert_spans(&self, spans: &Vec<Span>) -> String {
+        let mut line = "".to_string();
+        for span in spans.iter() {
+            line = match span {
+                Span::Text(text) => format!("{} {}", line, text),
+                Span::Code(text) => format!("{} '{}'", line, text),
+                Span::Emphasis(spans) => format!("{}{}", line, self.convert_spans(spans)),
+                Span::Strong(spans) => format!("{}{}", line, self.convert_spans(spans)),
+                _ => line,
+            };
+        }
+        line
     }
 }
 
@@ -423,6 +423,7 @@ pub struct Theme {
     pub code_font_size: u16,
     pub code_line_height: f32,
     pub code_background_color: String,
+    pub bullet: String,
     pub shader: bool,
 }
 
@@ -442,6 +443,7 @@ impl Default for Theme {
             code_font_size: 20,
             code_line_height: 1.2,
             code_background_color: "#002b36".to_string(),
+            bullet: ".".to_string(),
             shader: true,
         }
     }
