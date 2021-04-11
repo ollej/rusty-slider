@@ -8,15 +8,17 @@ Use right key or left mouse button to go to next slide.
 
 # Markdown
 
-Only supports headers and paragraphs for simplicity.
-
-Text between horizontal lines will be a slide.
+* Slides are written in markdown.
+* Supports headers, paragraphs, unordered lists and code blocks.
+* Text between horizontal lines will be a slide.
 
 ---
 
 # Theme
 
-Colors and font can be configured in a json file.
+Colors and fonts can be configured in a json file.
+
+A background image can also be defined in the theme file.
 
 ---
 
@@ -59,9 +61,9 @@ Space toggles the shader.
 
 # Usage
 
-Create a markdown file called slides.md in current dir.
+Create a markdown file called slides.md in `assets` directory.
 
-Optionally add a theme.json in current dir.
+Optionally add a theme.json in `assets` directory.
 
 ---
 
