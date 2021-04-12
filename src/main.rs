@@ -15,6 +15,14 @@ use syntect::highlighting::ThemeSet;
 use syntect::parsing::SyntaxSet;
 use syntect::util::LinesWithEndings;
 
+fn horizontal_position(width: f32, horizontal_offset: f32, align: &String) -> f32 {
+    match align.as_str() {
+        "left" => horizontal_offset,
+        "right" => screen_width() - horizontal_offset - width,
+        _ => screen_width() / 2. - width / 2.,
+    }
+}
+
 struct Slide {
     content: Vec<Block>,
 }
@@ -161,7 +169,9 @@ impl Slides {
                         new_position,
                         self.active_slide,
                     ) {
-                        Some(code_block) => code_block.draw(),
+                        Some(code_block) => {
+                            code_block.draw(self.theme.horizontal_offset, &self.theme.align)
+                        }
                         None => new_position,
                     }
                 }
@@ -186,10 +196,9 @@ impl Slides {
     }
 
     fn draw_header(&self, spans: &Vec<Span>, header_size: usize, position: f32) -> f32 {
-        let text = self.convert_spans(spans);
         let font_size = self.theme.font_size_header_slides - ((header_size as u16 - 1) * 5);
         return self.draw_text(
-            &text,
+            &self.convert_spans(spans),
             self.theme.heading_color(),
             font_size,
             self.theme.line_height,
@@ -199,12 +208,10 @@ impl Slides {
     }
 
     fn draw_paragraph(&self, spans: &Vec<Span>, position: f32) -> f32 {
-        let font_size = self.theme.font_size_text;
-        let text = self.convert_spans(spans);
         self.draw_text(
-            &text,
+            &self.convert_spans(spans),
             self.theme.text_color(),
-            font_size,
+            self.theme.font_size_text,
             self.theme.line_height,
             position,
             None,
@@ -221,7 +228,7 @@ impl Slides {
                         Some(b) => b.to_owned(),
                         None => format!("{}.", index + 1),
                     };
-                    let text = format!("{} {}", item_bullet, self.convert_spans(spans));
+                    let text = format!("{}{}", item_bullet, self.convert_spans(spans));
                     let dimensions =
                         measure_text(&text, Some(self.font), self.theme.font_size_text, 1.);
                     max_width = max_width.max(dimensions.width);
@@ -231,7 +238,7 @@ impl Slides {
             };
         }
         let mut new_position = position;
-        let hpos = screen_width() / 2. - max_width / 2.;
+        let hpos = self.horizontal_position(max_width);
         for text in list {
             new_position = self.draw_text(
                 &text,
@@ -263,7 +270,7 @@ impl Slides {
         let dimensions = measure_text(text, Some(self.font), font_size, 1.);
         let hpos = match hposition {
             Some(pos) => pos,
-            None => screen_width() / 2. - dimensions.width / 2.,
+            None => self.horizontal_position(dimensions.width),
         };
         let vpos = vposition + font_size as f32 * line_height;
         //debug!(
@@ -272,6 +279,10 @@ impl Slides {
         //);
         draw_text_ex(text, hpos, vpos, text_params);
         vpos
+    }
+
+    fn horizontal_position(&self, width: f32) -> f32 {
+        horizontal_position(width, self.theme.horizontal_offset, &self.theme.align)
     }
 
     fn convert_spans(&self, spans: &Vec<Span>) -> String {
@@ -413,15 +424,15 @@ struct CodeBlock {
 }
 
 impl CodeBlock {
-    fn draw(&self) -> f32 {
-        let mut hpos = screen_width() / 2. - self.code_box.width_with_padding() / 2.;
+    fn draw(&self, horizontal_offset: f32, align: &String) -> f32 {
+        let mut hpos = self.horizontal_position(horizontal_offset, align);
         let mut vpos = self.start_position + CodeBox::BOX_MARGIN * 2.;
         let bottom_position = self.start_position + self.code_box.height_with_margin();
         draw_rectangle(
             hpos,
             vpos,
-            self.code_box.width_with_padding(),
-            self.code_box.height_with_padding(),
+            self.width(),
+            self.height(),
             self.background_color,
         );
         hpos += CodeBox::BOX_PADDING;
@@ -436,6 +447,18 @@ impl CodeBlock {
             draw_text_ex(&text, hpos + x, vpos + y, text_params);
         }
         bottom_position
+    }
+
+    fn horizontal_position(&self, horizontal_offset: f32, align: &String) -> f32 {
+        horizontal_position(self.width(), horizontal_offset, align)
+    }
+
+    fn width(&self) -> f32 {
+        self.code_box.width_with_padding()
+    }
+
+    fn height(&self) -> f32 {
+        self.code_box.height_with_padding()
     }
 }
 
@@ -469,11 +492,13 @@ pub struct Theme {
     pub background_color: String,
     pub heading_color: String,
     pub text_color: String,
+    pub align: String,
     pub font: String,
     pub font_size_header_title: u16,
     pub font_size_header_slides: u16,
     pub font_size_text: u16,
     pub vertical_offset: f32,
+    pub horizontal_offset: f32,
     pub line_height: f32,
     pub code_font: String,
     pub code_font_size: u16,
@@ -492,11 +517,13 @@ impl Default for Theme {
             background_color: "#301934".to_string(),
             heading_color: "#b19cd9".to_string(),
             text_color: "#ffffff".to_string(),
+            align: "center".to_string(),
             font: "assets/Amble-Regular.ttf".to_string(),
             font_size_header_title: 100,
             font_size_header_slides: 80,
             font_size_text: 40,
             vertical_offset: 20.0,
+            horizontal_offset: 20.0,
             line_height: 2.0,
             code_font: "assets/Hack-Regular.ttf".to_string(),
             code_font_size: 20,
@@ -504,7 +531,7 @@ impl Default for Theme {
             code_background_color: "#002b36".to_string(),
             code_theme: "Solarized (dark)".to_string(),
             code_tab_width: 4,
-            bullet: ".".to_string(),
+            bullet: "• ".to_string(),
             shader: true,
         }
     }

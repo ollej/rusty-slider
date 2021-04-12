@@ -52,11 +52,13 @@ to add it to the release.
     "background_color": "#753204",
     "heading_color": "#8f4d22",
     "text_color": "#cccccc",
+    "align": "right",
     "font": "assets/Amble-Regular.ttf",
     "font_size_header_title": 100,
     "font_size_header_slides": 80,
     "font_size_text": 40,
     "vertical_offset": 20.0,
+    "horizontal_offset": 100.0,
     "line_height": 2.0,
     "code_font": "assets/Hack-Regular.ttf",
     "code_font_size": 20,
@@ -64,7 +66,7 @@ to add it to the release.
     "code_background_color": "#002b36",
     "code_theme": "Solarized (dark)",
     "code_tab_width": 2,
-    "bullet": "•",
+    "bullet": "• ",
     "shader": true
 }
 ```
