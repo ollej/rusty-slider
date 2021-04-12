@@ -60,6 +60,8 @@ impl Slides {
             theme.code_background_color().to_owned(),
             theme.code_theme.to_owned(),
             theme.code_tab_width,
+            theme.horizontal_offset,
+            theme.align.to_owned(),
         );
         Slides {
             slides,
@@ -169,9 +171,7 @@ impl Slides {
                         new_position,
                         self.active_slide,
                     ) {
-                        Some(code_block) => {
-                            code_block.draw(self.theme.horizontal_offset, &self.theme.align)
-                        }
+                        Some(code_block) => code_block.draw(),
                         None => new_position,
                     }
                 }
@@ -309,6 +309,8 @@ struct CodeBlocks {
     background_color: Color,
     tab_spaces: String,
     theme: String,
+    horizontal_offset: f32,
+    align: String,
     blocks: HashMap<String, CodeBlock>,
 }
 
@@ -320,6 +322,8 @@ impl CodeBlocks {
         background_color: Color,
         theme: String,
         tab_width: u8,
+        horizontal_offset: f32,
+        align: String,
     ) -> Self {
         Self {
             ts: ThemeSet::load_defaults(),
@@ -331,6 +335,8 @@ impl CodeBlocks {
             background_color,
             tab_spaces: " ".repeat(tab_width as usize),
             theme,
+            horizontal_offset,
+            align,
         }
     }
 
@@ -363,6 +369,8 @@ impl CodeBlocks {
             font_size: self.font_size,
             line_height: self.line_height,
             background_color: self.background_color,
+            horizontal_offset: self.horizontal_offset,
+            align: self.align.to_owned(),
         }
     }
 
@@ -421,11 +429,13 @@ struct CodeBlock {
     font_size: u16,
     line_height: f32,
     background_color: Color,
+    horizontal_offset: f32,
+    align: String,
 }
 
 impl CodeBlock {
-    fn draw(&self, horizontal_offset: f32, align: &String) -> f32 {
-        let mut hpos = self.horizontal_position(horizontal_offset, align);
+    fn draw(&self) -> f32 {
+        let mut hpos = self.horizontal_position();
         let mut vpos = self.start_position + CodeBox::BOX_MARGIN * 2.;
         let bottom_position = self.start_position + self.code_box.height_with_margin();
         draw_rectangle(
@@ -449,8 +459,8 @@ impl CodeBlock {
         bottom_position
     }
 
-    fn horizontal_position(&self, horizontal_offset: f32, align: &String) -> f32 {
-        horizontal_position(self.width(), horizontal_offset, align)
+    fn horizontal_position(&self) -> f32 {
+        horizontal_position(self.width(), self.horizontal_offset, &self.align)
     }
 
     fn width(&self) -> f32 {
