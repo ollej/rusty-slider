@@ -149,7 +149,8 @@ impl Slides {
         let mut new_position = start_position;
         for block in slide.content.iter() {
             new_position = match block {
-                Block::Header(spans, size) => self.draw_header(spans, size - 1, new_position),
+                Block::Header(spans, 1) => self.draw_title(spans),
+                Block::Header(spans, size) => self.draw_header(spans, *size, new_position),
                 Block::Paragraph(spans) => self.draw_paragraph(spans, new_position),
                 Block::CodeBlock(language, code) => {
                     match self.code_blocks.get_code_block(
@@ -171,16 +172,41 @@ impl Slides {
         }
     }
 
+    fn draw_title(&self, spans: &Vec<Span>) -> f32 {
+        return self.draw_text(
+            &self.convert_spans(spans),
+            self.theme.heading_color(),
+            self.theme.font_size_header_title,
+            0.,
+            screen_height() / 2.,
+            None,
+        );
+    }
+
     fn draw_header(&self, spans: &Vec<Span>, header_size: usize, position: f32) -> f32 {
-        let font_size = self.theme.font_size_header - (header_size as u16 * 2);
         let text = self.convert_spans(spans);
-        self.draw_text(&text, self.theme.heading_color(), font_size, position, None)
+        let font_size = self.theme.font_size_header_slides - ((header_size as u16 - 1) * 5);
+        return self.draw_text(
+            &text,
+            self.theme.heading_color(),
+            font_size,
+            self.theme.line_height,
+            position,
+            None,
+        );
     }
 
     fn draw_paragraph(&self, spans: &Vec<Span>, position: f32) -> f32 {
         let font_size = self.theme.font_size_text;
         let text = self.convert_spans(spans);
-        self.draw_text(&text, self.theme.text_color(), font_size, position, None)
+        self.draw_text(
+            &text,
+            self.theme.text_color(),
+            font_size,
+            self.theme.line_height,
+            position,
+            None,
+        )
     }
 
     fn draw_list(&self, items: &Vec<ListItem>, position: f32, bullet: Option<&String>) -> f32 {
@@ -209,6 +235,7 @@ impl Slides {
                 &text,
                 self.theme.text_color(),
                 self.theme.font_size_text,
+                self.theme.line_height,
                 new_position,
                 Some(hpos),
             );
@@ -221,6 +248,7 @@ impl Slides {
         text: &String,
         color: Color,
         font_size: u16,
+        line_height: f32,
         vposition: f32,
         hposition: Option<f32>,
     ) -> f32 {
@@ -235,7 +263,7 @@ impl Slides {
             Some(pos) => pos,
             None => screen_width() / 2. - dimensions.width / 2.,
         };
-        let vpos = vposition + font_size as f32 * self.theme.line_height;
+        let vpos = vposition + font_size as f32 * line_height;
         //debug!(
         //    "font_size: {}, position: {} hpos: {} vpos: {} height: {} offest_y: {} text: {}",
         //    font_size, position, hpos, vpos, dimensions.height, dimensions.offset_y, text
@@ -432,7 +460,8 @@ pub struct Theme {
     pub heading_color: String,
     pub text_color: String,
     pub font: String,
-    pub font_size_header: u16,
+    pub font_size_header_title: u16,
+    pub font_size_header_slides: u16,
     pub font_size_text: u16,
     pub vertical_offset: f32,
     pub line_height: f32,
@@ -452,7 +481,8 @@ impl Default for Theme {
             heading_color: "#b19cd9".to_string(),
             text_color: "#ffffff".to_string(),
             font: "assets/Amble-Regular.ttf".to_string(),
-            font_size_header: 80,
+            font_size_header_title: 100,
+            font_size_header_slides: 80,
             font_size_text: 40,
             vertical_offset: 20.0,
             line_height: 2.0,

@@ -25,6 +25,10 @@ horizontal lines: `---`
 At the moment, the markdown supported is headers, paragraphs,
 code blocks, and simple lists. Emphasis and strong will be ignored.
 
+Heading level 1 can be used as title page, as it will render in the
+middle of the slide and can have a larger font size set by the theme
+option `font_size_header_title`.
+
 Use left and right arrow keys or left and right mouse button to move
 back and forth between slides.
 
@@ -46,7 +50,8 @@ to add it to the release.
     "heading_color": "#8f4d22",
     "text_color": "#cccccc",
     "font": "assets/Amble-Regular.ttf",
-    "font_size_header": 80,
+    "font_size_header_title": 100,
+    "font_size_header_slides": 80,
     "font_size_text": 40,
     "vertical_offset": 20.0,
     "line_height": 2.0,
