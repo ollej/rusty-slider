@@ -14,6 +14,7 @@
     "code_line_height": 1.2,
     "code_background_color": "#e0e0e0",
     "code_theme": "base16-ocean.light",
+    "code_tab_width": 4,
     "bullet": "»",
     "shader": false
 }

@@ -51,6 +51,7 @@ impl Slides {
             theme.code_line_height.to_owned(),
             theme.code_background_color().to_owned(),
             theme.code_theme.to_owned(),
+            theme.code_tab_width,
         );
         Slides {
             slides,
@@ -295,19 +296,19 @@ struct CodeBlocks {
     font_size: u16,
     line_height: f32,
     background_color: Color,
+    tab_spaces: String,
     theme: String,
     blocks: HashMap<String, CodeBlock>,
 }
 
 impl CodeBlocks {
-    const TAB_SPACES: &'static str = "    ";
-
     fn new(
         font: Font,
         font_size: u16,
         line_height: f32,
         background_color: Color,
         theme: String,
+        tab_width: u8,
     ) -> Self {
         Self {
             ts: ThemeSet::load_defaults(),
@@ -317,6 +318,7 @@ impl CodeBlocks {
             font_size,
             line_height,
             background_color,
+            tab_spaces: " ".repeat(tab_width as usize),
             theme,
         }
     }
@@ -373,7 +375,7 @@ impl CodeBlocks {
             let mut line_width: f32 = 0.;
             code_height += line_height;
             for (style, text) in tokens {
-                let text = text.trim_end_matches('\n').replace('\t', Self::TAB_SPACES);
+                let text = text.trim_end_matches('\n').replace('\t', &self.tab_spaces);
                 if text.is_empty() {
                     continue;
                 }
@@ -478,6 +480,7 @@ pub struct Theme {
     pub code_line_height: f32,
     pub code_background_color: String,
     pub code_theme: String,
+    pub code_tab_width: u8,
     pub bullet: String,
     pub shader: bool,
 }
@@ -500,6 +503,7 @@ impl Default for Theme {
             code_line_height: 1.2,
             code_background_color: "#002b36".to_string(),
             code_theme: "Solarized (dark)".to_string(),
+            code_tab_width: 4,
             bullet: ".".to_string(),
             shader: true,
         }

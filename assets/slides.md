@@ -44,9 +44,9 @@ Code blocks will be rendered with syntax highlighting.
 
 ```rust
 let shader_material = load_material(
-    shaders::crt::VERTEX,
-    shaders::crt::FRAGMENT,
-    Default::default(),
+	shaders::crt::VERTEX,
+	shaders::crt::FRAGMENT,
+	Default::default(),
 )
 .unwrap();
 ```
