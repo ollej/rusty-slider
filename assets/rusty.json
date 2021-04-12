@@ -1,7 +1,7 @@
 {
     "background_image": "assets/background.png",
     "background_color": "#753204",
-    "heading_color": "#8f4d22",
+    "heading_color": "#e37831",
     "text_color": "#cccccc",
     "font": "assets/Amble-Regular.ttf",
     "font_size_header_title": 100,
@@ -12,7 +12,8 @@
     "code_font": "assets/Hack-Regular.ttf",
     "code_font_size": 20,
     "code_line_height": 1.2,
-    "code_background_color": "#002b36",
+    "code_background_color": "#e0e0e0",
+    "code_theme": "base16-ocean.light",
     "bullet": "»",
-    "shader": true
+    "shader": false
 }

@@ -50,6 +50,7 @@ impl Slides {
             theme.code_font_size.to_owned(),
             theme.code_line_height.to_owned(),
             theme.code_background_color().to_owned(),
+            theme.code_theme.to_owned(),
         );
         Slides {
             slides,
@@ -294,22 +295,29 @@ struct CodeBlocks {
     font_size: u16,
     line_height: f32,
     background_color: Color,
+    theme: String,
     blocks: HashMap<String, CodeBlock>,
 }
 
 impl CodeBlocks {
-    const SYNTAX_THEME: &'static str = "Solarized (dark)";
     const TAB_SPACES: &'static str = "    ";
 
-    fn new(font: Font, font_size: u16, line_height: f32, background_color: Color) -> Self {
+    fn new(
+        font: Font,
+        font_size: u16,
+        line_height: f32,
+        background_color: Color,
+        theme: String,
+    ) -> Self {
         Self {
-            ps: SyntaxSet::load_defaults_newlines(),
             ts: ThemeSet::load_defaults(),
+            ps: SyntaxSet::load_defaults_newlines(),
             blocks: HashMap::new(),
             font,
             font_size,
             line_height,
             background_color,
+            theme,
         }
     }
 
@@ -351,7 +359,7 @@ impl CodeBlocks {
             None => self.ps.find_syntax_by_first_line(&code),
         }
         .unwrap_or_else(|| self.ps.find_syntax_plain_text());
-        let theme = &self.ts.themes[Self::SYNTAX_THEME];
+        let theme = &self.ts.themes[&self.theme];
         let mut h = HighlightLines::new(syntax, &theme);
         let lines = LinesWithEndings::from(&code)
             .map(|line| h.highlight(line, &self.ps))
@@ -469,6 +477,7 @@ pub struct Theme {
     pub code_font_size: u16,
     pub code_line_height: f32,
     pub code_background_color: String,
+    pub code_theme: String,
     pub bullet: String,
     pub shader: bool,
 }
@@ -490,6 +499,7 @@ impl Default for Theme {
             code_font_size: 20,
             code_line_height: 1.2,
             code_background_color: "#002b36".to_string(),
+            code_theme: "Solarized (dark)".to_string(),
             bullet: ".".to_string(),
             shader: true,
         }
