@@ -649,10 +649,16 @@ async fn main() {
         if is_key_pressed(KeyCode::Escape) {
             return;
         }
-        if is_key_pressed(KeyCode::Left) || is_mouse_button_pressed(MouseButton::Right) {
+        if is_key_pressed(KeyCode::Left)
+            || is_key_pressed(KeyCode::H)
+            || is_mouse_button_pressed(MouseButton::Right)
+        {
             slides.prev();
         }
-        if is_key_pressed(KeyCode::Right) || is_mouse_button_pressed(MouseButton::Left) {
+        if is_key_pressed(KeyCode::Right)
+            || is_key_pressed(KeyCode::L)
+            || is_mouse_button_pressed(MouseButton::Left)
+        {
             slides.next();
         }
         if is_key_pressed(KeyCode::Space) {
