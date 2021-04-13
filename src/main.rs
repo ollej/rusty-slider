@@ -206,7 +206,7 @@ impl Slides {
 
     fn draw_blockquote(&self, blocks: &Vec<Block>, vpos: f32) -> f32 {
         let text_box = TextBox::new(
-            self.blocks_to_text_boxes(blocks),
+            self.blocks_to_text_lines(blocks),
             self.theme.font_size_text as f32,
             self.theme.blockquote_background_color(),
         );
@@ -224,38 +224,53 @@ impl Slides {
         bottom_position
     }
 
-    fn draw_quotes(&self, left_pos: Vec2, right_pos: Vec2) {
-        let qsize = self.theme.font_size_header_title * 2;
-        let text_params = TextParams {
-            font: self.font,
-            font_size: qsize,
-            font_scale: 1.,
-            color: self.theme.text_color(),
-        };
-        let dimensions = measure_text("“", Some(self.font), qsize, 1.);
-        draw_text_ex(
-            "“",
-            left_pos.x - dimensions.width,
-            left_pos.y + qsize as f32,
-            text_params,
-        );
-        draw_text_ex("„", right_pos.x, right_pos.y, text_params);
-    }
-
-    fn blocks_to_text_boxes(&self, blocks: &Vec<Block>) -> Vec<TextLine> {
-        let mut boxes = vec![];
+    fn blocks_to_text_lines(&self, blocks: &Vec<Block>) -> Vec<TextLine> {
+        let mut text_lines = vec![];
         for block in blocks.iter() {
             match block {
+                Block::Header(spans, 1) => {
+                    text_lines.push(TextLine::new(self.spans_to_text_partials(
+                        spans,
+                        self.font,
+                        self.theme.font_size_header_title,
+                        self.theme.heading_color(),
+                    )));
+                }
+                Block::Header(spans, _size) => {
+                    text_lines.push(TextLine::new(self.spans_to_text_partials(
+                        spans,
+                        self.font,
+                        self.theme.font_size_header_slides,
+                        self.theme.heading_color(),
+                    )));
+                }
                 Block::Paragraph(spans) => {
-                    boxes.push(TextLine::new(self.spans_to_text_partials(spans, self.font)));
+                    text_lines.push(TextLine::new(self.spans_to_text_partials(
+                        spans,
+                        self.font,
+                        self.theme.font_size_text,
+                        self.theme.text_color(),
+                    )));
+                }
+                Block::UnorderedList(items) => {
+                    text_lines.extend(self.build_list_box(items, Some(&self.theme.bullet)));
+                }
+                Block::OrderedList(items, _) => {
+                    text_lines.extend(self.build_list_box(items, None));
                 }
                 _ => (),
             }
         }
-        boxes
+        text_lines
     }
 
-    fn spans_to_text_partials(&self, spans: &Vec<Span>, font: Font) -> Vec<TextPartial> {
+    fn spans_to_text_partials(
+        &self,
+        spans: &Vec<Span>,
+        font: Font,
+        font_size: u16,
+        color: Color,
+    ) -> Vec<TextPartial> {
         let mut partials = vec![];
         // TODO: Text with only newline should start new line
         for span in spans.iter() {
@@ -263,24 +278,29 @@ impl Slides {
                 Span::Text(text) => partials.push(TextPartial::new(
                     &text,
                     font,
-                    self.theme.font_size_text,
+                    font_size,
                     self.theme.text_color(),
                     self.theme.line_height,
                 )),
                 Span::Code(text) => partials.push(TextPartial::new(
                     &text,
                     self.code_font,
-                    self.theme.font_size_text,
+                    font_size,
                     self.theme.text_color(), // TODO: Add code text color to theme
                     self.theme.line_height,
                 )),
-                // TODO: Add fonts for bold and italic
-                Span::Emphasis(spans) => {
-                    partials.extend(self.spans_to_text_partials(spans, self.italic_font))
-                }
-                Span::Strong(spans) => {
-                    partials.extend(self.spans_to_text_partials(spans, self.bold_font))
-                }
+                Span::Emphasis(spans) => partials.extend(self.spans_to_text_partials(
+                    spans,
+                    self.italic_font,
+                    font_size,
+                    color,
+                )),
+                Span::Strong(spans) => partials.extend(self.spans_to_text_partials(
+                    spans,
+                    self.bold_font,
+                    font_size,
+                    color,
+                )),
                 _ => (),
             };
         }
@@ -321,6 +341,42 @@ impl Slides {
         )
     }
 
+    fn build_list_box(&self, items: &Vec<ListItem>, bullet: Option<&String>) -> Vec<TextLine> {
+        let mut lines: Vec<TextLine> = vec![];
+        for (index, item) in items.iter().enumerate() {
+            match item {
+                ListItem::Simple(spans) => {
+                    let mut partials = vec![];
+                    partials.push(self.build_bullet(index, bullet));
+                    partials.extend(self.spans_to_text_partials(
+                        spans,
+                        self.font,
+                        self.theme.font_size_text,
+                        self.theme.text_color(),
+                    ));
+                    let text_line = TextLine::new(partials);
+                    lines.push(text_line);
+                }
+                _ => (),
+            };
+        }
+        lines
+    }
+
+    fn build_bullet(&self, index: usize, bullet: Option<&String>) -> TextPartial {
+        let item_bullet = match bullet {
+            Some(b) => b.to_owned(),
+            None => format!("{}. ", index + 1),
+        };
+        TextPartial::new(
+            &item_bullet,
+            self.font,
+            self.theme.font_size_text,
+            self.theme.text_color(),
+            self.theme.line_height,
+        )
+    }
+
     fn draw_list(&self, items: &Vec<ListItem>, position: f32, bullet: Option<&String>) -> f32 {
         let mut max_width: f32 = 0.;
         let mut list: Vec<String> = vec![];
@@ -353,6 +409,24 @@ impl Slides {
             );
         }
         new_position
+    }
+
+    fn draw_quotes(&self, left_pos: Vec2, right_pos: Vec2) {
+        let qsize = self.theme.font_size_header_title * 2;
+        let text_params = TextParams {
+            font: self.font,
+            font_size: qsize,
+            font_scale: 1.,
+            color: self.theme.text_color(),
+        };
+        let dimensions = measure_text("“", Some(self.font), qsize, 1.);
+        draw_text_ex(
+            "“",
+            left_pos.x - dimensions.width,
+            left_pos.y + qsize as f32,
+            text_params,
+        );
+        draw_text_ex("„", right_pos.x, right_pos.y, text_params);
     }
 
     fn draw_text(
