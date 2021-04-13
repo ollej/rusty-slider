@@ -188,26 +188,50 @@ impl Slides {
     }
 
     fn draw_blockquote(&self, blocks: &Vec<Block>, vpos: f32) -> f32 {
-        let mut max_width: f32 = 0.;
-        let boxes = self.blocks_to_text_boxes(blocks);
-        for text_box in boxes.iter() {
-            max_width = max_width.max(text_box.width);
-        }
-        let hpos = self.horizontal_position(max_width);
-        let mut new_position = vpos;
-        for text_box in boxes.iter() {
-            new_position = text_box.draw(hpos, new_position);
-        }
-        new_position
+        let text_box = TextBox::new(self.blocks_to_text_boxes(blocks));
+        let padding = 20.;
+        let margin = self.theme.font_size_text as f32 * 2.;
+        let hpos = self.horizontal_position(text_box.width + padding * 2.);
+        let mut new_position = vpos + margin;
+        draw_rectangle(
+            hpos - padding,
+            new_position,
+            text_box.width + padding * 2.,
+            text_box.height + padding,
+            BLACK,
+        );
+        let qsize = self.theme.font_size_header_title * 2;
+        let text_params = TextParams {
+            font: self.font,
+            font_size: qsize,
+            font_scale: 1.,
+            color: self.theme.text_color(),
+        };
+        let dimensions = measure_text("“", Some(self.font), qsize, 1.);
+        draw_text_ex(
+            "“",
+            hpos - padding - dimensions.width,
+            new_position + dimensions.offset_y,
+            text_params,
+        );
+        draw_text_ex(
+            "„",
+            hpos + text_box.width + padding * 2.,
+            new_position + text_box.height - padding,
+            text_params,
+        );
+        new_position = new_position + padding
+            - self.theme.font_size_text as f32 * (self.theme.line_height - 1.);
+        new_position = text_box.draw(hpos, new_position);
+        new_position + margin - self.theme.font_size_text as f32 * (self.theme.line_height - 1.)
     }
 
-    fn blocks_to_text_boxes(&self, blocks: &Vec<Block>) -> Vec<TextBox> {
+    fn blocks_to_text_boxes(&self, blocks: &Vec<Block>) -> Vec<TextLine> {
         let mut boxes = vec![];
         for block in blocks.iter() {
             match block {
                 Block::Paragraph(spans) => {
-                    let text_box = TextBox::new(self.spans_to_text_partials(spans, self.font));
-                    boxes.push(text_box);
+                    boxes.push(TextLine::new(self.spans_to_text_partials(spans, self.font)));
                 }
                 _ => (),
             }
@@ -362,10 +386,40 @@ impl Slides {
 struct TextBox {
     width: f32,
     height: f32,
-    partials: Vec<TextPartial>,
+    lines: Vec<TextLine>,
 }
 
 impl TextBox {
+    fn new(lines: Vec<TextLine>) -> Self {
+        let mut width: f32 = 0.;
+        let mut height: f32 = 0.;
+        for line in lines.iter() {
+            width = width.max(line.width);
+            height += line.height;
+        }
+        Self {
+            width,
+            height,
+            lines,
+        }
+    }
+
+    fn draw(&self, hpos: f32, vpos: f32) -> f32 {
+        let mut new_position = vpos;
+        for line in self.lines.iter() {
+            new_position = line.draw(hpos, new_position);
+        }
+        new_position
+    }
+}
+
+struct TextLine {
+    width: f32,
+    height: f32,
+    partials: Vec<TextPartial>,
+}
+
+impl TextLine {
     fn new(partials: Vec<TextPartial>) -> Self {
         let mut width: f32 = 0.;
         let mut height: f32 = 0.;
@@ -564,7 +618,6 @@ impl CodeBlock {
     fn draw(&self) -> f32 {
         let mut hpos = self.horizontal_position();
         let mut vpos = self.start_position + CodeBox::BOX_MARGIN * 2.;
-        let bottom_position = self.start_position + self.code_box.height_with_margin();
         draw_rectangle(
             hpos,
             vpos,
@@ -583,7 +636,7 @@ impl CodeBlock {
             };
             draw_text_ex(&text, hpos + x, vpos + y, text_params);
         }
-        bottom_position
+        self.start_position + self.code_box.height_with_margin()
     }
 
     fn horizontal_position(&self) -> f32 {
@@ -618,7 +671,7 @@ impl CodeBox {
     }
 
     fn height_with_margin(&self) -> f32 {
-        self.height + Self::BOX_PADDING * 2. + Self::BOX_MARGIN * 2.
+        self.height_with_padding() + Self::BOX_MARGIN * 2.
     }
 }
 
