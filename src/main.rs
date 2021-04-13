@@ -177,38 +177,23 @@ impl Slides {
 
     fn draw_slide(&mut self, start_position: f32) {
         let slide = &self.slides[self.active_slide];
-        let mut new_position = start_position;
-        for block in slide.content.iter() {
-            new_position = match block {
-                Block::Header(spans, 1) => self.draw_title(spans),
-                Block::Header(spans, size) => self.draw_header(spans, *size, new_position),
-                Block::Paragraph(spans) => self.draw_paragraph(spans, new_position),
-                Block::CodeBlock(language, code) => {
-                    match self.code_blocks.get_code_block(
-                        language.to_owned(),
-                        code.to_owned(),
-                        new_position,
-                        self.active_slide,
-                    ) {
-                        Some(code_block) => code_block.draw(),
-                        None => new_position,
-                    }
-                }
-                Block::UnorderedList(items) => {
-                    self.draw_list(items, new_position, Some(&self.theme.bullet))
-                }
-                Block::OrderedList(items, _) => self.draw_list(items, new_position, None),
-                Block::Blockquote(blocks) => self.draw_blockquote(blocks, new_position),
-                _ => 0.,
-            }
-        }
+        // TODO: Doesn't support codeblock/blockquote
+        // TODO: Title position not in middle
+        // TODO: blocks_to_text_lines should maybe be changed to blocks_to_text_boxes
+        let text_box = TextBox::new(
+            self.blocks_to_text_lines(&slide.content),
+            self.theme.font_size_text as f32,
+            None,
+        );
+        let hpos = self.horizontal_position(text_box.width_with_padding());
+        text_box.draw(hpos, start_position);
     }
 
     fn draw_blockquote(&self, blocks: &Vec<Block>, vpos: f32) -> f32 {
         let text_box = TextBox::new(
             self.blocks_to_text_lines(blocks),
             self.theme.font_size_text as f32,
-            self.theme.blockquote_background_color(),
+            Some(self.theme.blockquote_background_color()),
         );
         let hpos = self.horizontal_position(text_box.width_with_padding());
         let bottom_position = text_box.draw(hpos, vpos);
@@ -229,28 +214,37 @@ impl Slides {
         for block in blocks.iter() {
             match block {
                 Block::Header(spans, 1) => {
-                    text_lines.push(TextLine::new(self.spans_to_text_partials(
-                        spans,
-                        self.font,
-                        self.theme.font_size_header_title,
-                        self.theme.heading_color(),
-                    )));
+                    text_lines.push(TextLine::new(
+                        self.theme.align.to_owned(),
+                        self.spans_to_text_partials(
+                            spans,
+                            self.font,
+                            self.theme.font_size_header_title,
+                            self.theme.heading_color(),
+                        ),
+                    ));
                 }
                 Block::Header(spans, _size) => {
-                    text_lines.push(TextLine::new(self.spans_to_text_partials(
-                        spans,
-                        self.font,
-                        self.theme.font_size_header_slides,
-                        self.theme.heading_color(),
-                    )));
+                    text_lines.push(TextLine::new(
+                        self.theme.align.to_owned(),
+                        self.spans_to_text_partials(
+                            spans,
+                            self.font,
+                            self.theme.font_size_header_slides,
+                            self.theme.heading_color(),
+                        ),
+                    ));
                 }
                 Block::Paragraph(spans) => {
-                    text_lines.push(TextLine::new(self.spans_to_text_partials(
-                        spans,
-                        self.font,
-                        self.theme.font_size_text,
-                        self.theme.text_color(),
-                    )));
+                    text_lines.push(TextLine::new(
+                        self.theme.align.to_owned(),
+                        self.spans_to_text_partials(
+                            spans,
+                            self.font,
+                            self.theme.font_size_text,
+                            self.theme.text_color(),
+                        ),
+                    ));
                 }
                 Block::UnorderedList(items) => {
                     text_lines.extend(self.build_list_box(items, Some(&self.theme.bullet)));
@@ -279,7 +273,7 @@ impl Slides {
                     &text,
                     font,
                     font_size,
-                    self.theme.text_color(),
+                    color,
                     self.theme.line_height,
                 )),
                 Span::Code(text) => partials.push(TextPartial::new(
@@ -307,40 +301,6 @@ impl Slides {
         partials
     }
 
-    fn draw_title(&self, spans: &Vec<Span>) -> f32 {
-        return self.draw_text(
-            &self.convert_spans(spans),
-            self.theme.heading_color(),
-            self.theme.font_size_header_title,
-            0.,
-            screen_height() / 2.,
-            None,
-        );
-    }
-
-    fn draw_header(&self, spans: &Vec<Span>, header_size: usize, position: f32) -> f32 {
-        let font_size = self.theme.font_size_header_slides - ((header_size as u16 - 1) * 5);
-        return self.draw_text(
-            &self.convert_spans(spans),
-            self.theme.heading_color(),
-            font_size,
-            self.theme.line_height,
-            position,
-            None,
-        );
-    }
-
-    fn draw_paragraph(&self, spans: &Vec<Span>, position: f32) -> f32 {
-        self.draw_text(
-            &self.convert_spans(spans),
-            self.theme.text_color(),
-            self.theme.font_size_text,
-            self.theme.line_height,
-            position,
-            None,
-        )
-    }
-
     fn build_list_box(&self, items: &Vec<ListItem>, bullet: Option<&String>) -> Vec<TextLine> {
         let mut lines: Vec<TextLine> = vec![];
         for (index, item) in items.iter().enumerate() {
@@ -354,7 +314,7 @@ impl Slides {
                         self.theme.font_size_text,
                         self.theme.text_color(),
                     ));
-                    let text_line = TextLine::new(partials);
+                    let text_line = TextLine::new("left".to_string(), partials);
                     lines.push(text_line);
                 }
                 _ => (),
@@ -377,40 +337,6 @@ impl Slides {
         )
     }
 
-    fn draw_list(&self, items: &Vec<ListItem>, position: f32, bullet: Option<&String>) -> f32 {
-        let mut max_width: f32 = 0.;
-        let mut list: Vec<String> = vec![];
-        for (index, item) in items.iter().enumerate() {
-            match item {
-                ListItem::Simple(spans) => {
-                    let item_bullet = match bullet {
-                        Some(b) => b.to_owned(),
-                        None => format!("{}.", index + 1),
-                    };
-                    let text = format!("{}{}", item_bullet, self.convert_spans(spans));
-                    let dimensions =
-                        measure_text(&text, Some(self.font), self.theme.font_size_text, 1.);
-                    max_width = max_width.max(dimensions.width);
-                    list.push(text);
-                }
-                _ => (),
-            };
-        }
-        let mut new_position = position;
-        let hpos = self.horizontal_position(max_width);
-        for text in list {
-            new_position = self.draw_text(
-                &text,
-                self.theme.text_color(),
-                self.theme.font_size_text,
-                self.theme.line_height,
-                new_position,
-                Some(hpos),
-            );
-        }
-        new_position
-    }
-
     fn draw_quotes(&self, left_pos: Vec2, right_pos: Vec2) {
         let qsize = self.theme.font_size_header_title * 2;
         let text_params = TextParams {
@@ -429,51 +355,8 @@ impl Slides {
         draw_text_ex("„", right_pos.x, right_pos.y, text_params);
     }
 
-    fn draw_text(
-        &self,
-        text: &String,
-        color: Color,
-        font_size: u16,
-        line_height: f32,
-        vposition: f32,
-        hposition: Option<f32>,
-    ) -> f32 {
-        let text_params = TextParams {
-            font: self.font,
-            font_size: font_size,
-            font_scale: 1.,
-            color: color,
-        };
-        let dimensions = measure_text(text, Some(self.font), font_size, 1.);
-        let hpos = match hposition {
-            Some(pos) => pos,
-            None => self.horizontal_position(dimensions.width),
-        };
-        let vpos = vposition + font_size as f32 * line_height;
-        //debug!(
-        //    "font_size: {}, position: {} hpos: {} vpos: {} height: {} offest_y: {} text: {}",
-        //    font_size, position, hpos, vpos, dimensions.height, dimensions.offset_y, text
-        //);
-        draw_text_ex(text, hpos, vpos, text_params);
-        vpos
-    }
-
     fn horizontal_position(&self, width: f32) -> f32 {
         horizontal_position(width, self.theme.horizontal_offset, &self.theme.align)
-    }
-
-    fn convert_spans(&self, spans: &Vec<Span>) -> String {
-        let mut line = "".to_string();
-        for span in spans.iter() {
-            line = match span {
-                Span::Text(text) => format!("{} {}", line, text),
-                Span::Code(text) => format!("{} '{}'", line, text),
-                Span::Emphasis(spans) => format!("{}{}", line, self.convert_spans(spans)),
-                Span::Strong(spans) => format!("{}{}", line, self.convert_spans(spans)),
-                _ => line,
-            };
-        }
-        line
     }
 }
 
@@ -483,14 +366,14 @@ struct TextBox {
     margin: f32,
     padding: f32,
     offset_y: f32,
-    background_color: Color,
+    background_color: Option<Color>,
     lines: Vec<TextLine>,
 }
 
 impl TextBox {
     const BOX_PADDING: f32 = 20.;
 
-    fn new(lines: Vec<TextLine>, margin: f32, background_color: Color) -> Self {
+    fn new(lines: Vec<TextLine>, margin: f32, background_color: Option<Color>) -> Self {
         let mut width: f32 = 0.;
         let mut height: f32 = 0.;
         let mut offset_y: f32 = 0.;
@@ -515,19 +398,27 @@ impl TextBox {
         let inner_hpos = hpos + self.padding;
         let mut new_position = vpos + self.padding + self.margin;
         for line in self.lines.iter() {
-            new_position = line.draw(inner_hpos, new_position);
+            let line_hpos = match line.align.as_str() {
+                "left" => inner_hpos,
+                "right" => inner_hpos + self.width - line.width,
+                _ => inner_hpos + self.width / 2. - line.width / 2.,
+            };
+            new_position = line.draw(line_hpos, new_position);
         }
         vpos + self.height_with_margin()
     }
 
     fn draw_background(&self, hpos: f32, vpos: f32) {
-        draw_rectangle(
-            hpos,
-            vpos,
-            self.width_with_padding(),
-            self.height_with_padding(),
-            self.background_color,
-        );
+        match self.background_color {
+            Some(color) => draw_rectangle(
+                hpos,
+                vpos,
+                self.width_with_padding(),
+                self.height_with_padding(),
+                color,
+            ),
+            None => (),
+        }
     }
 
     fn width_with_padding(&self) -> f32 {
@@ -547,11 +438,12 @@ struct TextLine {
     width: f32,
     height: f32,
     offset_y: f32,
+    align: String,
     partials: Vec<TextPartial>,
 }
 
 impl TextLine {
-    fn new(partials: Vec<TextPartial>) -> Self {
+    fn new(align: String, partials: Vec<TextPartial>) -> Self {
         let mut width: f32 = 0.;
         let mut height: f32 = 0.;
         let mut offset_y: f32 = 0.;
@@ -564,6 +456,7 @@ impl TextLine {
             width,
             height,
             offset_y,
+            align,
             partials,
         }
     }
