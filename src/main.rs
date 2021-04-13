@@ -40,6 +40,7 @@ struct Slides {
     automatic: f32,
     theme: Theme,
     font: Font,
+    code_font: Font,
     background: Option<Texture2D>,
     code_blocks: CodeBlocks,
 }
@@ -70,6 +71,7 @@ impl Slides {
             time: 0.,
             theme,
             font,
+            code_font,
             background,
             code_blocks,
         }
@@ -179,9 +181,66 @@ impl Slides {
                     self.draw_list(items, new_position, Some(&self.theme.bullet))
                 }
                 Block::OrderedList(items, _) => self.draw_list(items, new_position, None),
+                Block::Blockquote(blocks) => self.draw_blockquote(blocks, new_position),
                 _ => 0.,
             }
         }
+    }
+
+    fn draw_blockquote(&self, blocks: &Vec<Block>, vpos: f32) -> f32 {
+        let mut max_width: f32 = 0.;
+        let boxes = self.blocks_to_text_boxes(blocks);
+        for text_box in boxes.iter() {
+            max_width = max_width.max(text_box.width);
+        }
+        let hpos = self.horizontal_position(max_width);
+        let mut new_position = vpos;
+        for text_box in boxes.iter() {
+            new_position = text_box.draw(hpos, new_position);
+        }
+        new_position
+    }
+
+    fn blocks_to_text_boxes(&self, blocks: &Vec<Block>) -> Vec<TextBox> {
+        let mut boxes = vec![];
+        for block in blocks.iter() {
+            match block {
+                Block::Paragraph(spans) => {
+                    let text_box = TextBox::new(self.spans_to_text_partials(spans, self.font));
+                    boxes.push(text_box);
+                }
+                _ => (),
+            }
+        }
+        boxes
+    }
+
+    fn spans_to_text_partials(&self, spans: &Vec<Span>, font: Font) -> Vec<TextPartial> {
+        let mut partials = vec![];
+        // TODO: Text with only newline should start new line
+        for span in spans.iter() {
+            match span {
+                Span::Text(text) => partials.push(TextPartial::new(
+                    &text,
+                    font,
+                    self.theme.font_size_text,
+                    self.theme.text_color(),
+                    self.theme.line_height,
+                )),
+                Span::Code(text) => partials.push(TextPartial::new(
+                    &text,
+                    self.code_font,
+                    self.theme.font_size_text,
+                    self.theme.text_color(), // TODO: Add code text color to theme
+                    self.theme.line_height,
+                )),
+                // TODO: Add fonts for bold and italic
+                Span::Emphasis(spans) => partials.extend(self.spans_to_text_partials(spans, font)),
+                Span::Strong(spans) => partials.extend(self.spans_to_text_partials(spans, font)),
+                _ => (),
+            };
+        }
+        partials
     }
 
     fn draw_title(&self, spans: &Vec<Span>) -> f32 {
@@ -297,6 +356,74 @@ impl Slides {
             };
         }
         line
+    }
+}
+
+struct TextBox {
+    width: f32,
+    height: f32,
+    partials: Vec<TextPartial>,
+}
+
+impl TextBox {
+    fn new(partials: Vec<TextPartial>) -> Self {
+        let mut width: f32 = 0.;
+        let mut height: f32 = 0.;
+        for partial in &partials {
+            width += partial.width;
+            height = height.max(partial.height);
+        }
+        Self {
+            width,
+            height,
+            partials,
+        }
+    }
+
+    fn draw(&self, start_hpos: f32, vpos: f32) -> f32 {
+        let mut hpos = start_hpos;
+        for partial in &self.partials {
+            hpos = partial.draw(hpos, vpos);
+        }
+        vpos + self.height
+    }
+}
+
+struct TextPartial {
+    width: f32,
+    height: f32,
+    color: Color,
+    font: Font,
+    font_size: u16,
+    text: String,
+}
+
+impl TextPartial {
+    fn new(text: &String, font: Font, font_size: u16, color: Color, line_height: f32) -> Self {
+        let dimensions = measure_text(text, Some(font), font_size, 1.);
+        Self {
+            width: dimensions.width,
+            height: font_size as f32 * line_height,
+            color,
+            font,
+            font_size,
+            text: text.to_owned(),
+        }
+    }
+
+    fn draw(&self, hpos: f32, vpos: f32) -> f32 {
+        draw_text_ex(
+            &self.text,
+            hpos,
+            vpos + self.height,
+            TextParams {
+                font: self.font,
+                font_size: self.font_size,
+                font_scale: 1.,
+                color: self.color,
+            },
+        );
+        hpos + self.width
     }
 }
 
