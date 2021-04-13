@@ -28,7 +28,6 @@ pub mod crt {
             color *= scanline * grille * 1.2;
         }
         void main() {
-
             vec2 crtUV = CRTCurveUV(uv);
 
             vec3 res = texture2D(Texture, uv).rgb * color.rgb;

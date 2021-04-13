@@ -188,18 +188,25 @@ impl Slides {
     }
 
     fn draw_blockquote(&self, blocks: &Vec<Block>, vpos: f32) -> f32 {
-        let text_box = TextBox::new(self.blocks_to_text_boxes(blocks));
-        let padding = 20.;
-        let margin = self.theme.font_size_text as f32 * 2.;
-        let hpos = self.horizontal_position(text_box.width + padding * 2.);
-        let mut new_position = vpos + margin;
-        draw_rectangle(
-            hpos - padding,
-            new_position,
-            text_box.width + padding * 2.,
-            text_box.height + padding,
-            BLACK,
+        let text_box = TextBox::new(
+            self.blocks_to_text_boxes(blocks),
+            self.theme.font_size_text as f32,
         );
+        let hpos = self.horizontal_position(text_box.width_with_padding());
+        let bottom_position = text_box.draw(hpos, vpos);
+
+        self.draw_quotes(
+            vec2(hpos, vpos),
+            vec2(
+                hpos + text_box.width_with_padding(),
+                bottom_position - text_box.offset_y,
+            ),
+        );
+
+        bottom_position
+    }
+
+    fn draw_quotes(&self, left_pos: Vec2, right_pos: Vec2) {
         let qsize = self.theme.font_size_header_title * 2;
         let text_params = TextParams {
             font: self.font,
@@ -210,20 +217,11 @@ impl Slides {
         let dimensions = measure_text("“", Some(self.font), qsize, 1.);
         draw_text_ex(
             "“",
-            hpos - padding - dimensions.width,
-            new_position + dimensions.offset_y,
+            left_pos.x - dimensions.width,
+            left_pos.y + qsize as f32,
             text_params,
         );
-        draw_text_ex(
-            "„",
-            hpos + text_box.width + padding * 2.,
-            new_position + text_box.height - padding,
-            text_params,
-        );
-        new_position = new_position + padding
-            - self.theme.font_size_text as f32 * (self.theme.line_height - 1.);
-        new_position = text_box.draw(hpos, new_position);
-        new_position + margin - self.theme.font_size_text as f32 * (self.theme.line_height - 1.)
+        draw_text_ex("„", right_pos.x, right_pos.y, text_params);
     }
 
     fn blocks_to_text_boxes(&self, blocks: &Vec<Block>) -> Vec<TextLine> {
@@ -386,36 +384,71 @@ impl Slides {
 struct TextBox {
     width: f32,
     height: f32,
+    margin: f32,
+    padding: f32,
+    offset_y: f32,
     lines: Vec<TextLine>,
 }
 
 impl TextBox {
-    fn new(lines: Vec<TextLine>) -> Self {
+    const BOX_PADDING: f32 = 20.;
+
+    fn new(lines: Vec<TextLine>, margin: f32) -> Self {
         let mut width: f32 = 0.;
         let mut height: f32 = 0.;
+        let mut offset_y: f32 = 0.;
         for line in lines.iter() {
             width = width.max(line.width);
+            offset_y = offset_y.max(line.offset_y);
             height += line.height;
         }
         Self {
             width,
             height,
+            margin,
+            padding: Self::BOX_PADDING,
+            offset_y,
             lines,
         }
     }
 
     fn draw(&self, hpos: f32, vpos: f32) -> f32 {
-        let mut new_position = vpos;
+        self.draw_background(hpos, vpos + self.margin + self.offset_y);
+        let inner_hpos = hpos + self.padding;
+        let mut new_position = vpos + self.padding + self.margin;
         for line in self.lines.iter() {
-            new_position = line.draw(hpos, new_position);
+            new_position = line.draw(inner_hpos, new_position);
         }
-        new_position
+        vpos + self.height_with_margin()
+    }
+
+    fn draw_background(&self, hpos: f32, vpos: f32) {
+        draw_rectangle(
+            hpos,
+            vpos,
+            self.width_with_padding(),
+            self.height_with_padding(),
+            BLACK,
+        );
+    }
+
+    fn width_with_padding(&self) -> f32 {
+        self.width + self.padding * 2.
+    }
+
+    fn height_with_padding(&self) -> f32 {
+        self.height + self.padding * 2.
+    }
+
+    fn height_with_margin(&self) -> f32 {
+        self.height_with_padding() + self.margin * 2.
     }
 }
 
 struct TextLine {
     width: f32,
     height: f32,
+    offset_y: f32,
     partials: Vec<TextPartial>,
 }
 
@@ -423,13 +456,16 @@ impl TextLine {
     fn new(partials: Vec<TextPartial>) -> Self {
         let mut width: f32 = 0.;
         let mut height: f32 = 0.;
+        let mut offset_y: f32 = 0.;
         for partial in &partials {
             width += partial.width;
             height = height.max(partial.height);
+            offset_y = offset_y.max(partial.offset_y);
         }
         Self {
             width,
             height,
+            offset_y,
             partials,
         }
     }
@@ -449,6 +485,7 @@ struct TextPartial {
     color: Color,
     font: Font,
     font_size: u16,
+    offset_y: f32,
     text: String,
 }
 
@@ -461,6 +498,7 @@ impl TextPartial {
             color,
             font,
             font_size,
+            offset_y: dimensions.offset_y,
             text: text.to_owned(),
         }
     }
