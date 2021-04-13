@@ -40,6 +40,8 @@ struct Slides {
     automatic: f32,
     theme: Theme,
     font: Font,
+    bold_font: Font,
+    italic_font: Font,
     code_font: Font,
     background: Option<Texture2D>,
     code_blocks: CodeBlocks,
@@ -51,6 +53,8 @@ impl Slides {
         theme: Theme,
         automatic: f32,
         font: Font,
+        bold_font: Font,
+        italic_font: Font,
         code_font: Font,
         background: Option<Texture2D>,
     ) -> Slides {
@@ -71,6 +75,8 @@ impl Slides {
             time: 0.,
             theme,
             font,
+            bold_font,
+            italic_font,
             code_font,
             background,
             code_blocks,
@@ -82,6 +88,8 @@ impl Slides {
         theme: Theme,
         automatic: u32,
         font: Font,
+        bold_font: Font,
+        italic_font: Font,
         code_font: Font,
         background: Option<Texture2D>,
     ) -> Self {
@@ -95,7 +103,16 @@ impl Slides {
         };
         let tokens = markdown::tokenize(&markdown);
         let slides = Self::build_slides(tokens);
-        Self::from_slides(slides, theme, automatic as f32, font, code_font, background)
+        Self::from_slides(
+            slides,
+            theme,
+            automatic as f32,
+            font,
+            bold_font,
+            italic_font,
+            code_font,
+            background,
+        )
     }
 
     fn build_slides(tokens: Vec<Block>) -> Vec<Slide> {
@@ -191,6 +208,7 @@ impl Slides {
         let text_box = TextBox::new(
             self.blocks_to_text_boxes(blocks),
             self.theme.font_size_text as f32,
+            self.theme.blockquote_background_color(),
         );
         let hpos = self.horizontal_position(text_box.width_with_padding());
         let bottom_position = text_box.draw(hpos, vpos);
@@ -257,8 +275,12 @@ impl Slides {
                     self.theme.line_height,
                 )),
                 // TODO: Add fonts for bold and italic
-                Span::Emphasis(spans) => partials.extend(self.spans_to_text_partials(spans, font)),
-                Span::Strong(spans) => partials.extend(self.spans_to_text_partials(spans, font)),
+                Span::Emphasis(spans) => {
+                    partials.extend(self.spans_to_text_partials(spans, self.italic_font))
+                }
+                Span::Strong(spans) => {
+                    partials.extend(self.spans_to_text_partials(spans, self.bold_font))
+                }
                 _ => (),
             };
         }
@@ -387,13 +409,14 @@ struct TextBox {
     margin: f32,
     padding: f32,
     offset_y: f32,
+    background_color: Color,
     lines: Vec<TextLine>,
 }
 
 impl TextBox {
     const BOX_PADDING: f32 = 20.;
 
-    fn new(lines: Vec<TextLine>, margin: f32) -> Self {
+    fn new(lines: Vec<TextLine>, margin: f32, background_color: Color) -> Self {
         let mut width: f32 = 0.;
         let mut height: f32 = 0.;
         let mut offset_y: f32 = 0.;
@@ -408,6 +431,7 @@ impl TextBox {
             margin,
             padding: Self::BOX_PADDING,
             offset_y,
+            background_color,
             lines,
         }
     }
@@ -428,7 +452,7 @@ impl TextBox {
             vpos,
             self.width_with_padding(),
             self.height_with_padding(),
-            BLACK,
+            self.background_color,
         );
     }
 
@@ -722,12 +746,18 @@ pub struct Theme {
     pub text_color: String,
     pub align: String,
     pub font: String,
+    pub font_bold: String,
+    pub font_italic: String,
     pub font_size_header_title: u16,
     pub font_size_header_slides: u16,
     pub font_size_text: u16,
     pub vertical_offset: f32,
     pub horizontal_offset: f32,
     pub line_height: f32,
+    pub blockquote_background_color: String,
+    pub blockquote_padding: f32,
+    pub blockquote_left_quote: String,
+    pub blockquote_right_quote: String,
     pub code_font: String,
     pub code_font_size: u16,
     pub code_line_height: f32,
@@ -747,12 +777,18 @@ impl Default for Theme {
             text_color: "#ffffff".to_string(),
             align: "center".to_string(),
             font: "assets/Amble-Regular.ttf".to_string(),
+            font_bold: "assets/Amble-Bold.ttf".to_string(),
+            font_italic: "assets/Amble-Italic.ttf".to_string(),
             font_size_header_title: 100,
             font_size_header_slides: 80,
             font_size_text: 40,
             vertical_offset: 20.0,
             horizontal_offset: 20.0,
             line_height: 2.0,
+            blockquote_background_color: "#333333".to_string(),
+            blockquote_padding: 20.,
+            blockquote_left_quote: "“".to_string(),
+            blockquote_right_quote: "„".to_string(),
             code_font: "assets/Hack-Regular.ttf".to_string(),
             code_font_size: 20,
             code_line_height: 1.2,
@@ -795,6 +831,10 @@ impl Theme {
 
     fn code_background_color(&self) -> Color {
         Self::from_hex(self.code_background_color.to_owned(), BLACK)
+    }
+
+    fn blockquote_background_color(&self) -> Color {
+        Self::from_hex(self.blockquote_background_color.to_owned(), BLACK)
     }
 
     fn from_hex(color: String, default: Color) -> Color {
@@ -847,7 +887,8 @@ async fn main() {
         theme.heading_color(),
     );
     let text_font = load_ttf_font(&theme.font).await;
-    debug!("code_font: {}", theme.code_font);
+    let bold_font = load_ttf_font(&theme.font_bold).await;
+    let italic_font = load_ttf_font(&theme.font_italic).await;
     let code_font = load_ttf_font(&theme.code_font).await;
     let background = match &theme.background_image {
         Some(path) => Some(load_texture(&path).await),
@@ -859,6 +900,8 @@ async fn main() {
         theme,
         opt.automatic,
         text_font,
+        bold_font,
+        italic_font,
         code_font,
         background,
     )

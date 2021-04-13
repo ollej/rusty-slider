@@ -53,6 +53,14 @@ let shader_material = load_material(
 
 ---
 
+## Blockquotes
+
+> Blockquotes renders with background color
+>
+> And fancy quotes.
+
+---
+
 ## Controls
 
 Left/right keys switches between previous and next slide.
