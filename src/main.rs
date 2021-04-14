@@ -177,39 +177,25 @@ impl Slides {
 
     fn draw_slide(&mut self, start_position: f32) {
         let slide = &self.slides[self.active_slide];
-        // TODO: Doesn't support codeblock/blockquote
-        // TODO: Title position not in middle
-        // TODO: blocks_to_text_lines should maybe be changed to blocks_to_text_boxes
-        let text_box = TextBox::new(
-            self.blocks_to_text_lines(&slide.content),
-            self.theme.font_size_text as f32,
-            None,
-        );
-        let hpos = self.horizontal_position(text_box.width_with_padding());
-        text_box.draw(hpos, start_position);
+        // TODO: Doesn't support codeblock
+        // TODO: Title position not in middle vertically
+        // TODO: blockquote TextBox should know how to render quotes
+        // TODO: add type to TextBox
+        // TODO: code blocks should be changed to TextBox
+        let text_boxes = self.blocks_to_text_boxes(&slide.content, None);
+        let mut new_position: f32 = start_position;
+        for text_box in text_boxes {
+            let hpos = self.horizontal_position(text_box.width_with_padding());
+            new_position = text_box.draw(hpos, new_position);
+        }
     }
 
-    fn draw_blockquote(&self, blocks: &Vec<Block>, vpos: f32) -> f32 {
-        let text_box = TextBox::new(
-            self.blocks_to_text_lines(blocks),
-            self.theme.font_size_text as f32,
-            Some(self.theme.blockquote_background_color()),
-        );
-        let hpos = self.horizontal_position(text_box.width_with_padding());
-        let bottom_position = text_box.draw(hpos, vpos);
-
-        self.draw_quotes(
-            vec2(hpos, vpos),
-            vec2(
-                hpos + text_box.width_with_padding(),
-                bottom_position - text_box.offset_y,
-            ),
-        );
-
-        bottom_position
-    }
-
-    fn blocks_to_text_lines(&self, blocks: &Vec<Block>) -> Vec<TextLine> {
+    fn blocks_to_text_boxes(
+        &self,
+        blocks: &Vec<Block>,
+        background_color: Option<Color>,
+    ) -> Vec<TextBox> {
+        let mut text_boxes = vec![];
         let mut text_lines = vec![];
         for block in blocks.iter() {
             match block {
@@ -252,10 +238,31 @@ impl Slides {
                 Block::OrderedList(items, _) => {
                     text_lines.extend(self.build_list_box(items, None));
                 }
+                Block::Blockquote(blocks) => {
+                    if text_lines.len() > 0 {
+                        text_boxes.push(TextBox::new(
+                            text_lines,
+                            self.theme.vertical_offset,
+                            background_color,
+                        ));
+                    }
+                    text_boxes.extend(self.blocks_to_text_boxes(
+                        blocks,
+                        Some(self.theme.blockquote_background_color()),
+                    ));
+                    text_lines = Vec::new();
+                }
                 _ => (),
             }
         }
-        text_lines
+        if text_lines.len() > 0 {
+            text_boxes.push(TextBox::new(
+                text_lines,
+                self.theme.vertical_offset,
+                background_color,
+            ));
+        }
+        text_boxes
     }
 
     fn spans_to_text_partials(
@@ -307,7 +314,7 @@ impl Slides {
             match item {
                 ListItem::Simple(spans) => {
                     let mut partials = vec![];
-                    partials.push(self.build_bullet(index, bullet));
+                    partials.push(self.build_bullet_partial(index, bullet));
                     partials.extend(self.spans_to_text_partials(
                         spans,
                         self.font,
@@ -323,7 +330,7 @@ impl Slides {
         lines
     }
 
-    fn build_bullet(&self, index: usize, bullet: Option<&String>) -> TextPartial {
+    fn build_bullet_partial(&self, index: usize, bullet: Option<&String>) -> TextPartial {
         let item_bullet = match bullet {
             Some(b) => b.to_owned(),
             None => format!("{}. ", index + 1),
@@ -409,6 +416,14 @@ impl TextBox {
     }
 
     fn draw_background(&self, hpos: f32, vpos: f32) {
+        //self.draw_quotes(
+        //    vec2(hpos, vpos),
+        //    vec2(
+        //        hpos + self.width_with_padding(),
+        //        vpos + self.height_with_margin() - self.offset_y,
+        //    ),
+        //);
+
         match self.background_color {
             Some(color) => draw_rectangle(
                 hpos,
@@ -430,7 +445,7 @@ impl TextBox {
     }
 
     fn height_with_margin(&self) -> f32 {
-        self.height_with_padding() + self.margin * 2.
+        self.height_with_padding() + self.margin
     }
 }
 
