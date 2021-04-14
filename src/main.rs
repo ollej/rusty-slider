@@ -179,10 +179,8 @@ impl Slides {
         let slide = &self.slides[self.active_slide];
         // TODO: Doesn't support codeblock
         // TODO: Title position not in middle vertically
-        // TODO: blockquote TextBox should know how to render quotes
-        // TODO: add type to TextBox
         // TODO: code blocks should be changed to TextBox
-        let text_boxes = self.blocks_to_text_boxes(&slide.content, None);
+        let text_boxes = self.blocks_to_text_boxes(&slide.content, None, TextBoxStyle::Standard);
         let mut new_position: f32 = start_position;
         for text_box in text_boxes {
             let hpos = self.horizontal_position(text_box.width_with_padding());
@@ -194,6 +192,7 @@ impl Slides {
         &self,
         blocks: &Vec<Block>,
         background_color: Option<Color>,
+        style: TextBoxStyle,
     ) -> Vec<TextBox> {
         let mut text_boxes = vec![];
         let mut text_lines = vec![];
@@ -244,11 +243,17 @@ impl Slides {
                             text_lines,
                             self.theme.vertical_offset,
                             background_color,
+                            style,
                         ));
                     }
                     text_boxes.extend(self.blocks_to_text_boxes(
                         blocks,
                         Some(self.theme.blockquote_background_color()),
+                        TextBoxStyle::Blockquote {
+                            size: self.theme.font_size_header_title * 2,
+                            font: self.font,
+                            color: self.theme.text_color(),
+                        },
                     ));
                     text_lines = Vec::new();
                 }
@@ -260,6 +265,7 @@ impl Slides {
                 text_lines,
                 self.theme.vertical_offset,
                 background_color,
+                style,
             ));
         }
         text_boxes
@@ -344,26 +350,55 @@ impl Slides {
         )
     }
 
-    fn draw_quotes(&self, left_pos: Vec2, right_pos: Vec2) {
-        let qsize = self.theme.font_size_header_title * 2;
-        let text_params = TextParams {
-            font: self.font,
-            font_size: qsize,
-            font_scale: 1.,
-            color: self.theme.text_color(),
-        };
-        let dimensions = measure_text("“", Some(self.font), qsize, 1.);
-        draw_text_ex(
-            "“",
-            left_pos.x - dimensions.width,
-            left_pos.y + qsize as f32,
-            text_params,
-        );
-        draw_text_ex("„", right_pos.x, right_pos.y, text_params);
-    }
-
     fn horizontal_position(&self, width: f32) -> f32 {
         horizontal_position(width, self.theme.horizontal_offset, &self.theme.align)
+    }
+}
+#[derive(Copy, Clone)]
+pub enum TextBoxStyle {
+    Standard,
+    Blockquote { size: u16, font: Font, color: Color },
+    Code,
+}
+
+impl TextBoxStyle {
+    fn draw(&self, hpos: f32, vpos: f32, text_box: &TextBox) {
+        match self {
+            TextBoxStyle::Blockquote { size, font, color } => {
+                self.draw_blockquote(hpos, vpos, text_box, *size, *font, *color)
+            }
+            _ => (),
+        }
+    }
+
+    fn draw_blockquote(
+        &self,
+        hpos: f32,
+        vpos: f32,
+        text_box: &TextBox,
+        size: u16,
+        font: Font,
+        color: Color,
+    ) {
+        let text_params = TextParams {
+            font: font,
+            font_size: size,
+            font_scale: 1.,
+            color: color,
+        };
+        let dimensions = measure_text("“", Some(font), size, 1.);
+        draw_text_ex(
+            "“",
+            hpos - dimensions.width,
+            vpos + size as f32,
+            text_params,
+        );
+        draw_text_ex(
+            "„",
+            hpos + text_box.width_with_padding(),
+            vpos + text_box.height_with_margin(),
+            text_params,
+        );
     }
 }
 
@@ -374,13 +409,19 @@ struct TextBox {
     padding: f32,
     offset_y: f32,
     background_color: Option<Color>,
+    style: TextBoxStyle,
     lines: Vec<TextLine>,
 }
 
 impl TextBox {
     const BOX_PADDING: f32 = 20.;
 
-    fn new(lines: Vec<TextLine>, margin: f32, background_color: Option<Color>) -> Self {
+    fn new(
+        lines: Vec<TextLine>,
+        margin: f32,
+        background_color: Option<Color>,
+        style: TextBoxStyle,
+    ) -> Self {
         let mut width: f32 = 0.;
         let mut height: f32 = 0.;
         let mut offset_y: f32 = 0.;
@@ -396,12 +437,14 @@ impl TextBox {
             padding: Self::BOX_PADDING,
             offset_y,
             background_color,
+            style,
             lines,
         }
     }
 
     fn draw(&self, hpos: f32, vpos: f32) -> f32 {
         self.draw_background(hpos, vpos + self.margin + self.offset_y);
+        self.draw_style(hpos, vpos);
         let inner_hpos = hpos + self.padding;
         let mut new_position = vpos + self.padding + self.margin;
         for line in self.lines.iter() {
@@ -416,14 +459,6 @@ impl TextBox {
     }
 
     fn draw_background(&self, hpos: f32, vpos: f32) {
-        //self.draw_quotes(
-        //    vec2(hpos, vpos),
-        //    vec2(
-        //        hpos + self.width_with_padding(),
-        //        vpos + self.height_with_margin() - self.offset_y,
-        //    ),
-        //);
-
         match self.background_color {
             Some(color) => draw_rectangle(
                 hpos,
@@ -434,6 +469,10 @@ impl TextBox {
             ),
             None => (),
         }
+    }
+
+    fn draw_style(&self, hpos: f32, vpos: f32) {
+        self.style.draw(hpos, vpos, self);
     }
 
     fn width_with_padding(&self) -> f32 {
