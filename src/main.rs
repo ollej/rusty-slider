@@ -24,12 +24,13 @@ fn horizontal_position(width: f32, horizontal_offset: f32, align: &String) -> f3
 }
 
 struct Slide {
-    content: Vec<Block>,
+    blocks: Vec<Block>,
+    text_boxes: Vec<TextBox>,
 }
 
 impl Slide {
-    fn new(content: Vec<Block>) -> Slide {
-        Slide { content }
+    fn new(blocks: Vec<Block>, text_boxes: Vec<TextBox>) -> Self {
+        Self { blocks, text_boxes }
     }
 }
 
@@ -38,49 +39,47 @@ struct Slides {
     active_slide: usize,
     time: f32,
     automatic: f32,
-    theme: Theme,
-    font: Font,
-    bold_font: Font,
-    italic_font: Font,
-    code_font: Font,
+    background_color: Color,
     background: Option<Texture2D>,
-    code_box_builder: CodeBoxBuilder,
+    horizontal_offset: f32,
+    align: String,
+    markdown_text_box_builder: MarkdownTextBoxBuilder,
 }
 
 impl Slides {
     fn from_slides(
-        slides: Vec<Slide>,
+        slide_blocks: Vec<Vec<Block>>,
         theme: Theme,
         automatic: f32,
         font: Font,
-        bold_font: Font,
-        italic_font: Font,
+        font_bold: Font,
+        font_italic: Font,
         code_font: Font,
         background: Option<Texture2D>,
     ) -> Slides {
-        let code_box_builder = CodeBoxBuilder::new(
-            code_font,
-            bold_font,
-            italic_font,
-            theme.code_font_size.to_owned(),
-            theme.code_line_height.to_owned(),
-            theme.code_background_color().to_owned(),
-            theme.code_theme.to_owned(),
-            theme.code_tab_width,
-            theme.vertical_offset,
-        );
+        let background_color = theme.background_color();
+        let horizontal_offset = theme.horizontal_offset;
+        let align = theme.align.to_owned();
+        let markdown_text_box_builder =
+            MarkdownTextBoxBuilder::new(theme, font, font_bold, font_italic, code_font);
+        let mut slides: Vec<Slide> = vec![];
+        for blocks in slide_blocks.iter() {
+            slides.push(Slide::new(
+                blocks.to_owned(),
+                markdown_text_box_builder.build_slide_boxes(blocks.to_owned()),
+            ));
+        }
+
         Slides {
             slides,
             active_slide: 0,
             automatic,
             time: 0.,
-            theme,
-            font,
-            bold_font,
-            italic_font,
-            code_font,
+            background_color,
             background,
-            code_box_builder,
+            horizontal_offset,
+            align,
+            markdown_text_box_builder,
         }
     }
 
@@ -116,21 +115,21 @@ impl Slides {
         )
     }
 
-    fn build_slides(tokens: Vec<Block>) -> Vec<Slide> {
-        let mut slides: Vec<Slide> = vec![];
-        let mut content: Vec<Block> = vec![];
+    fn build_slides(tokens: Vec<Block>) -> Vec<Vec<Block>> {
+        let mut slides: Vec<Vec<Block>> = vec![];
+        let mut blocks: Vec<Block> = vec![];
         for block in tokens.iter() {
             debug!("{:?}", block);
             match block {
                 Block::Hr => {
-                    slides.push(Slide::new(content));
-                    content = vec![];
+                    slides.push(blocks);
+                    blocks = vec![];
                 }
-                _ => content.push(block.to_owned()),
+                _ => blocks.push(block.to_owned()),
             }
         }
-        if content.len() > 0 {
-            slides.push(Slide::new(content));
+        if blocks.len() > 0 {
+            slides.push(blocks);
         }
         return slides;
     }
@@ -155,9 +154,9 @@ impl Slides {
         } else {
             self.time += delta;
         }
-        clear_background(self.theme.background_color());
+        clear_background(self.background_color);
         self.draw_background(self.background);
-        self.draw_slide(self.theme.vertical_offset);
+        self.draw_slide();
     }
 
     fn draw_background(&self, background: Option<Texture2D>) {
@@ -176,14 +175,54 @@ impl Slides {
         };
     }
 
-    fn draw_slide(&mut self, start_position: f32) {
+    fn draw_slide(&mut self) {
         let slide = &self.slides[self.active_slide];
-        let text_boxes = self.blocks_to_text_boxes(&slide.content, None, TextBoxStyle::Standard);
-        let mut new_position: f32 = start_position;
-        for text_box in text_boxes {
+        let mut new_position: f32 = 0.;
+        for text_box in slide.text_boxes.iter() {
             let hpos = self.horizontal_position(text_box.width_with_padding());
             new_position = text_box.draw(hpos, new_position);
         }
+    }
+
+    fn horizontal_position(&self, width: f32) -> f32 {
+        horizontal_position(width, self.horizontal_offset, &self.align)
+    }
+}
+
+struct MarkdownTextBoxBuilder {
+    theme: Theme,
+    font: Font,
+    font_bold: Font,
+    font_italic: Font,
+    code_font: Font,
+    code_box_builder: CodeBoxBuilder,
+}
+
+impl MarkdownTextBoxBuilder {
+    fn new(theme: Theme, font: Font, font_bold: Font, font_italic: Font, code_font: Font) -> Self {
+        let code_box_builder = CodeBoxBuilder::new(
+            code_font,
+            font_bold,
+            font_italic,
+            theme.code_font_size.to_owned(),
+            theme.code_line_height.to_owned(),
+            theme.code_background_color().to_owned(),
+            theme.code_theme.to_owned(),
+            theme.code_tab_width,
+            theme.vertical_offset,
+        );
+        Self {
+            theme,
+            font,
+            font_bold,
+            font_italic,
+            code_font,
+            code_box_builder,
+        }
+    }
+
+    fn build_slide_boxes(&self, blocks: Vec<Block>) -> Vec<TextBox> {
+        self.blocks_to_text_boxes(&blocks, None, TextBoxStyle::Standard)
     }
 
     fn blocks_to_text_boxes(
@@ -325,13 +364,13 @@ impl Slides {
                 )),
                 Span::Emphasis(spans) => partials.extend(self.spans_to_text_partials(
                     spans,
-                    self.italic_font,
+                    self.font_italic,
                     font_size,
                     color,
                 )),
                 Span::Strong(spans) => partials.extend(self.spans_to_text_partials(
                     spans,
-                    self.bold_font,
+                    self.font_bold,
                     font_size,
                     color,
                 )),
@@ -376,11 +415,8 @@ impl Slides {
             self.theme.line_height,
         )
     }
-
-    fn horizontal_position(&self, width: f32) -> f32 {
-        horizontal_position(width, self.theme.horizontal_offset, &self.theme.align)
-    }
 }
+
 #[derive(Copy, Clone)]
 pub enum TextBoxStyle {
     Standard,
