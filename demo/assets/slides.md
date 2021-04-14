@@ -1,20 +1,24 @@
 # Rusty Slider
 
+---
+
+## About
+
 A small tool to display markdown files as a slideshow.
 
 Use right key or left mouse button to go to next slide.
 
 ---
 
-# Markdown
+## Markdown
 
 * Slides are written in markdown.
-* Supports headers, paragraphs, lists and code blocks.
+* Supports headers, paragraphs, lists, blockquotes and code blocks.
 * Text between horizontal lines will be a slide.
 
 ---
 
-# Theme
+## Theme
 
 Colors and fonts can be configured in a json file.
 
@@ -22,34 +26,42 @@ A background image can also be defined in the theme file.
 
 ---
 
-# Rust + Macroquad
+## Rust + Macroquad
 
 Developed with Rust and the macroquad game library.
 
 ---
 
-# Cross-platform
+## Cross-platform
 
 Supports Windows, MacOS, Linux and web.
 
 ---
 
-# Code
+## Code
 
 Code blocks will be rendered with syntax highlighting.
 
 ```rust
 let shader_material = load_material(
-    shaders::crt::VERTEX,
-    shaders::crt::FRAGMENT,
-    Default::default(),
+	shaders::crt::VERTEX,
+	shaders::crt::FRAGMENT,
+	Default::default(),
 )
 .unwrap();
 ```
 
 ---
 
-# Controls
+## Blockquotes
+
+> Blockquotes renders with background color
+>
+> *And fancy quotes.*
+
+---
+
+## Controls
 
 Left/right keys switches between previous and next slide.
 
@@ -59,14 +71,14 @@ Space toggles the shader.
 
 ---
 
-# Usage
+## Usage
 
-1. Create a markdown file called slides.md in `assets` directory.
-1. Optionally add a theme.json in `assets` directory.
+1. Create a markdown file called `slides.md` in `assets` directory.
+1. Optionally add a `theme.json` in `assets` directory.
 
 ---
 
-# Possible improvements
+## Possible improvements
 
 Add transitions.
 
@@ -74,8 +86,8 @@ Support image syntax to set backround image of slide.
 
 ---
 
-# License
+## License
 
-Copyright 2021 Olle Wreede
+**Copyright 2021 Olle Wreede**
 
 Released under the MIT license.
