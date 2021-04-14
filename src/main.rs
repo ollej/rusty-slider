@@ -199,14 +199,28 @@ impl Slides {
         for block in blocks.iter() {
             match block {
                 Block::Header(spans, 1) => {
-                    text_lines.push(TextLine::new(
-                        self.theme.align.to_owned(),
-                        self.spans_to_text_partials(
-                            spans,
-                            self.font,
-                            self.theme.font_size_header_title,
-                            self.theme.heading_color(),
-                        ),
+                    if text_lines.len() > 0 {
+                        text_boxes.push(TextBox::new(
+                            text_lines,
+                            self.theme.vertical_offset,
+                            background_color,
+                            style,
+                        ));
+                        text_lines = Vec::new();
+                    }
+                    text_boxes.push(TextBox::new(
+                        vec![TextLine::new(
+                            self.theme.align.to_owned(),
+                            self.spans_to_text_partials(
+                                spans,
+                                self.font,
+                                self.theme.font_size_header_title,
+                                self.theme.heading_color(),
+                            ),
+                        )],
+                        self.theme.vertical_offset,
+                        background_color,
+                        TextBoxStyle::Title,
                     ));
                 }
                 Block::Header(spans, _size) => {
@@ -245,6 +259,7 @@ impl Slides {
                             background_color,
                             style,
                         ));
+                        text_lines = Vec::new();
                     }
                     text_boxes.extend(self.blocks_to_text_boxes(
                         blocks,
@@ -255,7 +270,6 @@ impl Slides {
                             color: self.theme.text_color(),
                         },
                     ));
-                    text_lines = Vec::new();
                 }
                 _ => (),
             }
@@ -357,6 +371,7 @@ impl Slides {
 #[derive(Copy, Clone)]
 pub enum TextBoxStyle {
     Standard,
+    Title,
     Blockquote { size: u16, font: Font, color: Color },
     Code,
 }
@@ -368,6 +383,19 @@ impl TextBoxStyle {
                 self.draw_blockquote(hpos, vpos, text_box, *size, *font, *color)
             }
             _ => (),
+        }
+    }
+
+    fn top_position(&self, vpos: f32, text_box: &TextBox) -> f32 {
+        match self {
+            TextBoxStyle::Title => {
+                screen_height() / 2.
+                    - text_box.height / 2.
+                    - text_box.margin
+                    - text_box.padding
+                    - text_box.offset_y
+            }
+            _ => vpos,
         }
     }
 
@@ -443,8 +471,9 @@ impl TextBox {
     }
 
     fn draw(&self, hpos: f32, vpos: f32) -> f32 {
+        let vpos = self.style.top_position(vpos, self);
         self.draw_background(hpos, vpos + self.margin + self.offset_y);
-        self.draw_style(hpos, vpos);
+        self.style.draw(hpos, vpos, self);
         let inner_hpos = hpos + self.padding;
         let mut new_position = vpos + self.padding + self.margin;
         for line in self.lines.iter() {
@@ -469,10 +498,6 @@ impl TextBox {
             ),
             None => (),
         }
-    }
-
-    fn draw_style(&self, hpos: f32, vpos: f32) {
-        self.style.draw(hpos, vpos, self);
     }
 
     fn width_with_padding(&self) -> f32 {
