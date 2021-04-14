@@ -6,11 +6,11 @@ use macroquad::prelude::*;
 use markdown::{Block, ListItem, Span};
 use nanoserde::DeJson;
 use quad_url::get_program_parameters;
-use std::collections::HashMap;
 use std::path::PathBuf;
 use structopt::StructOpt;
 
 use syntect::easy::HighlightLines;
+use syntect::highlighting::FontStyle;
 use syntect::highlighting::ThemeSet;
 use syntect::parsing::SyntaxSet;
 use syntect::util::LinesWithEndings;
@@ -44,7 +44,7 @@ struct Slides {
     italic_font: Font,
     code_font: Font,
     background: Option<Texture2D>,
-    code_blocks: CodeBlocks,
+    code_box_builder: CodeBoxBuilder,
 }
 
 impl Slides {
@@ -58,15 +58,16 @@ impl Slides {
         code_font: Font,
         background: Option<Texture2D>,
     ) -> Slides {
-        let code_blocks = CodeBlocks::new(
+        let code_box_builder = CodeBoxBuilder::new(
             code_font,
+            bold_font,
+            italic_font,
             theme.code_font_size.to_owned(),
             theme.code_line_height.to_owned(),
             theme.code_background_color().to_owned(),
             theme.code_theme.to_owned(),
             theme.code_tab_width,
-            theme.horizontal_offset,
-            theme.align.to_owned(),
+            theme.vertical_offset,
         );
         Slides {
             slides,
@@ -79,7 +80,7 @@ impl Slides {
             italic_font,
             code_font,
             background,
-            code_blocks,
+            code_box_builder,
         }
     }
 
@@ -177,9 +178,6 @@ impl Slides {
 
     fn draw_slide(&mut self, start_position: f32) {
         let slide = &self.slides[self.active_slide];
-        // TODO: Doesn't support codeblock
-        // TODO: Title position not in middle vertically
-        // TODO: code blocks should be changed to TextBox
         let text_boxes = self.blocks_to_text_boxes(&slide.content, None, TextBoxStyle::Standard);
         let mut new_position: f32 = start_position;
         for text_box in text_boxes {
@@ -270,6 +268,21 @@ impl Slides {
                             color: self.theme.text_color(),
                         },
                     ));
+                }
+                Block::CodeBlock(language, code) => {
+                    if text_lines.len() > 0 {
+                        text_boxes.push(TextBox::new(
+                            text_lines,
+                            self.theme.vertical_offset,
+                            background_color,
+                            style,
+                        ));
+                        text_lines = Vec::new();
+                    }
+                    text_boxes.push(
+                        self.code_box_builder
+                            .build_text_box(language.to_owned(), code.to_owned()),
+                    );
                 }
                 _ => (),
             }
@@ -589,81 +602,57 @@ impl TextPartial {
     }
 }
 
-struct CodeBlocks {
+struct CodeBoxBuilder {
     ps: SyntaxSet,
     ts: ThemeSet,
     font: Font,
+    font_bold: Font,
+    font_italic: Font,
     font_size: u16,
     line_height: f32,
     background_color: Color,
     tab_spaces: String,
     theme: String,
-    horizontal_offset: f32,
-    align: String,
-    blocks: HashMap<String, CodeBlock>,
+    margin: f32,
 }
 
-impl CodeBlocks {
+impl CodeBoxBuilder {
     fn new(
         font: Font,
+        font_bold: Font,
+        font_italic: Font,
         font_size: u16,
         line_height: f32,
         background_color: Color,
         theme: String,
         tab_width: u8,
-        horizontal_offset: f32,
-        align: String,
+        margin: f32,
     ) -> Self {
         Self {
             ts: ThemeSet::load_defaults(),
             ps: SyntaxSet::load_defaults_newlines(),
-            blocks: HashMap::new(),
             font,
+            font_bold,
+            font_italic,
             font_size,
             line_height,
             background_color,
             tab_spaces: " ".repeat(tab_width as usize),
             theme,
-            horizontal_offset,
-            align,
+            margin,
         }
     }
 
-    fn get_code_block(
-        &mut self,
-        language: Option<String>,
-        code: String,
-        start_position: f32,
-        slide_number: usize,
-    ) -> Option<&CodeBlock> {
-        let key = format!("{}-{}", slide_number, start_position);
-        if !self.blocks.contains_key(&key) {
-            let code_block = self.build_code_block(language, code, start_position);
-            self.blocks.insert(key.to_owned(), code_block);
-        }
-        return self.blocks.get(&key);
+    fn build_text_box(&self, language: Option<String>, code: String) -> TextBox {
+        TextBox::new(
+            self.build_text_lines(language, code),
+            self.margin,
+            Some(self.background_color),
+            TextBoxStyle::Code,
+        )
     }
 
-    fn build_code_block(
-        &self,
-        language: Option<String>,
-        code: String,
-        start_position: f32,
-    ) -> CodeBlock {
-        let code_box = self.build_code_box(language, code);
-        CodeBlock {
-            code_box,
-            start_position: start_position,
-            font: self.font,
-            font_size: self.font_size,
-            line_height: self.line_height,
-            background_color: self.background_color,
-            horizontal_offset: self.horizontal_offset,
-            align: self.align.to_owned(),
-        }
-    }
-
-    fn build_code_box(&self, language: Option<String>, code: String) -> CodeBox {
+    fn build_text_lines(&self, language: Option<String>, code: String) -> Vec<TextLine> {
         let syntax = match language {
             Some(lang) => self.ps.find_syntax_by_token(&lang),
             None => self.ps.find_syntax_by_first_line(&code),
@@ -675,111 +664,35 @@ impl CodeBlocks {
             .map(|line| h.highlight(line, &self.ps))
             .collect::<Vec<_>>();
 
+        let mut text_lines = vec![];
         let mut partials = vec![];
-        let mut code_width: f32 = 0.;
-        let mut code_height: f32 = 0.;
-        let line_height = self.font_size as f32 * self.line_height;
-        for (lineno, tokens) in lines.iter().enumerate() {
-            let mut line_width: f32 = 0.;
-            code_height += line_height;
+        for tokens in lines.iter() {
             for (style, text) in tokens {
                 let text = text.trim_end_matches('\n').replace('\t', &self.tab_spaces);
                 if text.is_empty() {
                     continue;
                 }
 
-                let dimensions = measure_text(&text, Some(self.font), self.font_size, 1.);
                 let c = style.foreground;
+                let font = match style.font_style {
+                    FontStyle::BOLD => self.font_bold,
+                    FontStyle::ITALIC => self.font_italic,
+                    _ => self.font,
+                };
 
-                partials.push((
-                    line_width,
-                    line_height * (lineno + 1) as f32,
+                partials.push(TextPartial::new(
+                    &text,
+                    font,
+                    self.font_size,
                     Color::from_rgba(c.r, c.g, c.b, c.a),
-                    text.to_owned(),
+                    self.line_height,
                 ));
-
-                line_width += dimensions.width;
-                code_width = code_width.max(line_width);
             }
+            text_lines.push(TextLine::new("left".to_owned(), partials));
+            partials = Vec::new();
         }
 
-        CodeBox {
-            width: code_width,
-            height: code_height,
-            partials,
-        }
-    }
-}
-
-struct CodeBlock {
-    code_box: CodeBox,
-    start_position: f32,
-    font: Font,
-    font_size: u16,
-    line_height: f32,
-    background_color: Color,
-    horizontal_offset: f32,
-    align: String,
-}
-
-impl CodeBlock {
-    fn draw(&self) -> f32 {
-        let mut hpos = self.horizontal_position();
-        let mut vpos = self.start_position + CodeBox::BOX_MARGIN * 2.;
-        draw_rectangle(
-            hpos,
-            vpos,
-            self.width(),
-            self.height(),
-            self.background_color,
-        );
-        hpos += CodeBox::BOX_PADDING;
-        vpos += CodeBox::BOX_PADDING - self.font_size as f32 * (self.line_height - 1.);
-        for (x, y, color, text) in &self.code_box.partials {
-            let text_params = TextParams {
-                font: self.font,
-                font_size: self.font_size,
-                font_scale: 1.,
-                color: color.to_owned(),
-            };
-            draw_text_ex(&text, hpos + x, vpos + y, text_params);
-        }
-        self.start_position + self.code_box.height_with_margin()
-    }
-
-    fn horizontal_position(&self) -> f32 {
-        horizontal_position(self.width(), self.horizontal_offset, &self.align)
-    }
-
-    fn width(&self) -> f32 {
-        self.code_box.width_with_padding()
-    }
-
-    fn height(&self) -> f32 {
-        self.code_box.height_with_padding()
-    }
-}
-
-struct CodeBox {
-    width: f32,
-    height: f32,
-    partials: Vec<(f32, f32, Color, String)>,
-}
-
-impl CodeBox {
-    const BOX_PADDING: f32 = 20.;
-    const BOX_MARGIN: f32 = 20.;
-
-    fn width_with_padding(&self) -> f32 {
-        self.width + Self::BOX_PADDING * 2.
-    }
-
-    fn height_with_padding(&self) -> f32 {
-        self.height + Self::BOX_PADDING * 2.
-    }
-
-    fn height_with_margin(&self) -> f32 {
-        self.height_with_padding() + Self::BOX_MARGIN * 2.
+        text_lines
     }
 }
 
