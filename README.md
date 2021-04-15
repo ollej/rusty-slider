@@ -1,6 +1,5 @@
 # Rusty Slider
 [![Cross-compile](https://github.com/ollej/rusty-slider/actions/workflows/rust.yml/badge.svg?branch=main)](https://github.com/ollej/rusty-slider/actions/workflows/rust.yml)
-[![Release](https://github.com/ollej/rusty-slider/actions/workflows/release.yml/badge.svg?event=release)](https://github.com/ollej/rusty-slider/actions/workflows/release.yml)
 
 A small tool to display markdown files as a slideshow.
 
@@ -16,7 +15,7 @@ Try out Rusty Slider online:
 ## Download
 
 Rusty Slider is available for multiple platforms, such as Windows, 
-Linux, and MacOS. Download the latest binary build from github:
+Linux, MacOS, and the web. Download the latest binary build from github:
 
 [https://github.com/ollej/rusty-slider/releases/](https://github.com/ollej/rusty-slider/releases/)
 
@@ -26,7 +25,8 @@ The file `slides.md` will be read and split into slides on
 horizontal lines: `---`
 
 At the moment, the markdown supported is headers, paragraphs,
-code blocks, and simple lists. Emphasis and strong will be ignored.
+code blocks, blockquotes, and simple lists. Emphasis and strong are
+supported if the theme has italic and bold fonts.
 
 Heading level 1 can be used as title page, as it will render in the
 middle of the slide and can have a larger font size set by the theme
@@ -83,7 +83,7 @@ The command line options can also be used as URL arguments to the
 web demo.
 
 ```
-rusty-slider 0.4.0
+rusty-slider 0.5.0
 A small tool to display markdown files as a slideshow.
 
 USAGE:
