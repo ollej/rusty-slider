@@ -15,23 +15,8 @@ use syntect::highlighting::ThemeSet;
 use syntect::parsing::SyntaxSet;
 use syntect::util::LinesWithEndings;
 
-fn horizontal_position(width: f32, horizontal_offset: f32, align: &String) -> f32 {
-    match align.as_str() {
-        "left" => horizontal_offset,
-        "right" => screen_width() - horizontal_offset - width,
-        _ => screen_width() / 2. - width / 2.,
-    }
-}
-
 struct Slide {
-    blocks: Vec<Block>,
     text_boxes: Vec<TextBox>,
-}
-
-impl Slide {
-    fn new(blocks: Vec<Block>, text_boxes: Vec<TextBox>) -> Self {
-        Self { blocks, text_boxes }
-    }
 }
 
 struct Slides {
@@ -43,11 +28,10 @@ struct Slides {
     background: Option<Texture2D>,
     horizontal_offset: f32,
     align: String,
-    markdown_text_box_builder: MarkdownTextBoxBuilder,
 }
 
 impl Slides {
-    fn from_slides(
+    fn from_slide_blocks(
         slide_blocks: Vec<Vec<Block>>,
         theme: Theme,
         automatic: f32,
@@ -60,15 +44,8 @@ impl Slides {
         let background_color = theme.background_color();
         let horizontal_offset = theme.horizontal_offset;
         let align = theme.align.to_owned();
-        let markdown_text_box_builder =
-            MarkdownTextBoxBuilder::new(theme, font, font_bold, font_italic, code_font);
-        let mut slides: Vec<Slide> = vec![];
-        for blocks in slide_blocks.iter() {
-            slides.push(Slide::new(
-                blocks.to_owned(),
-                markdown_text_box_builder.build_slide_boxes(blocks.to_owned()),
-            ));
-        }
+        let slides = MarkdownTextBoxBuilder::new(theme, font, font_bold, font_italic, code_font)
+            .build_slides(slide_blocks);
 
         Slides {
             slides,
@@ -79,7 +56,6 @@ impl Slides {
             background,
             horizontal_offset,
             align,
-            markdown_text_box_builder,
         }
     }
 
@@ -102,9 +78,9 @@ impl Slides {
             }
         };
         let tokens = markdown::tokenize(&markdown);
-        let slides = Self::build_slides(tokens);
-        Self::from_slides(
-            slides,
+        let slide_blocks = Self::split_tokens_into_slides(tokens);
+        Self::from_slide_blocks(
+            slide_blocks,
             theme,
             automatic as f32,
             font,
@@ -115,7 +91,7 @@ impl Slides {
         )
     }
 
-    fn build_slides(tokens: Vec<Block>) -> Vec<Vec<Block>> {
+    fn split_tokens_into_slides(tokens: Vec<Block>) -> Vec<Vec<Block>> {
         let mut slides: Vec<Vec<Block>> = vec![];
         let mut blocks: Vec<Block> = vec![];
         for block in tokens.iter() {
@@ -185,7 +161,11 @@ impl Slides {
     }
 
     fn horizontal_position(&self, width: f32) -> f32 {
-        horizontal_position(width, self.horizontal_offset, &self.align)
+        match self.align.as_str() {
+            "left" => self.horizontal_offset,
+            "right" => screen_width() - self.horizontal_offset - width,
+            _ => screen_width() / 2. - width / 2.,
+        }
     }
 }
 
@@ -221,8 +201,18 @@ impl MarkdownTextBoxBuilder {
         }
     }
 
-    fn build_slide_boxes(&self, blocks: Vec<Block>) -> Vec<TextBox> {
-        self.blocks_to_text_boxes(&blocks, None, TextBoxStyle::Standard)
+    fn build_slides(&self, slide_blocks: Vec<Vec<Block>>) -> Vec<Slide> {
+        let mut slides = vec![];
+        for blocks in slide_blocks.iter() {
+            slides.push(Slide {
+                text_boxes: self.build_slide_boxes(blocks),
+            });
+        }
+        slides
+    }
+
+    fn build_slide_boxes(&self, blocks: &Vec<Block>) -> Vec<TextBox> {
+        self.blocks_to_text_boxes(blocks, None, TextBoxStyle::Standard)
     }
 
     fn blocks_to_text_boxes(
