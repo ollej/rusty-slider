@@ -31,8 +31,8 @@ struct Slides {
 }
 
 impl Slides {
-    fn from_slide_blocks(
-        slide_blocks: Vec<Vec<Block>>,
+    fn from_markdown(
+        markdown: String,
         theme: Theme,
         automatic: f32,
         font: Font,
@@ -44,8 +44,8 @@ impl Slides {
         let background_color = theme.background_color();
         let horizontal_offset = theme.horizontal_offset;
         let align = theme.align.to_owned();
-        let slides = MarkdownTextBoxBuilder::new(theme, font, font_bold, font_italic, code_font)
-            .build_slides(slide_blocks);
+        let slides =
+            MarkdownToSlides::new(theme, font, font_bold, font_italic, code_font).parse(markdown);
 
         Slides {
             slides,
@@ -77,10 +77,8 @@ impl Slides {
                 std::process::exit(1);
             }
         };
-        let tokens = markdown::tokenize(&markdown);
-        let slide_blocks = Self::split_tokens_into_slides(tokens);
-        Self::from_slide_blocks(
-            slide_blocks,
+        Self::from_markdown(
+            markdown,
             theme,
             automatic as f32,
             font,
@@ -89,25 +87,6 @@ impl Slides {
             code_font,
             background,
         )
-    }
-
-    fn split_tokens_into_slides(tokens: Vec<Block>) -> Vec<Vec<Block>> {
-        let mut slides: Vec<Vec<Block>> = vec![];
-        let mut blocks: Vec<Block> = vec![];
-        for block in tokens.iter() {
-            debug!("{:?}", block);
-            match block {
-                Block::Hr => {
-                    slides.push(blocks);
-                    blocks = vec![];
-                }
-                _ => blocks.push(block.to_owned()),
-            }
-        }
-        if blocks.len() > 0 {
-            slides.push(blocks);
-        }
-        return slides;
     }
 
     fn next(&mut self) {
@@ -169,7 +148,7 @@ impl Slides {
     }
 }
 
-struct MarkdownTextBoxBuilder {
+struct MarkdownToSlides {
     theme: Theme,
     font: Font,
     font_bold: Font,
@@ -178,7 +157,7 @@ struct MarkdownTextBoxBuilder {
     code_box_builder: CodeBoxBuilder,
 }
 
-impl MarkdownTextBoxBuilder {
+impl MarkdownToSlides {
     fn new(theme: Theme, font: Font, font_bold: Font, font_italic: Font, code_font: Font) -> Self {
         let code_box_builder = CodeBoxBuilder::new(
             code_font,
@@ -199,6 +178,31 @@ impl MarkdownTextBoxBuilder {
             code_font,
             code_box_builder,
         }
+    }
+
+    fn parse(&self, markdown: String) -> Vec<Slide> {
+        let tokens = markdown::tokenize(&markdown);
+        let slide_blocks = self.split_tokens_into_slides(tokens);
+        self.build_slides(slide_blocks)
+    }
+
+    fn split_tokens_into_slides(&self, tokens: Vec<Block>) -> Vec<Vec<Block>> {
+        let mut slides: Vec<Vec<Block>> = vec![];
+        let mut blocks: Vec<Block> = vec![];
+        for block in tokens.iter() {
+            debug!("{:?}", block);
+            match block {
+                Block::Hr => {
+                    slides.push(blocks);
+                    blocks = vec![];
+                }
+                _ => blocks.push(block.to_owned()),
+            }
+        }
+        if blocks.len() > 0 {
+            slides.push(blocks);
+        }
+        return slides;
     }
 
     fn build_slides(&self, slide_blocks: Vec<Vec<Block>>) -> Vec<Slide> {
