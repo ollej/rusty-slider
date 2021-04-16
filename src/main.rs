@@ -15,6 +15,13 @@ use syntect::highlighting::ThemeSet;
 use syntect::parsing::SyntaxSet;
 use syntect::util::LinesWithEndings;
 
+type Vpos = f32;
+type Hpos = f32;
+type Duration = f32;
+type Width = f32;
+type Height = f32;
+type FontSize = u16;
+
 struct Slide {
     text_boxes: Vec<TextBox>,
 }
@@ -22,11 +29,11 @@ struct Slide {
 struct Slides {
     slides: Vec<Slide>,
     active_slide: usize,
-    time: f32,
-    automatic: f32,
+    time: Duration,
+    automatic: Duration,
     background_color: Color,
     background: Option<Texture2D>,
-    horizontal_offset: f32,
+    horizontal_offset: Hpos,
     align: String,
 }
 
@@ -34,7 +41,7 @@ impl Slides {
     fn from_markdown(
         markdown: String,
         theme: Theme,
-        automatic: f32,
+        automatic: Duration,
         font: Font,
         font_bold: Font,
         font_italic: Font,
@@ -62,7 +69,7 @@ impl Slides {
     async fn load(
         slides_path: PathBuf,
         theme: Theme,
-        automatic: u32,
+        automatic: Duration,
         font: Font,
         bold_font: Font,
         italic_font: Font,
@@ -80,7 +87,7 @@ impl Slides {
         Self::from_markdown(
             markdown,
             theme,
-            automatic as f32,
+            automatic,
             font,
             bold_font,
             italic_font,
@@ -103,7 +110,7 @@ impl Slides {
         }
     }
 
-    fn draw(&mut self, delta: f32) {
+    fn draw(&mut self, delta: Duration) {
         if self.automatic > 0. && self.time > self.automatic {
             self.next();
         } else {
@@ -132,14 +139,14 @@ impl Slides {
 
     fn draw_slide(&mut self) {
         let slide = &self.slides[self.active_slide];
-        let mut new_position: f32 = 0.;
+        let mut new_position: Vpos = 0.;
         for text_box in slide.text_boxes.iter() {
             let hpos = self.horizontal_position(text_box.width_with_padding());
             new_position = text_box.draw(hpos, new_position);
         }
     }
 
-    fn horizontal_position(&self, width: f32) -> f32 {
+    fn horizontal_position(&self, width: Width) -> Hpos {
         match self.align.as_str() {
             "left" => self.horizontal_offset,
             "right" => screen_width() - self.horizontal_offset - width,
@@ -335,7 +342,7 @@ impl MarkdownToSlides {
         &self,
         spans: &Vec<Span>,
         font: Font,
-        font_size: u16,
+        font_size: FontSize,
         color: Color,
     ) -> Vec<TextPartial> {
         let mut partials = vec![];
@@ -415,12 +422,16 @@ impl MarkdownToSlides {
 pub enum TextBoxStyle {
     Standard,
     Title,
-    Blockquote { size: u16, font: Font, color: Color },
+    Blockquote {
+        size: FontSize,
+        font: Font,
+        color: Color,
+    },
     Code,
 }
 
 impl TextBoxStyle {
-    fn draw(&self, hpos: f32, vpos: f32, text_box: &TextBox) {
+    fn draw(&self, hpos: Hpos, vpos: Vpos, text_box: &TextBox) {
         match self {
             TextBoxStyle::Blockquote { size, font, color } => {
                 self.draw_blockquote(hpos, vpos, text_box, *size, *font, *color)
@@ -429,7 +440,7 @@ impl TextBoxStyle {
         }
     }
 
-    fn top_position(&self, vpos: f32, text_box: &TextBox) -> f32 {
+    fn top_position(&self, vpos: Vpos, text_box: &TextBox) -> Vpos {
         match self {
             TextBoxStyle::Title => {
                 screen_height() / 2.
@@ -444,10 +455,10 @@ impl TextBoxStyle {
 
     fn draw_blockquote(
         &self,
-        hpos: f32,
-        vpos: f32,
+        hpos: Hpos,
+        vpos: Vpos,
         text_box: &TextBox,
-        size: u16,
+        size: FontSize,
         font: Font,
         color: Color,
     ) {
@@ -461,7 +472,7 @@ impl TextBoxStyle {
         draw_text_ex(
             "“",
             hpos - dimensions.width,
-            vpos + size as f32,
+            vpos + size as Vpos,
             text_params,
         );
         draw_text_ex(
@@ -474,11 +485,11 @@ impl TextBoxStyle {
 }
 
 struct TextBox {
-    width: f32,
-    height: f32,
-    margin: f32,
+    width: Width,
+    height: Height,
+    margin: Height,
     padding: f32,
-    offset_y: f32,
+    offset_y: Vpos,
     background_color: Option<Color>,
     style: TextBoxStyle,
     lines: Vec<TextLine>,
@@ -489,13 +500,13 @@ impl TextBox {
 
     fn new(
         lines: Vec<TextLine>,
-        margin: f32,
+        margin: Height,
         background_color: Option<Color>,
         style: TextBoxStyle,
     ) -> Self {
-        let mut width: f32 = 0.;
-        let mut height: f32 = 0.;
-        let mut offset_y: f32 = 0.;
+        let mut width: Width = 0.;
+        let mut height: Height = 0.;
+        let mut offset_y: Vpos = 0.;
         for line in lines.iter() {
             width = width.max(line.width);
             offset_y = offset_y.max(line.offset_y);
@@ -513,7 +524,7 @@ impl TextBox {
         }
     }
 
-    fn draw(&self, hpos: f32, vpos: f32) -> f32 {
+    fn draw(&self, hpos: Hpos, vpos: Vpos) -> Vpos {
         let vpos = self.style.top_position(vpos, self);
         self.draw_background(hpos, vpos + self.margin + self.offset_y);
         self.style.draw(hpos, vpos, self);
@@ -530,7 +541,7 @@ impl TextBox {
         vpos + self.height_with_margin()
     }
 
-    fn draw_background(&self, hpos: f32, vpos: f32) {
+    fn draw_background(&self, hpos: Hpos, vpos: Vpos) {
         match self.background_color {
             Some(color) => draw_rectangle(
                 hpos,
@@ -543,32 +554,32 @@ impl TextBox {
         }
     }
 
-    fn width_with_padding(&self) -> f32 {
+    fn width_with_padding(&self) -> Width {
         self.width + self.padding * 2.
     }
 
-    fn height_with_padding(&self) -> f32 {
+    fn height_with_padding(&self) -> Height {
         self.height + self.padding * 2.
     }
 
-    fn height_with_margin(&self) -> f32 {
+    fn height_with_margin(&self) -> Height {
         self.height_with_padding() + self.margin
     }
 }
 
 struct TextLine {
-    width: f32,
-    height: f32,
-    offset_y: f32,
+    width: Width,
+    height: Height,
+    offset_y: Vpos,
     align: String,
     partials: Vec<TextPartial>,
 }
 
 impl TextLine {
     fn new(align: String, partials: Vec<TextPartial>) -> Self {
-        let mut width: f32 = 0.;
-        let mut height: f32 = 0.;
-        let mut offset_y: f32 = 0.;
+        let mut width: Width = 0.;
+        let mut height: Height = 0.;
+        let mut offset_y: Vpos = 0.;
         for partial in &partials {
             width += partial.width;
             height = height.max(partial.height);
@@ -583,7 +594,7 @@ impl TextLine {
         }
     }
 
-    fn draw(&self, start_hpos: f32, vpos: f32) -> f32 {
+    fn draw(&self, start_hpos: Hpos, vpos: Vpos) -> Vpos {
         let mut hpos = start_hpos;
         for partial in &self.partials {
             hpos = partial.draw(hpos, vpos);
@@ -593,21 +604,27 @@ impl TextLine {
 }
 
 struct TextPartial {
-    width: f32,
-    height: f32,
+    width: Width,
+    height: Height,
     color: Color,
     font: Font,
-    font_size: u16,
-    offset_y: f32,
+    font_size: FontSize,
+    offset_y: Vpos,
     text: String,
 }
 
 impl TextPartial {
-    fn new(text: &String, font: Font, font_size: u16, color: Color, line_height: f32) -> Self {
+    fn new(
+        text: &String,
+        font: Font,
+        font_size: FontSize,
+        color: Color,
+        line_height: Height,
+    ) -> Self {
         let dimensions = measure_text(text, Some(font), font_size, 1.);
         Self {
             width: dimensions.width,
-            height: font_size as f32 * line_height,
+            height: font_size as Height * line_height,
             color,
             font,
             font_size,
@@ -616,7 +633,7 @@ impl TextPartial {
         }
     }
 
-    fn draw(&self, hpos: f32, vpos: f32) -> f32 {
+    fn draw(&self, hpos: Hpos, vpos: Vpos) -> Vpos {
         draw_text_ex(
             &self.text,
             hpos,
@@ -638,12 +655,12 @@ struct CodeBoxBuilder {
     font: Font,
     font_bold: Font,
     font_italic: Font,
-    font_size: u16,
-    line_height: f32,
+    font_size: FontSize,
+    line_height: Height,
     background_color: Color,
     tab_spaces: String,
-    theme: String,
-    margin: f32,
+    highlighting_theme: String,
+    margin: Height,
 }
 
 impl CodeBoxBuilder {
@@ -651,12 +668,12 @@ impl CodeBoxBuilder {
         font: Font,
         font_bold: Font,
         font_italic: Font,
-        font_size: u16,
-        line_height: f32,
+        font_size: FontSize,
+        line_height: Height,
         background_color: Color,
-        theme: String,
-        tab_width: u8,
-        margin: f32,
+        highlighting_theme: String,
+        tab_width: usize,
+        margin: Height,
     ) -> Self {
         Self {
             ts: ThemeSet::load_defaults(),
@@ -667,8 +684,8 @@ impl CodeBoxBuilder {
             font_size,
             line_height,
             background_color,
-            tab_spaces: " ".repeat(tab_width as usize),
-            theme,
+            tab_spaces: " ".repeat(tab_width),
+            highlighting_theme,
             margin,
         }
     }
@@ -688,7 +705,7 @@ impl CodeBoxBuilder {
             None => self.ps.find_syntax_by_first_line(&code),
         }
         .unwrap_or_else(|| self.ps.find_syntax_plain_text());
-        let theme = &self.ts.themes[&self.theme];
+        let theme = &self.ts.themes[&self.highlighting_theme];
         let mut h = HighlightLines::new(syntax, &theme);
         let lines = LinesWithEndings::from(&code)
             .map(|line| h.highlight(line, &self.ps))
@@ -737,22 +754,22 @@ pub struct Theme {
     pub font: String,
     pub font_bold: String,
     pub font_italic: String,
-    pub font_size_header_title: u16,
-    pub font_size_header_slides: u16,
-    pub font_size_text: u16,
-    pub vertical_offset: f32,
-    pub horizontal_offset: f32,
-    pub line_height: f32,
+    pub font_size_header_title: FontSize,
+    pub font_size_header_slides: FontSize,
+    pub font_size_text: FontSize,
+    pub vertical_offset: Vpos,
+    pub horizontal_offset: Hpos,
+    pub line_height: Height,
     pub blockquote_background_color: String,
     pub blockquote_padding: f32,
     pub blockquote_left_quote: String,
     pub blockquote_right_quote: String,
     pub code_font: String,
-    pub code_font_size: u16,
-    pub code_line_height: f32,
+    pub code_font_size: FontSize,
+    pub code_line_height: Height,
     pub code_background_color: String,
     pub code_theme: String,
-    pub code_tab_width: u8,
+    pub code_tab_width: usize,
     pub bullet: String,
     pub shader: bool,
 }
@@ -853,7 +870,7 @@ struct CliOptions {
     pub theme: PathBuf,
     /// Automatically switch slides every N seconds.
     #[structopt(short, long, default_value = "0")]
-    pub automatic: u32,
+    pub automatic: Duration,
 }
 
 fn window_conf() -> Conf {
