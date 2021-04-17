@@ -48,7 +48,7 @@ impl Slides {
         code_font: Font,
         background: Option<Texture2D>,
     ) -> Slides {
-        let background_color = theme.background_color();
+        let background_color = theme.background_color;
         let horizontal_offset = theme.horizontal_offset;
         let align = theme.align.to_owned();
         let slides =
@@ -172,7 +172,7 @@ impl MarkdownToSlides {
             font_italic,
             theme.code_font_size.to_owned(),
             theme.code_line_height.to_owned(),
-            theme.code_background_color().to_owned(),
+            theme.code_background_color.to_owned(),
             theme.code_theme.to_owned(),
             theme.code_tab_width,
             theme.vertical_offset,
@@ -253,7 +253,7 @@ impl MarkdownToSlides {
                                 spans,
                                 self.font,
                                 self.theme.font_size_header_title,
-                                self.theme.heading_color(),
+                                self.theme.heading_color,
                             ),
                         )],
                         self.theme.vertical_offset,
@@ -268,7 +268,7 @@ impl MarkdownToSlides {
                             spans,
                             self.font,
                             self.theme.font_size_header_slides,
-                            self.theme.heading_color(),
+                            self.theme.heading_color,
                         ),
                     ));
                 }
@@ -279,7 +279,7 @@ impl MarkdownToSlides {
                             spans,
                             self.font,
                             self.theme.font_size_text,
-                            self.theme.text_color(),
+                            self.theme.text_color,
                         ),
                     ));
                 }
@@ -301,11 +301,11 @@ impl MarkdownToSlides {
                     }
                     text_boxes.extend(self.blocks_to_text_boxes(
                         blocks,
-                        Some(self.theme.blockquote_background_color()),
+                        Some(self.theme.blockquote_background_color),
                         TextBoxStyle::Blockquote {
                             size: self.theme.font_size_header_title * 2,
                             font: self.font,
-                            color: self.theme.text_color(),
+                            color: self.theme.text_color,
                         },
                     ));
                 }
@@ -360,7 +360,7 @@ impl MarkdownToSlides {
                     &text,
                     self.code_font,
                     font_size,
-                    self.theme.text_color(), // TODO: Add code text color to theme
+                    self.theme.text_color, // TODO: Add code text color to theme
                     self.theme.line_height,
                 )),
                 Span::Emphasis(spans) => partials.extend(self.spans_to_text_partials(
@@ -392,7 +392,7 @@ impl MarkdownToSlides {
                         spans,
                         self.font,
                         self.theme.font_size_text,
-                        self.theme.text_color(),
+                        self.theme.text_color,
                     ));
                     let text_line = TextLine::new("left".to_string(), partials);
                     lines.push(text_line);
@@ -412,7 +412,7 @@ impl MarkdownToSlides {
             &item_bullet,
             self.font,
             self.theme.font_size_text,
-            self.theme.text_color(),
+            self.theme.text_color,
             self.theme.line_height,
         )
     }
@@ -743,13 +743,38 @@ impl CodeBoxBuilder {
     }
 }
 
+#[derive(DeJson)]
+#[nserde(transparent)]
+struct HexColor(String);
+impl HexColor {
+    pub fn as_str(&self) -> &str {
+        &self.0
+    }
+}
+impl From<&HexColor> for Color {
+    fn from(color: &HexColor) -> Color {
+        match Rgb::from_hex_str(color.as_str()) {
+            Ok(rgb) => Color::new(
+                rgb.red() as f32 / 255.,
+                rgb.green() as f32 / 255.,
+                rgb.blue() as f32 / 255.,
+                1.,
+            ),
+            Err(_) => WHITE,
+        }
+    }
+}
+
 #[derive(Clone, DeJson)]
 #[nserde(default)]
 pub struct Theme {
     pub background_image: Option<String>,
-    pub background_color: String,
-    pub heading_color: String,
-    pub text_color: String,
+    #[nserde(proxy = "HexColor")]
+    pub background_color: Color,
+    #[nserde(proxy = "HexColor")]
+    pub heading_color: Color,
+    #[nserde(proxy = "HexColor")]
+    pub text_color: Color,
     pub align: String,
     pub font: String,
     pub font_bold: String,
@@ -760,14 +785,16 @@ pub struct Theme {
     pub vertical_offset: Vpos,
     pub horizontal_offset: Hpos,
     pub line_height: Height,
-    pub blockquote_background_color: String,
+    #[nserde(proxy = "HexColor")]
+    pub blockquote_background_color: Color,
     pub blockquote_padding: f32,
     pub blockquote_left_quote: String,
     pub blockquote_right_quote: String,
     pub code_font: String,
     pub code_font_size: FontSize,
     pub code_line_height: Height,
-    pub code_background_color: String,
+    #[nserde(proxy = "HexColor")]
+    pub code_background_color: Color,
     pub code_theme: String,
     pub code_tab_width: usize,
     pub bullet: String,
@@ -778,9 +805,9 @@ impl Default for Theme {
     fn default() -> Theme {
         Theme {
             background_image: None,
-            background_color: "#301934".to_string(),
-            heading_color: "#b19cd9".to_string(),
-            text_color: "#ffffff".to_string(),
+            background_color: Color::from_rgba(48, 25, 52, 255),
+            heading_color: Color::from_rgba(177, 156, 217, 255),
+            text_color: WHITE,
             align: "center".to_string(),
             font: "assets/Amble-Regular.ttf".to_string(),
             font_bold: "assets/Amble-Bold.ttf".to_string(),
@@ -791,14 +818,14 @@ impl Default for Theme {
             vertical_offset: 20.0,
             horizontal_offset: 20.0,
             line_height: 2.0,
-            blockquote_background_color: "#333333".to_string(),
+            blockquote_background_color: Color::from_rgba(51, 51, 51, 255),
             blockquote_padding: 20.,
             blockquote_left_quote: "“".to_string(),
             blockquote_right_quote: "„".to_string(),
             code_font: "assets/Hack-Regular.ttf".to_string(),
             code_font_size: 20,
             code_line_height: 1.2,
-            code_background_color: "#002b36".to_string(),
+            code_background_color: Color::from_rgba(0, 43, 54, 255),
             code_theme: "Solarized (dark)".to_string(),
             code_tab_width: 4,
             bullet: "• ".to_string(),
@@ -820,38 +847,6 @@ impl Theme {
                 }
             },
             Err(_) => Theme::default(),
-        }
-    }
-
-    fn background_color(&self) -> Color {
-        Self::from_hex(self.background_color.to_owned(), PURPLE)
-    }
-
-    fn heading_color(&self) -> Color {
-        Self::from_hex(self.heading_color.to_owned(), WHITE)
-    }
-
-    fn text_color(&self) -> Color {
-        Self::from_hex(self.text_color.to_owned(), WHITE)
-    }
-
-    fn code_background_color(&self) -> Color {
-        Self::from_hex(self.code_background_color.to_owned(), BLACK)
-    }
-
-    fn blockquote_background_color(&self) -> Color {
-        Self::from_hex(self.blockquote_background_color.to_owned(), BLACK)
-    }
-
-    fn from_hex(color: String, default: Color) -> Color {
-        match Rgb::from_hex_str(&color) {
-            Ok(rgb) => Color::new(
-                rgb.red() as f32 / 255.,
-                rgb.green() as f32 / 255.,
-                rgb.blue() as f32 / 255.,
-                1.,
-            ),
-            Err(_) => default,
         }
     }
 }
@@ -888,9 +883,7 @@ async fn main() {
     let theme = Theme::load(opt.theme).await;
     debug!(
         "background_color: {:?} text_color: {:?} heading_color{:?}",
-        theme.background_color(),
-        theme.text_color(),
-        theme.heading_color(),
+        theme.background_color, theme.text_color, theme.heading_color,
     );
     let text_font = load_ttf_font(&theme.font).await;
     let bold_font = load_ttf_font(&theme.font_bold).await;
