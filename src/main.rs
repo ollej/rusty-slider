@@ -890,7 +890,11 @@ async fn main() {
     let italic_font = load_ttf_font(&theme.font_italic).await;
     let code_font = load_ttf_font(&theme.code_font).await;
     let background = match &theme.background_image {
-        Some(path) => Some(load_texture(&path).await),
+        Some(path) => Some(
+            load_texture(&path)
+                .await
+                .expect("Couldn't load background texture"),
+        ),
         None => None,
     };
     let mut shader_activated = theme.shader;
@@ -907,7 +911,7 @@ async fn main() {
     .await;
 
     let render_target = render_target(screen_width() as u32, screen_height() as u32);
-    set_texture_filter(render_target.texture, FilterMode::Linear);
+    render_target.texture.set_filter(FilterMode::Linear);
     let shader_material = load_material(
         shaders::crt::VERTEX,
         shaders::crt::FRAGMENT,
@@ -942,7 +946,7 @@ async fn main() {
         // (0., 0)     .... (SCR_W, 0.)
         // (0., SCR_H) .... (SCR_W, SCR_H)
         if shader_activated {
-            set_camera(Camera2D {
+            set_camera(&Camera2D {
                 zoom: vec2(1. / scr_w * 2., -1. / scr_h * 2.),
                 target: vec2(scr_w / 2., scr_h / 2.),
                 render_target: Some(render_target),
