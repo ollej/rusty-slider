@@ -8,7 +8,7 @@
 
 "use strict";
 
-const version = "0.1.23";
+const version = "0.1.24";
 
 const canvas = document.querySelector("#glcanvas");
 const gl = canvas.getContext("webgl");
@@ -26,9 +26,14 @@ var high_dpi = false;
 canvas.focus();
 
 canvas.requestPointerLock = canvas.requestPointerLock ||
-    canvas.mozRequestPointerLock;
+    canvas.mozRequestPointerLock ||
+    // pointer lock in any form is not supported on iOS safari 
+    // https://developer.mozilla.org/en-US/docs/Web/API/Pointer_Lock_API#browser_compatibility
+    (function () {});
 document.exitPointerLock = document.exitPointerLock ||
-    document.mozExitPointerLock;
+    document.mozExitPointerLock ||
+    // pointer lock in any form is not supported on iOS safari
+    (function () {});
 
 function assert(flag, message) {
     if (flag == false) {
@@ -1102,6 +1107,8 @@ var importObject = {
                     case 290: case 291: case 292: case 293: case 294: case 295: case 296: case 297: case 298: case 299:
                     // backspace is Back on Firefox/Windows
                     case 259:
+                    // tab - for UI
+                    case 258:
                         event.preventDefault();
                         break;
                 }
