@@ -66,16 +66,7 @@ impl Slides {
         }
     }
 
-    async fn load(
-        slides_path: PathBuf,
-        theme: Theme,
-        automatic: Duration,
-        font: Font,
-        bold_font: Font,
-        italic_font: Font,
-        code_font: Font,
-        background: Option<Texture2D>,
-    ) -> Self {
+    async fn load(slides_path: PathBuf, theme: Theme, automatic: Duration) -> Self {
         let path = slides_path.as_path().to_str().unwrap().to_owned();
         let markdown = match load_string(&path).await {
             Ok(tokens) => tokens,
@@ -84,11 +75,23 @@ impl Slides {
                 std::process::exit(1);
             }
         };
+        let text_font = load_ttf_font(&theme.font).await;
+        let bold_font = load_ttf_font(&theme.font_bold).await;
+        let italic_font = load_ttf_font(&theme.font_italic).await;
+        let code_font = load_ttf_font(&theme.code_font).await;
+        let background = match &theme.background_image {
+            Some(path) => Some(
+                load_texture(&path)
+                    .await
+                    .expect("Couldn't load background texture"),
+            ),
+            None => None,
+        };
         Self::from_markdown(
             markdown,
             theme,
             automatic,
-            font,
+            text_font,
             bold_font,
             italic_font,
             code_font,
@@ -888,30 +891,8 @@ async fn main() {
         "background_color: {:?} text_color: {:?} heading_color{:?}",
         theme.background_color, theme.text_color, theme.heading_color,
     );
-    let text_font = load_ttf_font(&theme.font).await;
-    let bold_font = load_ttf_font(&theme.font_bold).await;
-    let italic_font = load_ttf_font(&theme.font_italic).await;
-    let code_font = load_ttf_font(&theme.code_font).await;
-    let background = match &theme.background_image {
-        Some(path) => Some(
-            load_texture(&path)
-                .await
-                .expect("Couldn't load background texture"),
-        ),
-        None => None,
-    };
     let mut shader_activated = theme.shader;
-    let mut slides = Slides::load(
-        opt.slides,
-        theme,
-        opt.automatic,
-        text_font,
-        bold_font,
-        italic_font,
-        code_font,
-        background,
-    )
-    .await;
+    let mut slides = Slides::load(opt.slides, theme, opt.automatic).await;
 
     let render_target = render_target(screen_width() as u32, screen_height() as u32);
     render_target.texture.set_filter(FilterMode::Linear);
