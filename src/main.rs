@@ -866,6 +866,9 @@ struct CliOptions {
     /// Automatically switch slides every N seconds.
     #[structopt(short, long, default_value = "0")]
     pub automatic: Duration,
+    /// Take screenshot of first slide and store as PNG at path
+    #[structopt(short = "S", long)]
+    pub screenshot: Option<PathBuf>,
 }
 
 fn window_conf() -> Conf {
@@ -945,35 +948,42 @@ async fn main() {
         // build camera with following coordinate system:
         // (0., 0)     .... (SCR_W, 0.)
         // (0., SCR_H) .... (SCR_W, SCR_H)
+        set_camera(&Camera2D {
+            zoom: vec2(1. / scr_w * 2., -1. / scr_h * 2.),
+            target: vec2(scr_w / 2., scr_h / 2.),
+            render_target: Some(render_target),
+            ..Default::default()
+        });
+
+        slides.draw(get_frame_time());
+
+        set_default_camera();
+
+        clear_background(BLACK);
         if shader_activated {
-            set_camera(&Camera2D {
-                zoom: vec2(1. / scr_w * 2., -1. / scr_h * 2.),
-                target: vec2(scr_w / 2., scr_h / 2.),
-                render_target: Some(render_target),
-                ..Default::default()
-            });
-
-            slides.draw(get_frame_time());
-
-            set_default_camera();
-
-            clear_background(BLACK);
             gl_use_material(shader_material);
-            draw_texture_ex(
-                render_target.texture,
-                0.,
-                0.,
-                WHITE,
-                DrawTextureParams {
-                    dest_size: Some(vec2(screen_width(), screen_height())),
-                    flip_y: true,
-                    ..Default::default()
-                },
-            );
+        }
+        draw_texture_ex(
+            render_target.texture,
+            0.,
+            0.,
+            WHITE,
+            DrawTextureParams {
+                dest_size: Some(vec2(scr_w, scr_h)),
+                flip_y: true,
+                ..Default::default()
+            },
+        );
+        if shader_activated {
             gl_use_default_material();
-        } else {
-            set_default_camera();
-            slides.draw(get_frame_time());
+        }
+
+        if let Some(path) = opt.screenshot {
+            render_target
+                .texture
+                .get_texture_data()
+                .export_png(path.into_os_string().to_str().expect("Incorrect path"));
+            return;
         }
 
         next_frame().await
