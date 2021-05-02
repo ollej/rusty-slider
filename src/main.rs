@@ -15,17 +15,27 @@ use structopt::StructOpt;
 )]
 struct CliOptions {
     /// Markdown files with slides text.
-    #[structopt(short, long, parse(from_os_str), default_value = "assets/slides.md")]
+    #[structopt(
+        short,
+        long,
+        parse(from_os_str),
+        default_value = "assets/rusty-slider.md"
+    )]
     pub slides: PathBuf,
     /// File with theme options.
-    #[structopt(short, long, parse(from_os_str), default_value = "assets/theme.json")]
+    #[structopt(
+        short,
+        long,
+        parse(from_os_str),
+        default_value = "assets/default-theme.json"
+    )]
     pub theme: PathBuf,
     /// Automatically switch slides every N seconds.
     #[structopt(short, long, default_value = "0")]
     pub automatic: Duration,
     /// When taking screenshot, store PNG at this path
-    #[structopt(short = "S", long)]
-    pub screenshot: Option<PathBuf>,
+    #[structopt(short = "S", long, default_value = "screenshot.png")]
+    pub screenshot: PathBuf,
 }
 
 fn window_conf() -> Conf {
@@ -77,12 +87,10 @@ async fn main() {
             shader_activated = !shader_activated;
         }
         if is_key_pressed(KeyCode::S) {
-            if let Some(path) = opt.screenshot.clone() {
-                render_target
-                    .texture
-                    .get_texture_data()
-                    .export_png(&path.to_string_lossy());
-            }
+            render_target
+                .texture
+                .get_texture_data()
+                .export_png(&opt.screenshot.to_string_lossy());
         }
 
         let scr_w = screen_width();

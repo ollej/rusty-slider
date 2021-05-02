@@ -21,7 +21,7 @@ Linux, MacOS, and the web. Download the latest binary build from github:
 
 ## Usage
 
-The file `slides.md` will be read and split into slides on
+The file `assets/rusty-slider.md` will be read and split into slides on
 horizontal lines: `---`
 
 At the moment, the markdown supported is headers, paragraphs,
@@ -35,11 +35,13 @@ option `font_size_header_title`.
 Use left and right arrow keys or left and right mouse button to move
 back and forth between slides.
 
+The `S` key saves the current slide as a PNG on disk.
+
 Use flag `automatic` to automatically switch slide every N seconds.
 
 ## Theme
 
-Create a file called `assets/theme.json` to modify default display values.
+Create a file called `assets/default-theme.json` to modify default display values.
 
 If you make your own theme file, and want to share it, I'd be happy
 to add it to the release.
@@ -83,20 +85,21 @@ The command line options can also be used as URL arguments to the
 web demo.
 
 ```
-rusty-slider 0.5.0
+rusty-slider 0.6.0
 A small tool to display markdown files as a slideshow.
 
 USAGE:
-rusty-slider [OPTIONS]
+    rusty-slider [OPTIONS]
 
 FLAGS:
--h, --help       Prints help information
--V, --version    Prints version information
+    -h, --help       Prints help information
+    -V, --version    Prints version information
 
 OPTIONS:
--a, --automatic <automatic>    Automatically switch slides every N seconds [default: 0]
--s, --slides <slides>          Markdown files with slides text [default: assets/slides.md]
--t, --theme <theme>            File with theme options [default: assets/theme.json]
+    -a, --automatic <automatic>      Automatically switch slides every N seconds [default: 0]
+    -S, --screenshot <screenshot>    When taking screenshot, store PNG at this path [default: screenshot.png]
+    -s, --slides <slides>            Markdown files with slides text [default: assets/rusty-slider.md]
+    -t, --theme <theme>              File with theme options [default: assets/default-theme.json]
 ```
 
 ## License
