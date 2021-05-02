@@ -1,5 +1,5 @@
 pub mod crt {
-    pub const FRAGMENT: &'static str = r#"#version 100
+    pub const FRAGMENT: &str = r#"#version 100
         precision lowp float;
         varying vec4 color;
         varying vec2 uv;
@@ -42,7 +42,7 @@ pub mod crt {
         }
     "#;
 
-    pub const VERTEX: &'static str = r#"#version 100
+    pub const VERTEX: &str = r#"#version 100
         attribute vec3 position;
         attribute vec2 texcoord;
         attribute vec4 color0;

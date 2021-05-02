@@ -203,10 +203,10 @@ impl MarkdownToSlides {
                 _ => blocks.push(block.to_owned()),
             }
         }
-        if blocks.len() > 0 {
+        if !blocks.is_empty() {
             slides.push(blocks);
         }
-        return slides;
+        slides
     }
 
     fn build_slides(&self, slide_blocks: Vec<Vec<Block>>) -> Vec<Slide> {
@@ -219,13 +219,13 @@ impl MarkdownToSlides {
         slides
     }
 
-    fn build_slide_boxes(&self, blocks: &Vec<Block>) -> Vec<TextBox> {
+    fn build_slide_boxes(&self, blocks: &[Block]) -> Vec<TextBox> {
         self.blocks_to_text_boxes(blocks, None, TextBoxStyle::Standard)
     }
 
     fn blocks_to_text_boxes(
         &self,
-        blocks: &Vec<Block>,
+        blocks: &[Block],
         background_color: Option<Color>,
         style: TextBoxStyle,
     ) -> Vec<TextBox> {
@@ -234,7 +234,7 @@ impl MarkdownToSlides {
         for block in blocks.iter() {
             match block {
                 Block::Header(spans, 1) => {
-                    if text_lines.len() > 0 {
+                    if !text_lines.is_empty() {
                         text_boxes.push(TextBox::new(
                             text_lines,
                             self.theme.vertical_offset,
@@ -287,7 +287,7 @@ impl MarkdownToSlides {
                     text_lines.extend(self.build_list_box(items, None));
                 }
                 Block::Blockquote(blocks) => {
-                    if text_lines.len() > 0 {
+                    if !text_lines.is_empty() {
                         text_boxes.push(TextBox::new(
                             text_lines,
                             self.theme.vertical_offset,
@@ -307,7 +307,7 @@ impl MarkdownToSlides {
                     ));
                 }
                 Block::CodeBlock(language, code) => {
-                    if text_lines.len() > 0 {
+                    if !text_lines.is_empty() {
                         text_boxes.push(TextBox::new(
                             text_lines,
                             self.theme.vertical_offset,
@@ -324,7 +324,7 @@ impl MarkdownToSlides {
                 _ => (),
             }
         }
-        if text_lines.len() > 0 {
+        if !text_lines.is_empty() {
             text_boxes.push(TextBox::new(
                 text_lines,
                 self.theme.vertical_offset,
@@ -337,7 +337,7 @@ impl MarkdownToSlides {
 
     fn spans_to_text_partials(
         &self,
-        spans: &Vec<Span>,
+        spans: &[Span],
         font: Font,
         font_size: FontSize,
         color: Color,
@@ -378,23 +378,19 @@ impl MarkdownToSlides {
         partials
     }
 
-    fn build_list_box(&self, items: &Vec<ListItem>, bullet: Option<&String>) -> Vec<TextLine> {
+    fn build_list_box(&self, items: &[ListItem], bullet: Option<&String>) -> Vec<TextLine> {
         let mut lines: Vec<TextLine> = vec![];
         for (index, item) in items.iter().enumerate() {
-            match item {
-                ListItem::Simple(spans) => {
-                    let mut partials = vec![];
-                    partials.push(self.build_bullet_partial(index, bullet));
-                    partials.extend(self.spans_to_text_partials(
-                        spans,
-                        self.font,
-                        self.theme.font_size_text,
-                        self.theme.text_color,
-                    ));
-                    let text_line = TextLine::new("left".to_string(), partials);
-                    lines.push(text_line);
-                }
-                _ => (),
+            if let ListItem::Simple(spans) = item {
+                let mut partials = vec![self.build_bullet_partial(index, bullet)];
+                partials.extend(self.spans_to_text_partials(
+                    spans,
+                    self.font,
+                    self.theme.font_size_text,
+                    self.theme.text_color,
+                ));
+                let text_line = TextLine::new("left".to_string(), partials);
+                lines.push(text_line);
             };
         }
         lines
@@ -429,11 +425,8 @@ pub enum TextBoxStyle {
 
 impl TextBoxStyle {
     fn draw(&self, hpos: Hpos, vpos: Vpos, text_box: &TextBox) {
-        match self {
-            TextBoxStyle::Blockquote { size, font, color } => {
-                self.draw_blockquote(hpos, vpos, text_box, *size, *font, *color)
-            }
-            _ => (),
+        if let TextBoxStyle::Blockquote { size, font, color } = self {
+            self.draw_blockquote(hpos, vpos, text_box, *size, *font, *color)
         }
     }
 
@@ -455,21 +448,21 @@ impl TextBoxStyle {
         hpos: Hpos,
         vpos: Vpos,
         text_box: &TextBox,
-        size: FontSize,
+        font_size: FontSize,
         font: Font,
         color: Color,
     ) {
         let text_params = TextParams {
-            font: font,
-            font_size: size,
+            font,
+            font_size,
             font_scale: 1.,
-            color: color,
+            color,
         };
-        let dimensions = measure_text("“", Some(font), size, 1.);
+        let dimensions = measure_text("“", Some(font), font_size, 1.);
         draw_text_ex(
             "“",
             hpos - dimensions.width,
-            vpos + size as Vpos,
+            vpos + font_size as Vpos,
             text_params,
         );
         draw_text_ex(
@@ -539,15 +532,14 @@ impl TextBox {
     }
 
     fn draw_background(&self, hpos: Hpos, vpos: Vpos) {
-        match self.background_color {
-            Some(color) => draw_rectangle(
+        if let Some(color) = self.background_color {
+            draw_rectangle(
                 hpos,
                 vpos,
                 self.width_with_padding(),
                 self.height_with_padding(),
                 color,
-            ),
-            None => (),
+            );
         }
     }
 
@@ -611,13 +603,7 @@ struct TextPartial {
 }
 
 impl TextPartial {
-    fn new(
-        text: &String,
-        font: Font,
-        font_size: FontSize,
-        color: Color,
-        line_height: Height,
-    ) -> Self {
+    fn new(text: &str, font: Font, font_size: FontSize, color: Color, line_height: Height) -> Self {
         let dimensions = measure_text(text, Some(font), font_size, 1.);
         Self {
             width: dimensions.width,
