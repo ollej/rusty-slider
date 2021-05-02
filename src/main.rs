@@ -23,7 +23,7 @@ struct CliOptions {
     /// Automatically switch slides every N seconds.
     #[structopt(short, long, default_value = "0")]
     pub automatic: Duration,
-    /// Take screenshot of first slide and store as PNG at path
+    /// When taking screenshot, store PNG at this path
     #[structopt(short = "S", long)]
     pub screenshot: Option<PathBuf>,
 }
@@ -76,6 +76,14 @@ async fn main() {
         if is_key_pressed(KeyCode::Space) {
             shader_activated = !shader_activated;
         }
+        if is_key_pressed(KeyCode::S) {
+            if let Some(path) = opt.screenshot.clone() {
+                render_target
+                    .texture
+                    .get_texture_data()
+                    .export_png(&path.to_string_lossy());
+            }
+        }
 
         let scr_w = screen_width();
         let scr_h = screen_height();
@@ -111,14 +119,6 @@ async fn main() {
         );
         if shader_activated {
             gl_use_default_material();
-        }
-
-        if let Some(path) = opt.screenshot {
-            render_target
-                .texture
-                .get_texture_data()
-                .export_png(path.into_os_string().to_str().expect("Incorrect path"));
-            return;
         }
 
         next_frame().await
