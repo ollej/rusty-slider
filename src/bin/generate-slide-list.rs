@@ -1,5 +1,7 @@
 use glob::glob;
+use macroquad::prelude::*;
 use maud::{html, Markup, PreEscaped, DOCTYPE};
+use rusty_slider::slider::{Slides, Theme};
 use std::borrow::Cow;
 use std::path::PathBuf;
 use structopt::StructOpt;
@@ -21,6 +23,19 @@ struct CliOptions {
         default_value = "./assets/slides.html"
     )]
     pub output: PathBuf,
+}
+
+fn javascript() -> &'static str {
+    r#"
+    function change_theme(el) {
+        let url = new URL(el.href);
+        let query = new URLSearchParams(url.search);
+        const theme = document.getElementById("theme").selectedOptions[0].value;
+        query.set("theme", theme);
+        url.search = query;
+        el.href = url;
+    }
+    "#
 }
 
 fn header(page_title: &str) -> Markup {
@@ -87,6 +102,12 @@ impl Filename {
         self.path.to_str().unwrap()
     }
 
+    fn png_path(&self) -> PathBuf {
+        let mut path = self.path.to_owned();
+        path.set_extension("png");
+        path
+    }
+
     fn name(&self) -> Cow<str> {
         match self.path.file_stem() {
             Some(name) => name.to_string_lossy(),
@@ -95,24 +116,33 @@ impl Filename {
     }
 }
 
-fn javascript() -> &'static str {
-    r#"
-    function change_theme(el) {
-        let url = new URL(el.href);
-        let query = new URLSearchParams(url.search);
-        const theme = document.getElementById("theme").selectedOptions[0].value;
-        query.set("theme", theme);
-        url.search = query;
-        el.href = url;
-    }
-    "#
-}
-
-fn main() {
+#[macroquad::main("generate-slide-list")]
+async fn main() {
     let opt = CliOptions::from_args();
 
     let slides = Filename::files(&opt.path, "md");
     let themes = Filename::files(&opt.path, "json");
+
+    let render_target = render_target(screen_width() as u32, screen_height() as u32);
+    render_target.texture.set_filter(FilterMode::Linear);
+    let theme = Theme::load(PathBuf::from("assets/theme.json")).await;
+    let scr_w = screen_width();
+    let scr_h = screen_height();
+    for slide in slides.iter() {
+        set_camera(&Camera2D {
+            zoom: vec2(1. / scr_w * 2., -1. / scr_h * 2.),
+            target: vec2(scr_w / 2., scr_h / 2.),
+            render_target: Some(render_target),
+            ..Default::default()
+        });
+        let mut slideshow = Slides::load(slide.path.to_owned(), theme.clone(), 0.0).await;
+        slideshow.draw(0.);
+        set_default_camera();
+        render_target
+            .texture
+            .get_texture_data()
+            .export_png(&slide.png_path().to_string_lossy());
+    }
 
     let html = page(
         "Rusty Slider",

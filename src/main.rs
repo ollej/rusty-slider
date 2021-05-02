@@ -1,6 +1,6 @@
 extern crate markdown;
-mod shaders;
-mod slider;
+pub mod shaders;
+pub mod slider;
 
 use macroquad::prelude::*;
 use quad_url::get_program_parameters;
