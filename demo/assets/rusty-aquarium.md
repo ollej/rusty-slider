@@ -38,12 +38,12 @@ Input data defines fish size, speed, and species
 
 ## Input data
 
-The `size` and `speed` values are multipliers
+The `size`, `speed`, and `bubbles` values are multipliers
 
 ```json
 {
     "school": [
-        { "fish": "crab", "size": 1.0, "speed": 1.0 }
+        { "fish": "crab", "size": 1.0, "speed": 1.0, "bubbles": 1.0 }
     ]
 }
 ```

@@ -9,8 +9,7 @@ A small tool to display markdown files as a slideshow.
 
 Try out Rusty Slider online:
 
-* [Default theme](https://ollej.github.io/rusty-slider/demo/).
-* [Rusty theme](https://ollej.github.io/rusty-slider/demo/?theme=assets/rusty.json).
+* [Example slideshows](https://ollej.github.io/rusty-slider/demo/example-slideshows.html).
 
 ## Download
 

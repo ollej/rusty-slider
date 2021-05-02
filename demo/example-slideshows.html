@@ -1,0 +1,44 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><title>Rusty Slider example slideshows</title><meta name="viewport" content="width=device-width"><style>
+    @font-face{
+        font-family: 'Amble';
+        src: url('assets/Amble.woff') format('woff');
+    }
+    body {
+        font-family: 'Amble'
+    }
+    h1 {
+        text-align: center;
+        font-size: 3em;
+    }
+    ul {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: flex-start;
+        list-style: none;
+        margin: 0;
+        padding: 0;
+    }
+    a {
+        color: black;
+        text-decoration: none;
+    }
+    img {
+        max-width: 20rem;
+    }
+    figcaption {
+        text-align: center;
+    }
+    footer {
+        text-align: center;
+        font-size: small;
+    }
+    </style><script>
+    function change_theme(el) {
+        let url = new URL(el.href);
+        let query = new URLSearchParams(url.search);
+        const theme = document.getElementById("theme").selectedOptions[0].value;
+        query.set("theme", theme);
+        url.search = query;
+        el.href = url;
+    }
+    </script></head><body><h1>Rusty Slider example slideshows</h1><form><label for="theme">Theme:</label><select id="theme"><option value="assets/default-theme.json">default-theme</option><option value="assets/rusty.json">rusty</option></select></form><ul><li><a href="index.html?slides=assets/rusty-aquarium.md&theme=assets/default-theme.json" onclick="change_theme(this)"><figure><img src="assets/rusty-aquarium.png" title="rusty-aquarium"><figcaption>rusty-aquarium</figcaption></figure></a></li><li><a href="index.html?slides=assets/rusty-slider.md&theme=assets/default-theme.json" onclick="change_theme(this)"><figure><img src="assets/rusty-slider.png" title="rusty-slider"><figcaption>rusty-slider</figcaption></figure></a></li></ul><footer><p><a href="https://github.com/ollej/rusty-slider">Copyright 2021 Olle Wreede</a></p></footer></body></html>
