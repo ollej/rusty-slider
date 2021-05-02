@@ -25,6 +25,44 @@ struct CliOptions {
     pub output: PathBuf,
 }
 
+fn stylesheet() -> &'static str {
+    r#"
+    @font-face{
+        font-family: 'Amble';
+        src: url('assets/Amble.woff') format('woff');
+    }
+    body {
+        font-family: 'Amble'
+    }
+    h1 {
+        text-align: center;
+        font-size: 3em;
+    }
+    ul {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: flex-start;
+        list-style: none;
+        margin: 0;
+        padding: 0;
+    }
+    a {
+        color: black;
+        text-decoration: none;
+    }
+    img {
+        max-width: 20rem;
+    }
+    figcaption {
+        text-align: center;
+    }
+    footer {
+        text-align: center;
+        font-size: small;
+    }
+    "#
+}
+
 fn javascript() -> &'static str {
     r#"
     function change_theme(el) {
@@ -44,7 +82,7 @@ fn header(page_title: &str) -> Markup {
             meta charset="utf-8";
             title { (page_title) }
             meta name="viewport" content="width=device-width";
-            link rel="stylesheet" href="stylesheet.css";
+            style { (PreEscaped(stylesheet())) }
             script { (PreEscaped(javascript())) }
         }
     }
@@ -53,7 +91,9 @@ fn header(page_title: &str) -> Markup {
 fn footer() -> Markup {
     html! {
         footer {
-            a href="https://github.com/ollej/rusty-slider" { "Source Code" }
+            p {
+                a href="https://github.com/ollej/rusty-slider" { "Copyright 2021 Olle Wreede" }
+            }
         }
     }
 }
@@ -145,9 +185,10 @@ async fn main() {
     }
 
     let html = page(
-        "Rusty Slider",
+        "Rusty Slider example slideshows",
         html! {
             form {
+                label for="theme" { "Theme:" }
                 select#theme {
                     @for theme in &themes {
                         option value=(theme.path()) {
@@ -160,7 +201,10 @@ async fn main() {
                 @for slide in &slides {
                     li {
                         a href=(PreEscaped(slide.href(themes.first()))) onclick="change_theme(this)" {
-                            (slide.name())
+                            figure {
+                                img src=(slide.png_path().to_string_lossy()) title=(slide.name());
+                                figcaption { (slide.name()) }
+                            }
                         }
                     }
                 }
