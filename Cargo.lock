@@ -702,9 +702,9 @@ dependencies = [
 
 [[package]]
 name = "macroquad"
-version = "0.3.0"
+version = "0.3.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "19e9a227ffaf48bcb3022d0e1941fd0f4da4b49f0d05fd53ea252b2f024dca82"
+checksum = "c1342e65e33e558518594cba52e3e702de16d65ec3cd3b89c86ab4eea32a474c"
 dependencies = [
  "bumpalo",
  "fontdue",
@@ -778,9 +778,9 @@ dependencies = [
 
 [[package]]
 name = "miniquad"
-version = "0.3.0-alpha.29"
+version = "0.3.0-alpha.30"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "f0c118b3ca8ee14b60dbadd67c20b84946a6c92db4761e60eb1c545e27863c24"
+checksum = "544f4f479ba6084845f4908abbeb40abb5fe01b171928dca2901852231f3f838"
 dependencies = [
  "sapp-android",
  "sapp-darwin",
@@ -1303,9 +1303,9 @@ dependencies = [
 
 [[package]]
 name = "sapp-wasm"
-version = "0.1.23"
+version = "0.1.24"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "6632d855712381429686c971a984067cb214900640e8fb045c461d2aa35378e4"
+checksum = "46dc18c2e8b9b9d1a50a8d83944d1e7c309581c99186b52d0530420d108ce37c"
 
 [[package]]
 name = "sapp-windows"
