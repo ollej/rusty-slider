@@ -35,3 +35,10 @@ build-linux = "bin/build-linux"
 build-win = "bin/build-win"
 serve-web = "bin/serve-web"
 build-apk = "bin/build-apk"
+
+[profile.release]
+opt-level = 'z'
+lto = true
+panic = 'abort'
+codegen-units = 1
+
