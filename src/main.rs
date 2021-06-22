@@ -68,8 +68,9 @@ async fn main() {
     .unwrap();
 
     loop {
-        if is_key_pressed(KeyCode::Escape) {
-            return;
+        #[cfg(not(target_arch = "wasm32"))]
+        if is_key_pressed(KeyCode::Q) | is_key_pressed(KeyCode::Escape) {
+            break;
         }
         if is_key_pressed(KeyCode::Left)
             || is_key_pressed(KeyCode::H)
@@ -91,6 +92,10 @@ async fn main() {
                 .texture
                 .get_texture_data()
                 .export_png(&opt.screenshot.to_string_lossy());
+        }
+        #[cfg(not(target_arch = "wasm32"))]
+        if is_key_pressed(KeyCode::Enter) {
+            slides.run_code_block();
         }
 
         let scr_w = screen_width();

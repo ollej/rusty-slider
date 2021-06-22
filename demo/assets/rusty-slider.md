@@ -53,6 +53,16 @@ let shader_material = load_material(
 
 ---
 
+## Run code!
+
+Execute `bash` code blocks by pressing `enter`.
+
+```bash
+echo "Hello, World!"
+```
+
+---
+
 ## Blockquotes
 
 > Blockquotes renders with background color

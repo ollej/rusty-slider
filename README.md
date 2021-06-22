@@ -36,7 +36,20 @@ back and forth between slides.
 
 The `S` key saves the current slide as a PNG on disk.
 
+Use the key `Q` or `Escape` to exit the slideshow.
+
 Use flag `automatic` to automatically switch slide every N seconds.
+
+### Run code blocks
+
+Code blocks marked with `bash` can be executed by pressing the `enter` key.
+The output will be added in a new code block at the bottom of the slide.
+
+This feature only works when running locally on a machine that can run shell
+scripts. Be careful when using this as there is no checks done on the shell
+script.
+
+Only the first bash code block on a slide can be executed.
 
 ## Theme
 
@@ -84,7 +97,7 @@ The command line options can also be used as URL arguments to the
 web demo.
 
 ```
-rusty-slider 0.7.0
+rusty-slider 0.8.0
 A small tool to display markdown files as a slideshow.
 
 USAGE:

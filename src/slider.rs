@@ -16,8 +16,16 @@ pub type Width = f32;
 pub type Height = f32;
 pub type FontSize = u16;
 
+#[derive(Clone)]
 struct Slide {
     text_boxes: Vec<TextBox>,
+    code_block: Option<String>,
+}
+
+impl Slide {
+    pub fn add_text_box(&mut self, text_box: TextBox) {
+        self.text_boxes.push(text_box);
+    }
 }
 
 pub struct Slides {
@@ -29,6 +37,7 @@ pub struct Slides {
     background: Option<Texture2D>,
     horizontal_offset: Hpos,
     align: String,
+    code_box_builder: CodeBoxBuilder,
 }
 
 impl Slides {
@@ -45,6 +54,17 @@ impl Slides {
         let background_color = theme.background_color;
         let horizontal_offset = theme.horizontal_offset;
         let align = theme.align.to_owned();
+        let code_box_builder = CodeBoxBuilder::new(
+            code_font,
+            font_bold,
+            font_italic,
+            theme.code_font_size.to_owned(),
+            theme.code_line_height.to_owned(),
+            theme.code_background_color.to_owned(),
+            theme.code_theme.to_owned(),
+            theme.code_tab_width,
+            theme.vertical_offset,
+        );
         let slides =
             MarkdownToSlides::new(theme, font, font_bold, font_italic, code_font).parse(markdown);
 
@@ -57,6 +77,7 @@ impl Slides {
             background,
             horizontal_offset,
             align,
+            code_box_builder,
         }
     }
 
@@ -116,6 +137,18 @@ impl Slides {
         clear_background(self.background_color);
         self.draw_background(self.background);
         self.draw_slide();
+    }
+
+    #[cfg(not(target_arch = "wasm32"))]
+    pub fn run_code_block(&mut self) {
+        let slide = self.slides.get_mut(self.active_slide).unwrap();
+        if let Some(code_block) = &slide.code_block {
+            let (_code, output, _error) = run_script::run_script!(code_block).unwrap();
+            let code_box = self
+                .code_box_builder
+                .build_text_box(None, output.to_owned());
+            slide.add_text_box(code_box);
+        }
     }
 
     fn draw_background(&self, background: Option<Texture2D>) {
@@ -212,15 +245,27 @@ impl MarkdownToSlides {
     fn build_slides(&self, slide_blocks: Vec<Vec<Block>>) -> Vec<Slide> {
         let mut slides = vec![];
         for blocks in slide_blocks.iter() {
-            slides.push(Slide {
-                text_boxes: self.build_slide_boxes(blocks),
-            });
+            slides.push(self.build_slide(blocks));
         }
         slides
     }
 
-    fn build_slide_boxes(&self, blocks: &[Block]) -> Vec<TextBox> {
-        self.blocks_to_text_boxes(blocks, None, TextBoxStyle::Standard)
+    fn build_slide(&self, blocks: &[Block]) -> Slide {
+        Slide {
+            text_boxes: self.blocks_to_text_boxes(blocks, None, TextBoxStyle::Standard),
+            code_block: self.find_first_code_block(blocks),
+        }
+    }
+
+    fn find_first_code_block(&self, blocks: &[Block]) -> Option<String> {
+        for block in blocks.iter() {
+            if let Block::CodeBlock(Some(language), code) = block {
+                if language == "bash" {
+                    return Some(code.to_owned());
+                }
+            }
+        }
+        None
     }
 
     fn blocks_to_text_boxes(
@@ -474,6 +519,7 @@ impl TextBoxStyle {
     }
 }
 
+#[derive(Clone)]
 struct TextBox {
     width: Width,
     height: Height,
@@ -556,6 +602,7 @@ impl TextBox {
     }
 }
 
+#[derive(Clone)]
 struct TextLine {
     width: Width,
     height: Height,
@@ -592,6 +639,7 @@ impl TextLine {
     }
 }
 
+#[derive(Clone)]
 struct TextPartial {
     width: Width,
     height: Height,

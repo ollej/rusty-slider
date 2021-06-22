@@ -1,6 +1,6 @@
 [package]
 name = "rusty-slider"
-version = "0.7.0"
+version = "0.8.0"
 authors = ["Olle Wreede <olle@wreede.se>"]
 edition = "2018"
 license = "MIT"
@@ -24,6 +24,9 @@ getrandom = { version = "0.2", features = ["js"] }
 quad-url = "0.1.0"
 glob = "0.3.0"
 maud = "0.22.2"
+
+[target.'cfg(not(target_arch = "wasm32"))'.dependencies]
+run_script = "0.8.0"
 
 # Doesn't work with android build
 [profile.dev.package.'*']
