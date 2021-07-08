@@ -84,12 +84,16 @@ impl Slides {
     pub async fn load(slides_path: PathBuf, theme: Theme, automatic: Duration) -> Self {
         let path = slides_path.as_path().to_str().unwrap().to_owned();
         let markdown = match load_string(&path).await {
-            Ok(tokens) => tokens,
+            Ok(text) => {
+                comment_strip::strip_comments(text, comment_strip::CommentStyle::XML, false)
+                    .expect("Failed stripping html comments")
+            }
             Err(_) => {
                 eprintln!("Couldn't parse markdown document: {}", path);
                 std::process::exit(1);
             }
         };
+
         let text_font = load_ttf_font(&theme.font)
             .await
             .expect("Couldn't load font");
