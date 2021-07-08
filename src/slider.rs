@@ -90,10 +90,18 @@ impl Slides {
                 std::process::exit(1);
             }
         };
-        let text_font = load_ttf_font(&theme.font).await;
-        let bold_font = load_ttf_font(&theme.font_bold).await;
-        let italic_font = load_ttf_font(&theme.font_italic).await;
-        let code_font = load_ttf_font(&theme.code_font).await;
+        let text_font = load_ttf_font(&theme.font)
+            .await
+            .expect("Couldn't load font");
+        let bold_font = load_ttf_font(&theme.font_bold)
+            .await
+            .expect("Couldn't load font");
+        let italic_font = load_ttf_font(&theme.font_italic)
+            .await
+            .expect("Couldn't load font");
+        let code_font = load_ttf_font(&theme.code_font)
+            .await
+            .expect("Couldn't load font");
         let background = match &theme.background_image {
             Some(path) => Some(
                 load_texture(&path)
@@ -502,6 +510,7 @@ impl TextBoxStyle {
             font_size,
             font_scale: 1.,
             color,
+            font_scale_aspect: 1.,
         };
         let dimensions = measure_text("“", Some(font), font_size, 1.);
         draw_text_ex(
@@ -674,6 +683,7 @@ impl TextPartial {
                 font_size: self.font_size,
                 font_scale: 1.,
                 color: self.color,
+                font_scale_aspect: 1.,
             },
         );
         hpos + self.width
