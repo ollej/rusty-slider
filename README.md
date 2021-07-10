@@ -31,14 +31,22 @@ Heading level 1 can be used as title page, as it will render in the
 middle of the slide and can have a larger font size set by the theme
 option `font_size_header_title`.
 
+You may use html comments (`<!-- ... -->`) in the markdown for anything you
+don't want to be shown.
+
 Use left and right arrow keys or left and right mouse button to move
 back and forth between slides.
+
+### Shortcuts
 
 The `S` key saves the current slide as a PNG on disk.
 
 Use the key `Q` or `Escape` to exit the slideshow.
 
-Use flag `automatic` to automatically switch slide every N seconds.
+### Command line options
+
+Use flag `--automatic` when starting the application to automatically switch
+slide every N seconds.
 
 ### Run code blocks
 
@@ -97,7 +105,7 @@ The command line options can also be used as URL arguments to the
 web demo.
 
 ```
-rusty-slider 0.9.0
+rusty-slider 0.10.0
 A small tool to display markdown files as a slideshow.
 
 USAGE:
