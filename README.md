@@ -34,10 +34,10 @@ option `font_size_header_title`.
 You may use html comments (`<!-- ... -->`) in the markdown for anything you
 don't want to be shown.
 
+### Shortcuts
+
 Use left and right arrow keys or left and right mouse button to move
 back and forth between slides.
-
-### Shortcuts
 
 The `S` key saves the current slide as a PNG on disk.
 
