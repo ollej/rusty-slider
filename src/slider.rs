@@ -85,12 +85,13 @@ impl Slides {
     pub async fn load(slides_path: PathBuf, theme: Theme, automatic: Duration) -> Self {
         let path = slides_path.as_path().to_str().unwrap().to_owned();
         let markdown = match load_string(&path).await {
-            Ok(text) => Self::strip_comments(text),
+            Ok(text) => Self::sanitize_markdown(text),
             Err(_) => {
                 eprintln!("Couldn't parse markdown document: {}", path);
                 std::process::exit(1);
             }
         };
+        debug!("Sanitized markdown:\n{}", markdown);
 
         let text_font = load_ttf_font(&theme.font)
             .await
@@ -124,8 +125,19 @@ impl Slides {
         )
     }
 
+    pub fn sanitize_markdown(text: String) -> String {
+        let no_comments = Self::strip_comments(text);
+        Self::strip_yaml_header(no_comments)
+    }
+
     pub fn strip_comments(text: String) -> String {
         let re = Regex::new(r"(?sm)<!--.*?--\s*>").unwrap();
+        re.replace_all(&text, "").to_string()
+    }
+
+    pub fn strip_yaml_header(text: String) -> String {
+        let re =
+            Regex::new(r"(?sm)^---(\r\n?|\n)((\w+?): (.+?)(\r\n?|\n))+?---(\r\n?|\n)").unwrap();
         re.replace_all(&text, "").to_string()
     }
 
