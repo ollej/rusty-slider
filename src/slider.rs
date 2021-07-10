@@ -2,6 +2,7 @@ use colorsys::Rgb;
 use macroquad::prelude::*;
 use markdown::{Block, ListItem, Span};
 use nanoserde::DeJson;
+use regex::Regex;
 use std::path::PathBuf;
 use syntect::easy::HighlightLines;
 use syntect::highlighting::FontStyle;
@@ -84,10 +85,7 @@ impl Slides {
     pub async fn load(slides_path: PathBuf, theme: Theme, automatic: Duration) -> Self {
         let path = slides_path.as_path().to_str().unwrap().to_owned();
         let markdown = match load_string(&path).await {
-            Ok(text) => {
-                comment_strip::strip_comments(text, comment_strip::CommentStyle::XML, false)
-                    .expect("Failed stripping html comments")
-            }
+            Ok(text) => Self::strip_comments(text),
             Err(_) => {
                 eprintln!("Couldn't parse markdown document: {}", path);
                 std::process::exit(1);
@@ -124,6 +122,11 @@ impl Slides {
             code_font,
             background,
         )
+    }
+
+    pub fn strip_comments(text: String) -> String {
+        let re = Regex::new(r"(?sm)<!--.*?--\s*>").unwrap();
+        re.replace_all(&text, "").to_string()
     }
 
     pub fn next(&mut self) {
