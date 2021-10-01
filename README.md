@@ -51,17 +51,24 @@ slide every N seconds.
 ### Run code blocks
 
 When the command line flag `--enable-code-execution` is used, it is possible
-to run shell code in code blocks and show the result.
+to run code in code blocks and show the result.
 
-Code blocks marked with `bash`, `sh`, or `python` can be executed by pressing
-the `enter` key.  The output will be added in a new code block at the bottom
-of the slide.
+When a code block with a recognized language is showing on a slide, it can be
+executed by pressing the `enter` key. The output will be added in a new code
+block at the bottom of the slide.
 
-This feature only works when running locally on a machine that can run shell
-scripts. Be careful when using this as there is no checks done on the shell
-script.
+This feature only works when running locally on a machine that has the
+interpretator for each language installed. Be careful when using this as
+there is no checks done on the shell script.
 
-Only the first bash code block on a slide can be executed.
+Only the first code block on a slide can be executed.
+
+#### Supported languages
+
+* bash
+* python
+* perl
+* ruby
 
 ## Theme
 
