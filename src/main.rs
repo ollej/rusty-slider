@@ -36,6 +36,9 @@ struct CliOptions {
     /// When taking screenshot, store PNG at this path
     #[structopt(short = "S", long, default_value = "screenshot.png")]
     pub screenshot: PathBuf,
+    /// Enable executing code in code blocks
+    #[structopt(long)]
+    pub enable_code_execution: bool,
 }
 
 fn window_conf() -> Conf {
@@ -94,7 +97,7 @@ async fn main() {
                 .export_png(&opt.screenshot.to_string_lossy());
         }
         #[cfg(not(target_arch = "wasm32"))]
-        if is_key_pressed(KeyCode::Enter) {
+        if opt.enable_code_execution && is_key_pressed(KeyCode::Enter) {
             slides.run_code_block();
         }
 

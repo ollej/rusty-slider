@@ -50,6 +50,9 @@ slide every N seconds.
 
 ### Run code blocks
 
+When the command line flag `--enable-code-execution` is used, it is possible
+to run shell code in code blocks and show the result.
+
 Code blocks marked with `bash` can be executed by pressing the `enter` key.
 The output will be added in a new code block at the bottom of the slide.
 
@@ -105,15 +108,16 @@ The command line options can also be used as URL arguments to the
 web demo.
 
 ```
-rusty-slider 0.10.0
+rusty-slider 0.11.0
 A small tool to display markdown files as a slideshow.
 
 USAGE:
     rusty-slider [OPTIONS]
 
 FLAGS:
-    -h, --help       Prints help information
-    -V, --version    Prints version information
+        --enable-code-execution    Enable executing code in code blocks
+    -h, --help                     Prints help information
+    -V, --version                  Prints version information
 
 OPTIONS:
     -a, --automatic <automatic>      Automatically switch slides every N seconds [default: 0]
