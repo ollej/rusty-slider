@@ -287,9 +287,10 @@ impl MarkdownToSlides {
     fn find_first_code_block(&self, blocks: &[Block]) -> Option<String> {
         for block in blocks.iter() {
             if let Block::CodeBlock(Some(language), code) = block {
-                if language == "bash" {
-                    return Some(code.to_owned());
-                }
+                match language.as_str() {
+                    "bash" | "sh" => return Some(code.to_owned()),
+                    _ => (),
+                };
             }
         }
         None
