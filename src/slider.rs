@@ -18,9 +18,32 @@ pub type Height = f32;
 pub type FontSize = u16;
 
 #[derive(Clone)]
+enum ExecutableCode {
+    Bash(String),
+}
+
+impl ExecutableCode {
+    fn from(language: &String, code: &String) -> Option<Self> {
+        match language.as_str() {
+            "bash" | "sh" => Some(ExecutableCode::Bash(code.to_string())),
+            _ => None,
+        }
+    }
+
+    fn execute(&self) -> String {
+        match self {
+            ExecutableCode::Bash(code) => {
+                let (_code, output, _error) = run_script::run_script!(code).unwrap();
+                return output;
+            }
+        }
+    }
+}
+
+#[derive(Clone)]
 struct Slide {
     text_boxes: Vec<TextBox>,
-    code_block: Option<String>,
+    code_block: Option<ExecutableCode>,
 }
 
 impl Slide {
@@ -170,7 +193,7 @@ impl Slides {
     pub fn run_code_block(&mut self) {
         let slide = self.slides.get_mut(self.active_slide).unwrap();
         if let Some(code_block) = &slide.code_block {
-            let (_code, output, _error) = run_script::run_script!(code_block).unwrap();
+            let output = code_block.execute();
             let code_box = self
                 .code_box_builder
                 .build_text_box(None, output.to_owned());
@@ -284,13 +307,12 @@ impl MarkdownToSlides {
         }
     }
 
-    fn find_first_code_block(&self, blocks: &[Block]) -> Option<String> {
+    fn find_first_code_block(&self, blocks: &[Block]) -> Option<ExecutableCode> {
         for block in blocks.iter() {
             if let Block::CodeBlock(Some(language), code) = block {
-                match language.as_str() {
-                    "bash" | "sh" => return Some(code.to_owned()),
-                    _ => (),
-                };
+                if let Some(cb) = ExecutableCode::from(language, code) {
+                    return Some(cb);
+                }
             }
         }
         None
