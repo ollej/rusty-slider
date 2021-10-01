@@ -53,8 +53,9 @@ slide every N seconds.
 When the command line flag `--enable-code-execution` is used, it is possible
 to run shell code in code blocks and show the result.
 
-Code blocks marked with `bash` can be executed by pressing the `enter` key.
-The output will be added in a new code block at the bottom of the slide.
+Code blocks marked with `bash`, `sh`, or `python` can be executed by pressing
+the `enter` key.  The output will be added in a new code block at the bottom
+of the slide.
 
 This feature only works when running locally on a machine that can run shell
 scripts. Be careful when using this as there is no checks done on the shell

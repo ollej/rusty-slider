@@ -3,7 +3,10 @@ use macroquad::prelude::*;
 use markdown::{Block, ListItem, Span};
 use nanoserde::DeJson;
 use regex::Regex;
+use std::fmt;
+use std::io::prelude::*;
 use std::path::PathBuf;
+use std::process::{Command, Stdio};
 use syntect::easy::HighlightLines;
 use syntect::highlighting::FontStyle;
 use syntect::highlighting::ThemeSet;
@@ -20,12 +23,23 @@ pub type FontSize = u16;
 #[derive(Clone)]
 enum ExecutableCode {
     Bash(String),
+    Python(String),
+}
+
+impl fmt::Display for ExecutableCode {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        match *self {
+            ExecutableCode::Bash(_) => write!(f, "bash"),
+            ExecutableCode::Python(_) => write!(f, "python"),
+        }
+    }
 }
 
 impl ExecutableCode {
     fn from(language: &String, code: &String) -> Option<Self> {
         match language.as_str() {
             "bash" | "sh" => Some(ExecutableCode::Bash(code.to_string())),
+            "python" => Some(ExecutableCode::Python(code.to_string())),
             _ => None,
         }
     }
@@ -36,7 +50,32 @@ impl ExecutableCode {
                 let (_code, output, _error) = run_script::run_script!(code).unwrap();
                 return output;
             }
+            ExecutableCode::Python(code) => {
+                let python = match Command::new("python")
+                    .arg("-")
+                    .stdin(Stdio::piped())
+                    .stdout(Stdio::piped())
+                    .spawn()
+                {
+                    Err(why) => return self.error(why),
+                    Ok(process) => process,
+                };
+                match python.stdin.unwrap().write_all(code.as_bytes()) {
+                    Err(why) => return self.error(why),
+                    Ok(_) => (),
+                };
+                let mut output = String::new();
+                match python.stdout.unwrap().read_to_string(&mut output) {
+                    Err(why) => return self.error(why),
+                    Ok(_) => (),
+                };
+                return output;
+            }
         }
+    }
+
+    fn error(&self, error: std::io::Error) -> String {
+        format!("Error running {}:\n{}", self, error)
     }
 }
 
