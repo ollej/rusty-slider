@@ -24,6 +24,8 @@ pub type FontSize = u16;
 enum ExecutableCode {
     Bash(String),
     Python(String),
+    Ruby(String),
+    Perl(String),
 }
 
 impl fmt::Display for ExecutableCode {
@@ -31,6 +33,8 @@ impl fmt::Display for ExecutableCode {
         match *self {
             ExecutableCode::Bash(_) => write!(f, "bash"),
             ExecutableCode::Python(_) => write!(f, "python"),
+            ExecutableCode::Ruby(_) => write!(f, "ruby"),
+            ExecutableCode::Perl(_) => write!(f, "perl"),
         }
     }
 }
@@ -40,38 +44,41 @@ impl ExecutableCode {
         match language.as_str() {
             "bash" | "sh" => Some(ExecutableCode::Bash(code.to_string())),
             "python" => Some(ExecutableCode::Python(code.to_string())),
+            "ruby" => Some(ExecutableCode::Ruby(code.to_string())),
+            "perl" => Some(ExecutableCode::Perl(code.to_string())),
             _ => None,
         }
     }
 
     fn execute(&self) -> String {
         match self {
-            ExecutableCode::Bash(code) => {
-                let (_code, output, _error) = run_script::run_script!(code).unwrap();
-                return output;
-            }
-            ExecutableCode::Python(code) => {
-                let python = match Command::new("python")
-                    .arg("-")
-                    .stdin(Stdio::piped())
-                    .stdout(Stdio::piped())
-                    .spawn()
-                {
-                    Err(why) => return self.error(why),
-                    Ok(process) => process,
-                };
-                match python.stdin.unwrap().write_all(code.as_bytes()) {
-                    Err(why) => return self.error(why),
-                    Ok(_) => (),
-                };
-                let mut output = String::new();
-                match python.stdout.unwrap().read_to_string(&mut output) {
-                    Err(why) => return self.error(why),
-                    Ok(_) => (),
-                };
-                return output;
-            }
+            ExecutableCode::Bash(code) => return self.execute_command("bash", "-", code),
+            ExecutableCode::Python(code) => return self.execute_command("python3", "-", code),
+            ExecutableCode::Ruby(code) => return self.execute_command("ruby", "-", code),
+            ExecutableCode::Perl(code) => return self.execute_command("perl", "-", code),
         }
+    }
+
+    fn execute_command(&self, command: &str, argument: &str, code: &String) -> String {
+        let process = match Command::new(command)
+            .arg(argument)
+            .stdin(Stdio::piped())
+            .stdout(Stdio::piped())
+            .spawn()
+        {
+            Err(why) => return self.error(why),
+            Ok(process) => process,
+        };
+        match process.stdin.unwrap().write_all(code.as_bytes()) {
+            Err(why) => return self.error(why),
+            Ok(_) => (),
+        };
+        let mut output = String::new();
+        match process.stdout.unwrap().read_to_string(&mut output) {
+            Err(why) => return self.error(why),
+            Ok(_) => (),
+        };
+        return output;
     }
 
     fn error(&self, error: std::io::Error) -> String {
