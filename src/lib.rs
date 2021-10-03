@@ -1,3 +1,4 @@
+mod code_box_builder;
 mod executable_code;
 pub mod hex_color;
 pub mod prelude;
