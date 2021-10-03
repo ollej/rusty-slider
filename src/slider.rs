@@ -7,13 +7,13 @@ use std::path::PathBuf;
 
 #[derive(Clone)]
 struct Slide {
-    text_boxes: Vec<DrawBox>,
+    draw_boxes: Vec<DrawBox>,
     code_block: Option<ExecutableCode>,
 }
 
 impl Slide {
     pub fn add_text_box(&mut self, text_box: DrawBox) {
-        self.text_boxes.push(text_box);
+        self.draw_boxes.push(text_box);
     }
 }
 
@@ -165,7 +165,7 @@ impl Slides {
     fn draw_slide(&mut self) {
         let slide = &self.slides[self.active_slide];
         let mut new_position: Vpos = 0.;
-        for text_box in slide.text_boxes.iter() {
+        for text_box in slide.draw_boxes.iter() {
             let hpos = self.horizontal_position(text_box.width_with_padding());
             new_position = text_box.draw(hpos, new_position);
         }
@@ -244,7 +244,7 @@ impl MarkdownToSlides {
 
     fn build_slide(&self, blocks: &[Block]) -> Slide {
         Slide {
-            text_boxes: self.blocks_to_text_boxes(blocks, None, DrawBoxStyle::Standard),
+            draw_boxes: self.blocks_to_draw_boxes(blocks, None, DrawBoxStyle::Standard),
             code_block: self.find_first_code_block(blocks),
         }
     }
@@ -260,19 +260,19 @@ impl MarkdownToSlides {
         None
     }
 
-    fn blocks_to_text_boxes(
+    fn blocks_to_draw_boxes(
         &self,
         blocks: &[Block],
         background_color: Option<Color>,
         style: DrawBoxStyle,
     ) -> Vec<DrawBox> {
-        let mut text_boxes = vec![];
+        let mut draw_boxes = vec![];
         let mut text_lines = vec![];
         for block in blocks.iter() {
             match block {
                 Block::Header(spans, 1) => {
                     if !text_lines.is_empty() {
-                        text_boxes.push(DrawBox::new(
+                        draw_boxes.push(DrawBox::new(
                             text_lines,
                             self.theme.vertical_offset,
                             background_color,
@@ -280,7 +280,7 @@ impl MarkdownToSlides {
                         ));
                         text_lines = Vec::new();
                     }
-                    text_boxes.push(DrawBox::new(
+                    draw_boxes.push(DrawBox::new(
                         vec![TextLine::new(
                             self.theme.align.to_owned(),
                             self.spans_to_text_partials(
@@ -325,7 +325,7 @@ impl MarkdownToSlides {
                 }
                 Block::Blockquote(blocks) => {
                     if !text_lines.is_empty() {
-                        text_boxes.push(DrawBox::new(
+                        draw_boxes.push(DrawBox::new(
                             text_lines,
                             self.theme.vertical_offset,
                             background_color,
@@ -333,7 +333,7 @@ impl MarkdownToSlides {
                         ));
                         text_lines = Vec::new();
                     }
-                    text_boxes.extend(self.blocks_to_text_boxes(
+                    draw_boxes.extend(self.blocks_to_draw_boxes(
                         blocks,
                         Some(self.theme.blockquote_background_color),
                         DrawBoxStyle::Blockquote {
@@ -345,7 +345,7 @@ impl MarkdownToSlides {
                 }
                 Block::CodeBlock(language, code) => {
                     if !text_lines.is_empty() {
-                        text_boxes.push(DrawBox::new(
+                        draw_boxes.push(DrawBox::new(
                             text_lines,
                             self.theme.vertical_offset,
                             background_color,
@@ -353,7 +353,7 @@ impl MarkdownToSlides {
                         ));
                         text_lines = Vec::new();
                     }
-                    text_boxes.push(
+                    draw_boxes.push(
                         self.code_box_builder
                             .build_text_box(language.to_owned(), code.to_owned()),
                     );
@@ -362,14 +362,14 @@ impl MarkdownToSlides {
             }
         }
         if !text_lines.is_empty() {
-            text_boxes.push(DrawBox::new(
+            draw_boxes.push(DrawBox::new(
                 text_lines,
                 self.theme.vertical_offset,
                 background_color,
                 style,
             ));
         }
-        text_boxes
+        draw_boxes
     }
 
     fn spans_to_text_partials(
