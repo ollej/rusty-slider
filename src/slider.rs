@@ -7,12 +7,12 @@ use std::path::PathBuf;
 
 #[derive(Clone)]
 struct Slide {
-    text_boxes: Vec<TextBox>,
+    text_boxes: Vec<DrawBox>,
     code_block: Option<ExecutableCode>,
 }
 
 impl Slide {
-    pub fn add_text_box(&mut self, text_box: TextBox) {
+    pub fn add_text_box(&mut self, text_box: DrawBox) {
         self.text_boxes.push(text_box);
     }
 }
@@ -244,7 +244,7 @@ impl MarkdownToSlides {
 
     fn build_slide(&self, blocks: &[Block]) -> Slide {
         Slide {
-            text_boxes: self.blocks_to_text_boxes(blocks, None, TextBoxStyle::Standard),
+            text_boxes: self.blocks_to_text_boxes(blocks, None, DrawBoxStyle::Standard),
             code_block: self.find_first_code_block(blocks),
         }
     }
@@ -264,15 +264,15 @@ impl MarkdownToSlides {
         &self,
         blocks: &[Block],
         background_color: Option<Color>,
-        style: TextBoxStyle,
-    ) -> Vec<TextBox> {
+        style: DrawBoxStyle,
+    ) -> Vec<DrawBox> {
         let mut text_boxes = vec![];
         let mut text_lines = vec![];
         for block in blocks.iter() {
             match block {
                 Block::Header(spans, 1) => {
                     if !text_lines.is_empty() {
-                        text_boxes.push(TextBox::new(
+                        text_boxes.push(DrawBox::new(
                             text_lines,
                             self.theme.vertical_offset,
                             background_color,
@@ -280,7 +280,7 @@ impl MarkdownToSlides {
                         ));
                         text_lines = Vec::new();
                     }
-                    text_boxes.push(TextBox::new(
+                    text_boxes.push(DrawBox::new(
                         vec![TextLine::new(
                             self.theme.align.to_owned(),
                             self.spans_to_text_partials(
@@ -292,7 +292,7 @@ impl MarkdownToSlides {
                         )],
                         self.theme.vertical_offset,
                         background_color,
-                        TextBoxStyle::Title,
+                        DrawBoxStyle::Title,
                     ));
                 }
                 Block::Header(spans, _size) => {
@@ -325,7 +325,7 @@ impl MarkdownToSlides {
                 }
                 Block::Blockquote(blocks) => {
                     if !text_lines.is_empty() {
-                        text_boxes.push(TextBox::new(
+                        text_boxes.push(DrawBox::new(
                             text_lines,
                             self.theme.vertical_offset,
                             background_color,
@@ -336,7 +336,7 @@ impl MarkdownToSlides {
                     text_boxes.extend(self.blocks_to_text_boxes(
                         blocks,
                         Some(self.theme.blockquote_background_color),
-                        TextBoxStyle::Blockquote {
+                        DrawBoxStyle::Blockquote {
                             size: self.theme.font_size_header_title * 2,
                             font: self.font_text,
                             color: self.theme.text_color,
@@ -345,7 +345,7 @@ impl MarkdownToSlides {
                 }
                 Block::CodeBlock(language, code) => {
                     if !text_lines.is_empty() {
-                        text_boxes.push(TextBox::new(
+                        text_boxes.push(DrawBox::new(
                             text_lines,
                             self.theme.vertical_offset,
                             background_color,
@@ -362,7 +362,7 @@ impl MarkdownToSlides {
             }
         }
         if !text_lines.is_empty() {
-            text_boxes.push(TextBox::new(
+            text_boxes.push(DrawBox::new(
                 text_lines,
                 self.theme.vertical_offset,
                 background_color,
@@ -449,7 +449,7 @@ impl MarkdownToSlides {
 }
 
 #[derive(Copy, Clone)]
-pub enum TextBoxStyle {
+pub enum DrawBoxStyle {
     Standard,
     Title,
     Blockquote {
@@ -460,16 +460,16 @@ pub enum TextBoxStyle {
     Code,
 }
 
-impl TextBoxStyle {
-    fn draw(&self, hpos: Hpos, vpos: Vpos, text_box: &TextBox) {
-        if let TextBoxStyle::Blockquote { size, font, color } = self {
+impl DrawBoxStyle {
+    fn draw(&self, hpos: Hpos, vpos: Vpos, text_box: &DrawBox) {
+        if let DrawBoxStyle::Blockquote { size, font, color } = self {
             self.draw_blockquote(hpos, vpos, text_box, *size, *font, *color)
         }
     }
 
-    fn top_position(&self, vpos: Vpos, text_box: &TextBox) -> Vpos {
+    fn top_position(&self, vpos: Vpos, text_box: &DrawBox) -> Vpos {
         match self {
-            TextBoxStyle::Title => {
+            DrawBoxStyle::Title => {
                 screen_height() / 2.
                     - text_box.height / 2.
                     - text_box.margin
@@ -484,7 +484,7 @@ impl TextBoxStyle {
         &self,
         hpos: Hpos,
         vpos: Vpos,
-        text_box: &TextBox,
+        text_box: &DrawBox,
         font_size: FontSize,
         font: Font,
         color: Color,
@@ -513,25 +513,25 @@ impl TextBoxStyle {
 }
 
 #[derive(Clone)]
-pub struct TextBox {
+pub struct DrawBox {
     width: Width,
     height: Height,
     margin: Height,
     padding: f32,
     offset_y: Vpos,
     background_color: Option<Color>,
-    style: TextBoxStyle,
+    style: DrawBoxStyle,
     lines: Vec<TextLine>,
 }
 
-impl TextBox {
+impl DrawBox {
     const BOX_PADDING: f32 = 20.;
 
     pub fn new(
         lines: Vec<TextLine>,
         margin: Height,
         background_color: Option<Color>,
-        style: TextBoxStyle,
+        style: DrawBoxStyle,
     ) -> Self {
         let mut width: Width = 0.;
         let mut height: Height = 0.;

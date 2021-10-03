@@ -37,12 +37,12 @@ impl CodeBoxBuilder {
         }
     }
 
-    pub fn build_text_box(&self, language: Option<String>, code: String) -> TextBox {
-        TextBox::new(
+    pub fn build_text_box(&self, language: Option<String>, code: String) -> DrawBox {
+        DrawBox::new(
             self.build_text_lines(language, code),
             self.margin,
             Some(self.background_color),
-            TextBoxStyle::Code,
+            DrawBoxStyle::Code,
         )
     }
 
