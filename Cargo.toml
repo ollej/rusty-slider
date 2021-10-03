@@ -9,7 +9,7 @@ repository = "https://github.com/ollej/rusty-slider"
 homepage = "https://ollej.github.io/rusty-slider/"
 readme = "README.md"
 categories = ["command-line-utilities"]
-keywords = ["markdown", "slide", "presentation", "graphics", "wasm"]
+keywords = ["markdown", "slideshow", "presentation", "graphics", "wasm"]
 default-run = "rusty-slider"
 
 [dependencies]

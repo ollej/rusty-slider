@@ -1,12 +1,11 @@
 extern crate markdown;
-pub mod shaders;
-pub mod slider;
 
 use macroquad::prelude::*;
 use quad_url::get_program_parameters;
-use slider::{Duration, Slides, Theme};
 use std::path::PathBuf;
 use structopt::StructOpt;
+
+use rusty_slider::prelude::*;
 
 #[derive(StructOpt, Debug)]
 #[structopt(
@@ -63,12 +62,7 @@ async fn main() {
 
     let render_target = render_target(screen_width() as u32, screen_height() as u32);
     render_target.texture.set_filter(FilterMode::Linear);
-    let shader_material = load_material(
-        shaders::crt::VERTEX,
-        shaders::crt::FRAGMENT,
-        Default::default(),
-    )
-    .unwrap();
+    let shader_material = load_material(crt::VERTEX, crt::FRAGMENT, Default::default()).unwrap();
 
     loop {
         #[cfg(not(target_arch = "wasm32"))]

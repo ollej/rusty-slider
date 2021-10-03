@@ -1,7 +1,8 @@
 use glob::glob;
 use macroquad::prelude::*;
 use maud::{html, Markup, PreEscaped, DOCTYPE};
-use rusty_slider::slider::{Slides, Theme};
+use rusty_slider::slider::Slides;
+use rusty_slider::theme::Theme;
 use std::borrow::Cow;
 use std::path::PathBuf;
 use structopt::StructOpt;
