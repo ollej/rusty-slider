@@ -100,54 +100,30 @@ impl Slide {
 
 pub struct Slides {
     slides: Vec<Slide>,
+    theme: Theme,
+    code_box_builder: CodeBoxBuilder,
+    background: Option<Texture2D>,
+    automatic: Duration,
     active_slide: usize,
     time: Duration,
-    automatic: Duration,
-    background_color: Color,
-    background: Option<Texture2D>,
-    horizontal_offset: Hpos,
-    align: String,
-    code_box_builder: CodeBoxBuilder,
 }
 
 impl Slides {
-    fn from_markdown(
-        markdown: String,
+    fn from_slides(
+        slides: Vec<Slide>,
         theme: Theme,
-        automatic: Duration,
-        font: Font,
-        font_bold: Font,
-        font_italic: Font,
-        code_font: Font,
+        code_box_builder: CodeBoxBuilder,
         background: Option<Texture2D>,
+        automatic: Duration,
     ) -> Slides {
-        let background_color = theme.background_color;
-        let horizontal_offset = theme.horizontal_offset;
-        let align = theme.align.to_owned();
-        let code_box_builder = CodeBoxBuilder::new(
-            code_font,
-            font_bold,
-            font_italic,
-            theme.code_font_size.to_owned(),
-            theme.code_line_height.to_owned(),
-            theme.code_background_color.to_owned(),
-            theme.code_theme.to_owned(),
-            theme.code_tab_width,
-            theme.vertical_offset,
-        );
-        let slides =
-            MarkdownToSlides::new(theme, font, font_bold, font_italic, code_font).parse(markdown);
-
         Slides {
             slides,
-            active_slide: 0,
+            theme,
+            code_box_builder,
+            background,
             automatic,
             time: 0.,
-            background_color,
-            background,
-            horizontal_offset,
-            align,
-            code_box_builder,
+            active_slide: 0,
         }
     }
 
@@ -162,16 +138,16 @@ impl Slides {
         };
         debug!("Sanitized markdown:\n{}", markdown);
 
-        let text_font = load_ttf_font(&theme.font)
+        let font_text = load_ttf_font(&theme.font)
             .await
             .expect("Couldn't load font");
-        let bold_font = load_ttf_font(&theme.font_bold)
+        let font_bold = load_ttf_font(&theme.font_bold)
             .await
             .expect("Couldn't load font");
-        let italic_font = load_ttf_font(&theme.font_italic)
+        let font_italic = load_ttf_font(&theme.font_italic)
             .await
             .expect("Couldn't load font");
-        let code_font = load_ttf_font(&theme.code_font)
+        let font_code = load_ttf_font(&theme.font_code)
             .await
             .expect("Couldn't load font");
         let background = match &theme.background_image {
@@ -182,15 +158,19 @@ impl Slides {
             ),
             None => None,
         };
-        Self::from_markdown(
-            markdown,
-            theme,
-            automatic,
-            text_font,
-            bold_font,
-            italic_font,
-            code_font,
+
+        let slides =
+            MarkdownToSlides::new(theme.clone(), font_text, font_bold, font_italic, font_code)
+                .parse(markdown);
+        let code_box_builder =
+            CodeBoxBuilder::new(theme.clone(), font_code, font_bold, font_italic);
+
+        Self::from_slides(
+            slides,
+            theme.clone(),
+            code_box_builder,
             background,
+            automatic,
         )
     }
 
@@ -230,7 +210,7 @@ impl Slides {
         } else {
             self.time += delta;
         }
-        clear_background(self.background_color);
+        clear_background(self.theme.background_color);
         self.draw_background(self.background);
         self.draw_slide();
     }
@@ -273,9 +253,9 @@ impl Slides {
     }
 
     fn horizontal_position(&self, width: Width) -> Hpos {
-        match self.align.as_str() {
-            "left" => self.horizontal_offset,
-            "right" => screen_width() - self.horizontal_offset - width,
+        match self.theme.align.as_str() {
+            "left" => self.theme.horizontal_offset,
+            "right" => screen_width() - self.theme.horizontal_offset - width,
             _ => screen_width() / 2. - width / 2.,
         }
     }
@@ -283,33 +263,30 @@ impl Slides {
 
 pub struct MarkdownToSlides {
     theme: Theme,
-    font: Font,
+    font_text: Font,
     font_bold: Font,
     font_italic: Font,
-    code_font: Font,
+    font_code: Font,
     code_box_builder: CodeBoxBuilder,
 }
 
 impl MarkdownToSlides {
-    fn new(theme: Theme, font: Font, font_bold: Font, font_italic: Font, code_font: Font) -> Self {
-        let code_box_builder = CodeBoxBuilder::new(
-            code_font,
-            font_bold,
-            font_italic,
-            theme.code_font_size.to_owned(),
-            theme.code_line_height.to_owned(),
-            theme.code_background_color.to_owned(),
-            theme.code_theme.to_owned(),
-            theme.code_tab_width,
-            theme.vertical_offset,
-        );
+    fn new(
+        theme: Theme,
+        font_text: Font,
+        font_bold: Font,
+        font_italic: Font,
+        font_code: Font,
+    ) -> Self {
+        let code_box_builder =
+            CodeBoxBuilder::new(theme.clone(), font_code, font_bold, font_italic);
         Self {
             theme,
-            font,
+            code_box_builder,
+            font_text,
             font_bold,
             font_italic,
-            code_font,
-            code_box_builder,
+            font_code,
         }
     }
 
@@ -389,7 +366,7 @@ impl MarkdownToSlides {
                             self.theme.align.to_owned(),
                             self.spans_to_text_partials(
                                 spans,
-                                self.font,
+                                self.font_text,
                                 self.theme.font_size_header_title,
                                 self.theme.heading_color,
                             ),
@@ -404,7 +381,7 @@ impl MarkdownToSlides {
                         self.theme.align.to_owned(),
                         self.spans_to_text_partials(
                             spans,
-                            self.font,
+                            self.font_text,
                             self.theme.font_size_header_slides,
                             self.theme.heading_color,
                         ),
@@ -415,7 +392,7 @@ impl MarkdownToSlides {
                         self.theme.align.to_owned(),
                         self.spans_to_text_partials(
                             spans,
-                            self.font,
+                            self.font_text,
                             self.theme.font_size_text,
                             self.theme.text_color,
                         ),
@@ -442,7 +419,7 @@ impl MarkdownToSlides {
                         Some(self.theme.blockquote_background_color),
                         TextBoxStyle::Blockquote {
                             size: self.theme.font_size_header_title * 2,
-                            font: self.font,
+                            font: self.font_text,
                             color: self.theme.text_color,
                         },
                     ));
@@ -496,7 +473,7 @@ impl MarkdownToSlides {
                 )),
                 Span::Code(text) => partials.push(TextPartial::new(
                     &text,
-                    self.code_font,
+                    self.font_code,
                     font_size,
                     self.theme.text_color, // TODO: Add code text color to theme
                     self.theme.line_height,
@@ -526,7 +503,7 @@ impl MarkdownToSlides {
                 let mut partials = vec![self.build_bullet_partial(index, bullet)];
                 partials.extend(self.spans_to_text_partials(
                     spans,
-                    self.font,
+                    self.font_text,
                     self.theme.font_size_text,
                     self.theme.text_color,
                 ));
@@ -544,7 +521,7 @@ impl MarkdownToSlides {
         };
         TextPartial::new(
             &item_bullet,
-            self.font,
+            self.font_text,
             self.theme.font_size_text,
             self.theme.text_color,
             self.theme.line_height,
@@ -781,7 +758,7 @@ impl TextPartial {
 pub struct CodeBoxBuilder {
     ps: SyntaxSet,
     ts: ThemeSet,
-    font: Font,
+    font_text: Font,
     font_bold: Font,
     font_italic: Font,
     font_size: FontSize,
@@ -793,29 +770,19 @@ pub struct CodeBoxBuilder {
 }
 
 impl CodeBoxBuilder {
-    fn new(
-        font: Font,
-        font_bold: Font,
-        font_italic: Font,
-        font_size: FontSize,
-        line_height: Height,
-        background_color: Color,
-        highlighting_theme: String,
-        tab_width: usize,
-        margin: Height,
-    ) -> Self {
+    fn new(theme: Theme, font_text: Font, font_bold: Font, font_italic: Font) -> Self {
         Self {
             ts: ThemeSet::load_defaults(),
             ps: SyntaxSet::load_defaults_newlines(),
-            font,
+            font_text,
             font_bold,
             font_italic,
-            font_size,
-            line_height,
-            background_color,
-            tab_spaces: " ".repeat(tab_width),
-            highlighting_theme,
-            margin,
+            font_size: theme.font_code_size.to_owned(),
+            line_height: theme.code_line_height.to_owned(),
+            background_color: theme.code_background_color.to_owned(),
+            tab_spaces: " ".repeat(theme.code_tab_width),
+            highlighting_theme: theme.code_theme.to_owned(),
+            margin: theme.vertical_offset.to_owned(),
         }
     }
 
@@ -850,15 +817,15 @@ impl CodeBoxBuilder {
                 }
 
                 let c = style.foreground;
-                let font = match style.font_style {
+                let font_style = match style.font_style {
                     FontStyle::BOLD => self.font_bold,
                     FontStyle::ITALIC => self.font_italic,
-                    _ => self.font,
+                    _ => self.font_text,
                 };
 
                 partials.push(TextPartial::new(
                     &text,
-                    font,
+                    font_style,
                     self.font_size,
                     Color::from_rgba(c.r, c.g, c.b, c.a),
                     self.line_height,
@@ -919,8 +886,8 @@ pub struct Theme {
     pub blockquote_padding: f32,
     pub blockquote_left_quote: String,
     pub blockquote_right_quote: String,
-    pub code_font: String,
-    pub code_font_size: FontSize,
+    pub font_code: String,
+    pub font_code_size: FontSize,
     pub code_line_height: Height,
     #[nserde(proxy = "HexColor")]
     pub code_background_color: Color,
@@ -951,8 +918,8 @@ impl Default for Theme {
             blockquote_padding: 20.,
             blockquote_left_quote: "“".to_string(),
             blockquote_right_quote: "„".to_string(),
-            code_font: "assets/Hack-Regular.ttf".to_string(),
-            code_font_size: 20,
+            font_code: "assets/Hack-Regular.ttf".to_string(),
+            font_code_size: 20,
             code_line_height: 1.2,
             code_background_color: Color::from_rgba(0, 43, 54, 255),
             code_theme: "Solarized (dark)".to_string(),
