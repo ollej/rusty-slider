@@ -190,7 +190,7 @@ async fn main() {
         html! {
             form {
                 label for="theme" { "Theme:" }
-                select#theme {
+                select #theme {
                     @for theme in &themes {
                         option value=(theme.path()) {
                             (theme.name())

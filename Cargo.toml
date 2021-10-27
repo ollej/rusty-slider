@@ -2,7 +2,7 @@
 name = "rusty-slider"
 version = "0.11.0"
 authors = ["Olle Wreede <olle@wreede.se>"]
-edition = "2018"
+edition = "2021"
 license = "MIT"
 description = "A small tool to display markdown files as a slideshow."
 repository = "https://github.com/ollej/rusty-slider"
