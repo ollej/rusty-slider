@@ -116,7 +116,7 @@ The command line options can also be used as URL arguments to the
 web demo.
 
 ```
-rusty-slider 0.11.0
+rusty-slider 0.12.0
 A small tool to display markdown files as a slideshow.
 
 USAGE:
@@ -129,6 +129,7 @@ FLAGS:
 
 OPTIONS:
     -a, --automatic <automatic>      Automatically switch slides every N seconds [default: 0]
+    -d, --directory <directory>      Path to directory to load files from [default: assets]
     -S, --screenshot <screenshot>    When taking screenshot, store PNG at this path [default: screenshot.png]
     -s, --slides <slides>            Markdown files with slides text [default: assets/rusty-slider.md]
     -t, --theme <theme>              File with theme options [default: assets/default-theme.json]
