@@ -15,7 +15,7 @@ default-run = "rusty-slider"
 [dependencies]
 colorsys = "0.6.3"
 image = "0.23.14"
-macroquad = "0.3.6"
+macroquad = "0.3.13"
 markdown = { git = "https://github.com/johannhof/markdown.rs" }
 nanoserde = "0.1.25"
 structopt = "0.3.21"
