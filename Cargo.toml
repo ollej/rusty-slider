@@ -13,12 +13,12 @@ keywords = ["markdown", "slideshow", "presentation", "graphics", "wasm"]
 default-run = "rusty-slider"
 
 [dependencies]
-colorsys = "0.6.3"
-image = "0.23.14"
+colorsys = "0.6.5"
+image = "0.24.0"
 macroquad = "0.3.13"
 markdown = { git = "https://github.com/johannhof/markdown.rs" }
-nanoserde = "0.1.25"
-structopt = "0.3.21"
+nanoserde = "0.1.29"
+structopt = "0.3.26"
 syntect = { version = "4.5", default-features = false, features = ["default-fancy"]}
 getrandom = { version = "0.2", features = ["js"] }
 quad-url = "0.1.0"
