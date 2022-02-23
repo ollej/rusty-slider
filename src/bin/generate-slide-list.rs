@@ -93,7 +93,7 @@ fn footer() -> Markup {
     html! {
         footer {
             p {
-                a href="https://github.com/ollej/rusty-slider" { "Copyright 2021 Olle Wreede" }
+                a href="https://github.com/ollej/rusty-slider" { "Copyright 2022 Olle Wreede" }
             }
         }
     }
@@ -121,10 +121,10 @@ impl Filename {
     fn href(&self, theme: Option<&Filename>) -> String {
         format!(
             "index.html?slides={}&theme={}",
-            self.path(),
+            self.filename(),
             match theme {
-                Some(t) => t.path(),
-                None => "",
+                Some(t) => t.filename(),
+                None => "".to_string(),
             }
         )
     }
@@ -141,6 +141,15 @@ impl Filename {
 
     fn path(&self) -> &str {
         self.path.to_str().unwrap()
+    }
+
+    fn filename(&self) -> String {
+        self.path
+            .as_path()
+            .file_name()
+            .unwrap()
+            .to_string_lossy()
+            .into()
     }
 
     fn png_path(&self) -> PathBuf {
@@ -192,7 +201,7 @@ async fn main() {
                 label for="theme" { "Theme:" }
                 select #theme {
                     @for theme in &themes {
-                        option value=(theme.path()) {
+                        option value=(theme.filename()) {
                             (theme.name())
                         }
                     }
