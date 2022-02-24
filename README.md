@@ -135,8 +135,23 @@ OPTIONS:
     -t, --theme <theme>              File with theme options [default: assets/default-theme.json]
 ```
 
-## License
+## Licenses
 
-Copyright 2021 Olle Wreede, released under the MIT License.
+### Rusty Slider
 
-Fonts are copyrighted by their respective designers.
+Copyright 2022 Olle Wreede, released under the MIT License.
+
+### Amble font
+
+By Punchcut
+Apache License
+Version 2.0, January 2004
+http://www.apache.org/licenses/
+
+### Hack font
+
+Copyright Chris Simpkins
+SIL OFL 1.1 and Bitstream Vera v0.00
+https://www.fontsquirrel.com/license/hack
+
+
