@@ -104,10 +104,21 @@ Kärna för intern funktionalitet
 
 ## Fyra API:er
 
-* Channel API – hanterar olika typer av telefonkanaler
-* Application API – Hanterar tjänster som röstbrevlåda och konferenser
-* Codec Translator API – Laddar codecs för olika ljudformat
-* File Format API – Läser/Skriver data
+**Channel API**
+
+Hanterar olika typer av telefonkanaler
+
+**Application API**
+
+Hanterar tjänster som röstbrevlåda och konferenser
+
+**Codec Translator API**
+
+Laddar codecs för olika ljudformat
+
+**File Format API**
+
+Läser/Skriver data
 
 ---
 
@@ -125,10 +136,16 @@ Kärna för intern funktionalitet
 
 ## Asterisk Gateway Interface
 
-* Gränssnitt för kommunikation mellan Asterisks dialplan och applikation
+* Gränssnitt för kommunikation
+
+mellan Asterisks dialplan och applikation
+
 * Läser/skriver via FIFO
 * Applikationerna startas från dialplan
-* AGI-kommandon för läsning av knapptryckningar, uppspelning av ljud osv
+* AGI-kommandon
+
+för läsning av knapptryckningar, uppspelning av ljud osv
+
 * Kan skrivas i vilket språk som helst
 
 ---
@@ -196,7 +213,8 @@ Kärna för intern funktionalitet
 
 * Fullt möjligt att utveckla
 * Kan kodas i olika språk
-* Komplicerat då det kräver många olika delar av Asterisks API:er
+* Komplicerat
+* Kräver många olika delar av Asterisks API:er
 * Kräver inga dyra system
 * Kan byggas ut med fler funktioner
 
