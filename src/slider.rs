@@ -358,6 +358,7 @@ impl MarkdownToSlides {
                             .build_text_box(language.to_owned(), code.to_owned()),
                     );
                 }
+
                 _ => (),
             }
         }
@@ -562,8 +563,8 @@ impl DrawBox {
         for line in self.lines.iter() {
             let line_hpos = match line.align.as_str() {
                 "left" => inner_hpos,
-                "right" => inner_hpos + self.width - line.width,
-                _ => inner_hpos + self.width / 2. - line.width / 2.,
+                "right" => inner_hpos + self.width() - line.width,
+                _ => inner_hpos + self.width() / 2. - line.width / 2.,
             };
             new_position = line.draw(line_hpos, new_position);
         }
@@ -582,8 +583,12 @@ impl DrawBox {
         }
     }
 
+    fn width(&self) -> Width {
+        self.width
+    }
+
     fn width_with_padding(&self) -> Width {
-        self.width + self.padding * 2.
+        self.width() + self.padding * 2.
     }
 
     fn height_with_padding(&self) -> Height {
