@@ -12,8 +12,8 @@ struct Slide {
 }
 
 impl Slide {
-    pub fn add_text_box(&mut self, text_box: DrawBox) {
-        self.draw_boxes.push(text_box);
+    pub fn add_draw_box(&mut self, draw_box: DrawBox) {
+        self.draw_boxes.push(draw_box);
     }
 }
 
@@ -141,8 +141,8 @@ impl Slides {
             let output = code_block.execute();
             let code_box = self
                 .code_box_builder
-                .build_text_box(None, output.to_owned());
-            slide.add_text_box(code_box);
+                .build_draw_box(None, output.to_owned());
+            slide.add_draw_box(code_box);
         }
     }
 
@@ -165,9 +165,9 @@ impl Slides {
     fn draw_slide(&mut self) {
         let slide = &self.slides[self.active_slide];
         let mut new_position: Vpos = 0.;
-        for text_box in slide.draw_boxes.iter() {
-            let hpos = self.horizontal_position(text_box.width_with_padding());
-            new_position = text_box.draw(hpos, new_position);
+        for draw_box in slide.draw_boxes.iter() {
+            let hpos = self.horizontal_position(draw_box.width_with_padding());
+            new_position = draw_box.draw(hpos, new_position);
         }
     }
 
@@ -355,7 +355,7 @@ impl MarkdownToSlides {
                     }
                     draw_boxes.push(
                         self.code_box_builder
-                            .build_text_box(language.to_owned(), code.to_owned()),
+                            .build_draw_box(language.to_owned(), code.to_owned()),
                     );
                 }
 
@@ -462,20 +462,20 @@ pub enum DrawBoxStyle {
 }
 
 impl DrawBoxStyle {
-    fn draw(&self, hpos: Hpos, vpos: Vpos, text_box: &DrawBox) {
+    fn draw(&self, hpos: Hpos, vpos: Vpos, draw_box: &DrawBox) {
         if let DrawBoxStyle::Blockquote { size, font, color } = self {
-            self.draw_blockquote(hpos, vpos, text_box, *size, *font, *color)
+            self.draw_blockquote(hpos, vpos, draw_box, *size, *font, *color)
         }
     }
 
-    fn top_position(&self, vpos: Vpos, text_box: &DrawBox) -> Vpos {
+    fn top_position(&self, vpos: Vpos, draw_box: &DrawBox) -> Vpos {
         match self {
             DrawBoxStyle::Title => {
                 screen_height() / 2.
-                    - text_box.height / 2.
-                    - text_box.margin
-                    - text_box.padding
-                    - text_box.offset_y
+                    - draw_box.height / 2.
+                    - draw_box.margin
+                    - draw_box.padding
+                    - draw_box.offset_y
             }
             _ => vpos,
         }
@@ -485,7 +485,7 @@ impl DrawBoxStyle {
         &self,
         hpos: Hpos,
         vpos: Vpos,
-        text_box: &DrawBox,
+        draw_box: &DrawBox,
         font_size: FontSize,
         font: Font,
         color: Color,
@@ -506,8 +506,8 @@ impl DrawBoxStyle {
         );
         draw_text_ex(
             "„",
-            hpos + text_box.width_with_padding(),
-            vpos + text_box.height_with_margin(),
+            hpos + draw_box.width_with_padding(),
+            vpos + draw_box.height_with_margin(),
             text_params,
         );
     }
