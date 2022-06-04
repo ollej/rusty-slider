@@ -63,6 +63,16 @@ echo "Hello, World!"
 
 ---
 
+## Compiling Rust
+
+```rust
+fn main() {
+    println!("Hello, world!");
+}
+```
+
+---
+
 ## Blockquotes
 
 > Blockquotes renders with background color

@@ -65,10 +65,11 @@ Only the first code block on a slide can be executed.
 
 #### Supported languages
 
-* bash
-* python
-* perl
-* ruby
+* Bash
+* Python
+* Perl
+* Ruby
+* Rust
 
 ## Theme
 
@@ -116,7 +117,7 @@ The command line options can also be used as URL arguments to the
 web demo.
 
 ```
-rusty-slider 0.12.0
+rusty-slider 0.13.0
 A small tool to display markdown files as a slideshow.
 
 USAGE:
