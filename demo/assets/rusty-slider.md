@@ -38,6 +38,12 @@ Supports Windows, MacOS, Linux and web.
 
 ---
 
+## Supports images
+
+![Title](assets/ferris.png)
+
+---
+
 ## Code
 
 Code blocks will be rendered with syntax highlighting.
