@@ -147,8 +147,8 @@ impl Slides {
     }
 
     fn draw_background(&self, background: Option<Texture2D>) {
-        match background {
-            Some(texture) => draw_texture_ex(
+        if let Some(texture) = background {
+            draw_texture_ex(
                 texture,
                 0.,
                 0.,
@@ -157,9 +157,8 @@ impl Slides {
                     dest_size: Some(vec2(screen_width(), screen_height())),
                     ..Default::default()
                 },
-            ),
-            None => (),
-        };
+            )
+        }
     }
 
     fn draw_slide(&mut self) {
