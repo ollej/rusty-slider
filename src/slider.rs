@@ -3,6 +3,7 @@ use crate::prelude::*;
 use macroquad::prelude::*;
 use markdown::{Block, ListItem, Span};
 use regex::Regex;
+use std::mem::discriminant;
 use std::path::PathBuf;
 
 #[derive(Clone)]
@@ -312,6 +313,20 @@ impl MarkdownToSlides {
                         ),
                     ));
                 }
+                Block::Paragraph(spans) if self.is_image(spans) => {
+                    if !text_lines.is_empty() {
+                        draw_boxes.push(DrawBox::Text(TextBox::new(
+                            text_lines,
+                            self.theme.vertical_offset,
+                            background_color,
+                            style,
+                        )));
+                        text_lines = Vec::new();
+                    }
+                    if let Some(Span::Image(_title, path, _)) = spans.first() {
+                        draw_boxes.push(DrawBox::Image(ImageBox::new(path, 0., None)));
+                    }
+                }
                 Block::Paragraph(spans) => {
                     text_lines.push(TextLine::new(
                         self.theme.align.to_owned(),
@@ -377,6 +392,14 @@ impl MarkdownToSlides {
             )));
         }
         draw_boxes
+    }
+
+    fn is_image(&self, spans: &[Span]) -> bool {
+        if let Some(span) = spans.first() {
+            return discriminant(span)
+                == discriminant(&Span::Image("".to_string(), "".to_string(), None));
+        }
+        false
     }
 
     fn spans_to_text_partials(
