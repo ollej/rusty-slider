@@ -7,13 +7,13 @@ use std::path::PathBuf;
 
 #[derive(Clone)]
 struct Slide {
-    draw_boxes: Vec<DrawBox>,
+    draw_boxes: Vec<Box<DrawBox>>,
     code_block: Option<ExecutableCode>,
 }
 
 impl Slide {
     pub fn add_draw_box(&mut self, draw_box: DrawBox) {
-        self.draw_boxes.push(draw_box);
+        self.draw_boxes.push(Box::new(draw_box));
     }
 }
 
@@ -265,22 +265,22 @@ impl MarkdownToSlides {
         blocks: &[Block],
         background_color: Option<Color>,
         style: DrawBoxStyle,
-    ) -> Vec<DrawBox> {
+    ) -> Vec<Box<DrawBox>> {
         let mut draw_boxes = vec![];
         let mut text_lines = vec![];
         for block in blocks.iter() {
             match block {
                 Block::Header(spans, 1) => {
                     if !text_lines.is_empty() {
-                        draw_boxes.push(DrawBox::new(
+                        draw_boxes.push(Box::new(DrawBox::new(
                             text_lines,
                             self.theme.vertical_offset,
                             background_color,
                             style,
-                        ));
+                        )));
                         text_lines = Vec::new();
                     }
-                    draw_boxes.push(DrawBox::new(
+                    draw_boxes.push(Box::new(DrawBox::new(
                         vec![TextLine::new(
                             self.theme.align.to_owned(),
                             self.spans_to_text_partials(
@@ -293,7 +293,7 @@ impl MarkdownToSlides {
                         self.theme.vertical_offset,
                         background_color,
                         DrawBoxStyle::Title,
-                    ));
+                    )));
                 }
                 Block::Header(spans, _size) => {
                     text_lines.push(TextLine::new(
@@ -325,12 +325,12 @@ impl MarkdownToSlides {
                 }
                 Block::Blockquote(blocks) => {
                     if !text_lines.is_empty() {
-                        draw_boxes.push(DrawBox::new(
+                        draw_boxes.push(Box::new(DrawBox::new(
                             text_lines,
                             self.theme.vertical_offset,
                             background_color,
                             style,
-                        ));
+                        )));
                         text_lines = Vec::new();
                     }
                     draw_boxes.extend(self.blocks_to_draw_boxes(
@@ -345,30 +345,30 @@ impl MarkdownToSlides {
                 }
                 Block::CodeBlock(language, code) => {
                     if !text_lines.is_empty() {
-                        draw_boxes.push(DrawBox::new(
+                        draw_boxes.push(Box::new(DrawBox::new(
                             text_lines,
                             self.theme.vertical_offset,
                             background_color,
                             style,
-                        ));
+                        )));
                         text_lines = Vec::new();
                     }
-                    draw_boxes.push(
+                    draw_boxes.push(Box::new(
                         self.code_box_builder
                             .build_draw_box(language.to_owned(), code.to_owned()),
-                    );
+                    ));
                 }
 
                 _ => (),
             }
         }
         if !text_lines.is_empty() {
-            draw_boxes.push(DrawBox::new(
+            draw_boxes.push(Box::new(DrawBox::new(
                 text_lines,
                 self.theme.vertical_offset,
                 background_color,
                 style,
-            ));
+            )));
         }
         draw_boxes
     }
@@ -513,6 +513,12 @@ impl DrawBoxStyle {
     }
 }
 
+trait Draw {
+    fn draw(&self, hpos: Hpos, vpos: Vpos) -> Vpos;
+
+    fn draw_background(&self, hpos: Hpos, vpos: Vpos);
+}
+
 #[derive(Clone)]
 pub struct DrawBox {
     width: Width,
@@ -554,6 +560,24 @@ impl DrawBox {
         }
     }
 
+    fn width(&self) -> Width {
+        self.width
+    }
+
+    fn width_with_padding(&self) -> Width {
+        self.width() + self.padding * 2.
+    }
+
+    fn height_with_padding(&self) -> Height {
+        self.height + self.padding * 2.
+    }
+
+    fn height_with_margin(&self) -> Height {
+        self.height_with_padding() + self.margin
+    }
+}
+
+impl Draw for DrawBox {
     fn draw(&self, hpos: Hpos, vpos: Vpos) -> Vpos {
         let vpos = self.style.top_position(vpos, self);
         self.draw_background(hpos, vpos + self.margin + self.offset_y);
@@ -581,22 +605,6 @@ impl DrawBox {
                 color,
             );
         }
-    }
-
-    fn width(&self) -> Width {
-        self.width
-    }
-
-    fn width_with_padding(&self) -> Width {
-        self.width() + self.padding * 2.
-    }
-
-    fn height_with_padding(&self) -> Height {
-        self.height + self.padding * 2.
-    }
-
-    fn height_with_margin(&self) -> Height {
-        self.height_with_padding() + self.margin
     }
 }
 
