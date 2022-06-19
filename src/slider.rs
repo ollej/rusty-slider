@@ -7,12 +7,12 @@ use std::path::PathBuf;
 
 #[derive(Clone)]
 struct Slide {
-    draw_boxes: Vec<Box<DrawBox>>,
+    draw_boxes: Vec<Box<TextBox>>,
     code_block: Option<ExecutableCode>,
 }
 
 impl Slide {
-    pub fn add_draw_box(&mut self, draw_box: DrawBox) {
+    pub fn add_draw_box(&mut self, draw_box: TextBox) {
         self.draw_boxes.push(Box::new(draw_box));
     }
 }
@@ -243,7 +243,7 @@ impl MarkdownToSlides {
 
     fn build_slide(&self, blocks: &[Block]) -> Slide {
         Slide {
-            draw_boxes: self.blocks_to_draw_boxes(blocks, None, DrawBoxStyle::Standard),
+            draw_boxes: self.blocks_to_draw_boxes(blocks, None, TextBoxStyle::Standard),
             code_block: self.find_first_code_block(blocks),
         }
     }
@@ -263,15 +263,15 @@ impl MarkdownToSlides {
         &self,
         blocks: &[Block],
         background_color: Option<Color>,
-        style: DrawBoxStyle,
-    ) -> Vec<Box<DrawBox>> {
+        style: TextBoxStyle,
+    ) -> Vec<Box<TextBox>> {
         let mut draw_boxes = vec![];
         let mut text_lines = vec![];
         for block in blocks.iter() {
             match block {
                 Block::Header(spans, 1) => {
                     if !text_lines.is_empty() {
-                        draw_boxes.push(Box::new(DrawBox::new(
+                        draw_boxes.push(Box::new(TextBox::new(
                             text_lines,
                             self.theme.vertical_offset,
                             background_color,
@@ -279,7 +279,7 @@ impl MarkdownToSlides {
                         )));
                         text_lines = Vec::new();
                     }
-                    draw_boxes.push(Box::new(DrawBox::new(
+                    draw_boxes.push(Box::new(TextBox::new(
                         vec![TextLine::new(
                             self.theme.align.to_owned(),
                             self.spans_to_text_partials(
@@ -291,7 +291,7 @@ impl MarkdownToSlides {
                         )],
                         self.theme.vertical_offset,
                         background_color,
-                        DrawBoxStyle::Title,
+                        TextBoxStyle::Title,
                     )));
                 }
                 Block::Header(spans, _size) => {
@@ -324,7 +324,7 @@ impl MarkdownToSlides {
                 }
                 Block::Blockquote(blocks) => {
                     if !text_lines.is_empty() {
-                        draw_boxes.push(Box::new(DrawBox::new(
+                        draw_boxes.push(Box::new(TextBox::new(
                             text_lines,
                             self.theme.vertical_offset,
                             background_color,
@@ -335,7 +335,7 @@ impl MarkdownToSlides {
                     draw_boxes.extend(self.blocks_to_draw_boxes(
                         blocks,
                         Some(self.theme.blockquote_background_color),
-                        DrawBoxStyle::Blockquote {
+                        TextBoxStyle::Blockquote {
                             size: self.theme.font_size_header_title * 2,
                             font: self.font_text,
                             color: self.theme.text_color,
@@ -344,7 +344,7 @@ impl MarkdownToSlides {
                 }
                 Block::CodeBlock(language, code) => {
                     if !text_lines.is_empty() {
-                        draw_boxes.push(Box::new(DrawBox::new(
+                        draw_boxes.push(Box::new(TextBox::new(
                             text_lines,
                             self.theme.vertical_offset,
                             background_color,
@@ -362,7 +362,7 @@ impl MarkdownToSlides {
             }
         }
         if !text_lines.is_empty() {
-            draw_boxes.push(Box::new(DrawBox::new(
+            draw_boxes.push(Box::new(TextBox::new(
                 text_lines,
                 self.theme.vertical_offset,
                 background_color,
@@ -449,7 +449,7 @@ impl MarkdownToSlides {
 }
 
 #[derive(Copy, Clone)]
-pub enum DrawBoxStyle {
+pub enum TextBoxStyle {
     Standard,
     Title,
     Blockquote {
@@ -460,16 +460,16 @@ pub enum DrawBoxStyle {
     Code,
 }
 
-impl DrawBoxStyle {
-    fn draw(&self, hpos: Hpos, vpos: Vpos, draw_box: &DrawBox) {
-        if let DrawBoxStyle::Blockquote { size, font, color } = self {
+impl TextBoxStyle {
+    fn draw(&self, hpos: Hpos, vpos: Vpos, draw_box: &TextBox) {
+        if let TextBoxStyle::Blockquote { size, font, color } = self {
             self.draw_blockquote(hpos, vpos, draw_box, *size, *font, *color)
         }
     }
 
-    fn top_position(&self, vpos: Vpos, draw_box: &DrawBox) -> Vpos {
+    fn top_position(&self, vpos: Vpos, draw_box: &TextBox) -> Vpos {
         match self {
-            DrawBoxStyle::Title => {
+            TextBoxStyle::Title => {
                 screen_height() / 2.
                     - draw_box.height / 2.
                     - draw_box.margin
@@ -484,7 +484,7 @@ impl DrawBoxStyle {
         &self,
         hpos: Hpos,
         vpos: Vpos,
-        draw_box: &DrawBox,
+        draw_box: &TextBox,
         font_size: FontSize,
         font: Font,
         color: Color,
@@ -580,25 +580,25 @@ impl Draw for ImageBox {
 }
 
 #[derive(Clone)]
-pub struct DrawBox {
+pub struct TextBox {
     width: Width,
     height: Height,
     margin: Height,
     padding: f32,
     offset_y: Vpos,
     background_color: Option<Color>,
-    style: DrawBoxStyle,
+    style: TextBoxStyle,
     lines: Vec<TextLine>,
 }
 
-impl DrawBox {
+impl TextBox {
     const BOX_PADDING: f32 = 20.;
 
     pub fn new(
         lines: Vec<TextLine>,
         margin: Height,
         background_color: Option<Color>,
-        style: DrawBoxStyle,
+        style: TextBoxStyle,
     ) -> Self {
         let mut width: Width = 0.;
         let mut height: Height = 0.;
@@ -621,7 +621,7 @@ impl DrawBox {
     }
 }
 
-impl Draw for DrawBox {
+impl Draw for TextBox {
     fn draw(&self, hpos: Hpos, vpos: Vpos) -> Vpos {
         let vpos = self.style.top_position(vpos, self);
         self.draw_background(hpos, vpos + self.margin + self.offset_y);
