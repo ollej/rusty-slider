@@ -531,6 +531,8 @@ trait Draw {
 
     fn width(&self) -> Width;
 
+    fn height(&self) -> Height;
+
     fn width_with_padding(&self) -> Width;
 
     fn height_with_padding(&self) -> Height;
@@ -544,17 +546,46 @@ pub struct ImageBox {
     height: Height,
     margin: Height,
     padding: f32,
-    offset_y: Vpos,
     background_color: Option<Color>,
     image: Texture2D,
 }
 
 impl ImageBox {
     const BOX_PADDING: f32 = 20.;
+
+    pub fn new(margin: Height, background_color: Option<Color>, image: Texture2D) -> Self {
+        Self {
+            width: image.width() as Width,
+            height: image.height() as Height,
+            margin,
+            padding: Self::BOX_PADDING,
+            background_color,
+            image,
+        }
+    }
+
+    fn xpos(&self) -> f32 {
+        // TODO: Adhere to alignment from theme
+        (screen_width() - self.width()) / 2.
+    }
+
+    fn ypos(&self) -> f32 {
+        (screen_height() - self.height()) / 2.
+    }
 }
 
 impl Draw for ImageBox {
-    fn draw(&self, hpos: Hpos, vpos: Vpos) -> Vpos {
+    fn draw(&self, _hpos: Hpos, vpos: Vpos) -> Vpos {
+        draw_texture_ex(
+            self.image,
+            self.xpos(),
+            vpos + self.padding + self.margin,
+            WHITE,
+            DrawTextureParams {
+                dest_size: Some(vec2(self.width(), self.height())),
+                ..Default::default()
+            },
+        );
         vpos + self.height_with_margin()
     }
 
@@ -570,8 +601,12 @@ impl Draw for ImageBox {
         self.width() + self.padding * 2.
     }
 
+    fn height(&self) -> Height {
+        self.height
+    }
+
     fn height_with_padding(&self) -> Height {
-        self.height + self.padding * 2.
+        self.height() + self.padding * 2.
     }
 
     fn height_with_margin(&self) -> Height {
@@ -663,8 +698,12 @@ impl Draw for TextBox {
         self.width() + self.padding * 2.
     }
 
+    fn height(&self) -> Height {
+        self.height
+    }
+
     fn height_with_padding(&self) -> Height {
-        self.height + self.padding * 2.
+        self.height() + self.padding * 2.
     }
 
     fn height_with_margin(&self) -> Height {
