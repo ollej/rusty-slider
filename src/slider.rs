@@ -516,7 +516,68 @@ impl DrawBoxStyle {
 trait Draw {
     fn draw(&self, hpos: Hpos, vpos: Vpos) -> Vpos;
 
-    fn draw_background(&self, hpos: Hpos, vpos: Vpos);
+    fn draw_background(&self, hpos: Hpos, vpos: Vpos) {
+        if let Some(color) = self.background_color() {
+            draw_rectangle(
+                hpos,
+                vpos,
+                self.width_with_padding(),
+                self.height_with_padding(),
+                color,
+            );
+        }
+    }
+
+    fn background_color(&self) -> Option<Color>;
+
+    fn width(&self) -> Width;
+
+    fn width_with_padding(&self) -> Width;
+
+    fn height_with_padding(&self) -> Height;
+
+    fn height_with_margin(&self) -> Height;
+}
+
+#[derive(Clone)]
+pub struct ImageBox {
+    width: Width,
+    height: Height,
+    margin: Height,
+    padding: f32,
+    offset_y: Vpos,
+    background_color: Option<Color>,
+    image: Texture2D,
+}
+
+impl ImageBox {
+    const BOX_PADDING: f32 = 20.;
+}
+
+impl Draw for ImageBox {
+    fn draw(&self, hpos: Hpos, vpos: Vpos) -> Vpos {
+        vpos + self.height_with_margin()
+    }
+
+    fn background_color(&self) -> Option<Color> {
+        self.background_color
+    }
+
+    fn width(&self) -> Width {
+        self.width
+    }
+
+    fn width_with_padding(&self) -> Width {
+        self.width() + self.padding * 2.
+    }
+
+    fn height_with_padding(&self) -> Height {
+        self.height + self.padding * 2.
+    }
+
+    fn height_with_margin(&self) -> Height {
+        self.height_with_padding() + self.margin
+    }
 }
 
 #[derive(Clone)]
@@ -559,22 +620,6 @@ impl DrawBox {
             lines,
         }
     }
-
-    fn width(&self) -> Width {
-        self.width
-    }
-
-    fn width_with_padding(&self) -> Width {
-        self.width() + self.padding * 2.
-    }
-
-    fn height_with_padding(&self) -> Height {
-        self.height + self.padding * 2.
-    }
-
-    fn height_with_margin(&self) -> Height {
-        self.height_with_padding() + self.margin
-    }
 }
 
 impl Draw for DrawBox {
@@ -605,6 +650,26 @@ impl Draw for DrawBox {
                 color,
             );
         }
+    }
+
+    fn background_color(&self) -> Option<Color> {
+        self.background_color
+    }
+
+    fn width(&self) -> Width {
+        self.width
+    }
+
+    fn width_with_padding(&self) -> Width {
+        self.width() + self.padding * 2.
+    }
+
+    fn height_with_padding(&self) -> Height {
+        self.height + self.padding * 2.
+    }
+
+    fn height_with_margin(&self) -> Height {
+        self.height_with_padding() + self.margin
     }
 }
 
