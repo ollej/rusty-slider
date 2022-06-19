@@ -40,7 +40,7 @@ Supports Windows, MacOS, Linux and web.
 
 ## Supports images
 
-![Title](assets/ferris.png)
+![Image Title](assets/ferris.png)
 
 ---
 
@@ -61,7 +61,7 @@ let shader_material = load_material(
 
 ## Run code!
 
-Execute `bash` code blocks by pressing `enter`.
+Execute code blocks by pressing `enter`.
 
 ```bash
 echo "Hello, World!"
@@ -70,6 +70,8 @@ echo "Hello, World!"
 ---
 
 ## Compiling Rust
+
+Rust code blocks can be compiled and executed as well.
 
 ```rust
 fn main() {
@@ -108,12 +110,12 @@ Space toggles the shader.
 
 Add transitions.
 
-Support image syntax to set backround image of slide.
+Support more shaders.
 
 ---
 
 ## License
 
-**Copyright 2021 Olle Wreede**
+**Copyright 2022 Olle Wreede**
 
 Released under the MIT license.
