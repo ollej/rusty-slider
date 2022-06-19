@@ -23,9 +23,9 @@ Linux, MacOS, and the web. Download the latest binary build from github:
 The file `assets/rusty-slider.md` will be read and split into slides on
 horizontal lines: `---`
 
-At the moment, the markdown supported is headers, paragraphs,
-code blocks, blockquotes, and simple lists. Emphasis and strong are
-supported if the theme has italic and bold fonts.
+At the moment, the markdown supported is headers, paragraphs, code blocks,
+blockquotes, simple lists and images. Emphasis and strong are supported if the
+theme has italic and bold fonts.
 
 Heading level 1 can be used as title page, as it will render in the
 middle of the slide and can have a larger font size set by the theme
@@ -33,6 +33,13 @@ option `font_size_header_title`.
 
 You may use html comments (`<!-- ... -->`) in the markdown for anything you
 don't want to be shown.
+
+### Images
+
+Images can be added to the slideshow by using the image markdown
+`(title text)[path]`. It needs to be placed on its own at the start of a line,
+anything else in the same paragraph will be ignored.
+
 
 ### Shortcuts
 
@@ -45,7 +52,7 @@ Use the key `Q` or `Escape` to exit the slideshow.
 
 ### Command line options
 
-Use flag `--automatic` when starting the application to automatically switch
+Use flag `--automatic N` when starting the application to automatically switch
 slide every N seconds.
 
 ### Run code blocks
