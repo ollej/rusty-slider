@@ -13,7 +13,8 @@ Use right key or left mouse button to go to next slide.
 ## Markdown
 
 * Slides are written in markdown.
-* Supports headers, paragraphs, lists, blockquotes and code blocks.
+* Supports headers, paragraphs, lists, blockquotes, code blocks.
+* Also supports images
 * Text between horizontal lines will be a slide.
 
 ---
@@ -96,6 +97,8 @@ Left/right keys switches between previous and next slide.
 Escape quits the slideshow.
 
 Space toggles the shader.
+
+Enter executes code in first code block.
 
 ---
 
