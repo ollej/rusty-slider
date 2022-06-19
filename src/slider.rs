@@ -7,13 +7,13 @@ use std::path::PathBuf;
 
 #[derive(Clone)]
 struct Slide {
-    draw_boxes: Vec<Box<TextBox>>,
+    draw_boxes: Vec<DrawBox>,
     code_block: Option<ExecutableCode>,
 }
 
 impl Slide {
-    pub fn add_draw_box(&mut self, draw_box: TextBox) {
-        self.draw_boxes.push(Box::new(draw_box));
+    pub fn add_text_box(&mut self, draw_box: TextBox) {
+        self.draw_boxes.push(DrawBox::Text(draw_box));
     }
 }
 
@@ -78,9 +78,16 @@ impl Slides {
             None => None,
         };
 
-        let slides =
+        let mut slides =
             MarkdownToSlides::new(theme.clone(), font_text, font_bold, font_italic, font_code)
                 .parse(markdown);
+
+        for slide in &mut slides.iter_mut() {
+            for draw_box in &mut slide.draw_boxes.iter_mut() {
+                draw_box.load_image().await;
+            }
+        }
+
         let code_box_builder =
             CodeBoxBuilder::new(theme.clone(), font_code, font_bold, font_italic);
 
@@ -142,7 +149,7 @@ impl Slides {
             let code_box = self
                 .code_box_builder
                 .build_draw_box(None, output.to_owned());
-            slide.add_draw_box(code_box);
+            slide.add_text_box(code_box);
         }
     }
 
@@ -264,14 +271,14 @@ impl MarkdownToSlides {
         blocks: &[Block],
         background_color: Option<Color>,
         style: TextBoxStyle,
-    ) -> Vec<Box<TextBox>> {
+    ) -> Vec<DrawBox> {
         let mut draw_boxes = vec![];
         let mut text_lines = vec![];
         for block in blocks.iter() {
             match block {
                 Block::Header(spans, 1) => {
                     if !text_lines.is_empty() {
-                        draw_boxes.push(Box::new(TextBox::new(
+                        draw_boxes.push(DrawBox::Text(TextBox::new(
                             text_lines,
                             self.theme.vertical_offset,
                             background_color,
@@ -279,7 +286,7 @@ impl MarkdownToSlides {
                         )));
                         text_lines = Vec::new();
                     }
-                    draw_boxes.push(Box::new(TextBox::new(
+                    draw_boxes.push(DrawBox::Text(TextBox::new(
                         vec![TextLine::new(
                             self.theme.align.to_owned(),
                             self.spans_to_text_partials(
@@ -324,7 +331,7 @@ impl MarkdownToSlides {
                 }
                 Block::Blockquote(blocks) => {
                     if !text_lines.is_empty() {
-                        draw_boxes.push(Box::new(TextBox::new(
+                        draw_boxes.push(DrawBox::Text(TextBox::new(
                             text_lines,
                             self.theme.vertical_offset,
                             background_color,
@@ -344,7 +351,7 @@ impl MarkdownToSlides {
                 }
                 Block::CodeBlock(language, code) => {
                     if !text_lines.is_empty() {
-                        draw_boxes.push(Box::new(TextBox::new(
+                        draw_boxes.push(DrawBox::Text(TextBox::new(
                             text_lines,
                             self.theme.vertical_offset,
                             background_color,
@@ -352,7 +359,7 @@ impl MarkdownToSlides {
                         )));
                         text_lines = Vec::new();
                     }
-                    draw_boxes.push(Box::new(
+                    draw_boxes.push(DrawBox::Text(
                         self.code_box_builder
                             .build_draw_box(language.to_owned(), code.to_owned()),
                     ));
@@ -362,7 +369,7 @@ impl MarkdownToSlides {
             }
         }
         if !text_lines.is_empty() {
-            draw_boxes.push(Box::new(TextBox::new(
+            draw_boxes.push(DrawBox::Text(TextBox::new(
                 text_lines,
                 self.theme.vertical_offset,
                 background_color,
@@ -512,7 +519,45 @@ impl TextBoxStyle {
     }
 }
 
-trait Draw {
+#[derive(Clone)]
+enum DrawBox {
+    Image(ImageBox),
+    Text(TextBox),
+}
+
+impl DrawBox {
+    async fn load_image(&mut self) {
+        match self {
+            DrawBox::Image(draw_box) => {
+                if let Some(path) = draw_box.path() {
+                    if let Ok(texture) = load_texture(&path).await {
+                        draw_box.set_image(texture);
+                        debug!("Image loaded: {}", path);
+                    } else {
+                        error!("Couldn't load image file: {}", path);
+                    }
+                }
+            }
+            DrawBox::Text(_) => (),
+        }
+    }
+
+    fn draw(&self, hpos: Hpos, vpos: Vpos) -> Vpos {
+        match self {
+            DrawBox::Image(image_box) => image_box.draw(hpos, vpos),
+            DrawBox::Text(text_box) => text_box.draw(hpos, vpos),
+        }
+    }
+
+    fn width_with_padding(&self) -> Width {
+        match self {
+            DrawBox::Image(image_box) => image_box.width_with_padding(),
+            DrawBox::Text(text_box) => text_box.width_with_padding(),
+        }
+    }
+}
+
+trait Drawable {
     fn draw(&self, hpos: Hpos, vpos: Vpos) -> Vpos;
 
     fn draw_background(&self, hpos: Hpos, vpos: Vpos) {
@@ -526,6 +571,10 @@ trait Draw {
             );
         }
     }
+
+    fn path(&self) -> Option<String>;
+
+    fn set_image(&mut self, image: Texture2D);
 
     fn background_color(&self) -> Option<Color>;
 
@@ -542,51 +591,57 @@ trait Draw {
 
 #[derive(Clone)]
 pub struct ImageBox {
-    width: Width,
-    height: Height,
     margin: Height,
     padding: f32,
     background_color: Option<Color>,
-    image: Texture2D,
+    path: String,
+    image: Option<Texture2D>,
 }
 
 impl ImageBox {
     const BOX_PADDING: f32 = 20.;
 
-    pub fn new(margin: Height, background_color: Option<Color>, image: Texture2D) -> Self {
+    pub fn new(path: &str, margin: Height, background_color: Option<Color>) -> Self {
         Self {
-            width: image.width() as Width,
-            height: image.height() as Height,
             margin,
             padding: Self::BOX_PADDING,
             background_color,
-            image,
+            path: path.to_string(),
+            image: None,
         }
-    }
-
-    fn xpos(&self) -> f32 {
-        // TODO: Adhere to alignment from theme
-        (screen_width() - self.width()) / 2.
-    }
-
-    fn ypos(&self) -> f32 {
-        (screen_height() - self.height()) / 2.
     }
 }
 
-impl Draw for ImageBox {
-    fn draw(&self, _hpos: Hpos, vpos: Vpos) -> Vpos {
-        draw_texture_ex(
-            self.image,
-            self.xpos(),
-            vpos + self.padding + self.margin,
-            WHITE,
-            DrawTextureParams {
-                dest_size: Some(vec2(self.width(), self.height())),
-                ..Default::default()
-            },
-        );
+impl Drawable for ImageBox {
+    fn draw(&self, hpos: Hpos, vpos: Vpos) -> Vpos {
+        //debug!(
+        //    "Image draw hpos:{} vpos:{} width:{} height: {}",
+        //    hpos,
+        //    vpos,
+        //    self.width(),
+        //    self.height()
+        //);
+        if let Some(image) = self.image {
+            draw_texture_ex(
+                image,
+                hpos,
+                vpos + self.padding + self.margin,
+                WHITE,
+                DrawTextureParams {
+                    dest_size: Some(vec2(self.width(), self.height())),
+                    ..Default::default()
+                },
+            );
+        }
         vpos + self.height_with_margin()
+    }
+
+    fn path(&self) -> Option<String> {
+        Some(self.path.clone())
+    }
+
+    fn set_image(&mut self, image: Texture2D) {
+        self.image = Some(image);
     }
 
     fn background_color(&self) -> Option<Color> {
@@ -594,7 +649,10 @@ impl Draw for ImageBox {
     }
 
     fn width(&self) -> Width {
-        self.width
+        return match self.image {
+            Some(image) => image.width(),
+            None => 0.,
+        };
     }
 
     fn width_with_padding(&self) -> Width {
@@ -602,7 +660,10 @@ impl Draw for ImageBox {
     }
 
     fn height(&self) -> Height {
-        self.height
+        return match self.image {
+            Some(image) => image.height(),
+            None => 0.,
+        };
     }
 
     fn height_with_padding(&self) -> Height {
@@ -656,7 +717,7 @@ impl TextBox {
     }
 }
 
-impl Draw for TextBox {
+impl Drawable for TextBox {
     fn draw(&self, hpos: Hpos, vpos: Vpos) -> Vpos {
         let vpos = self.style.top_position(vpos, self);
         self.draw_background(hpos, vpos + self.margin + self.offset_y);
@@ -685,6 +746,12 @@ impl Draw for TextBox {
             );
         }
     }
+
+    fn path(&self) -> Option<String> {
+        None
+    }
+
+    fn set_image(&mut self, _image: Texture2D) {}
 
     fn background_color(&self) -> Option<Color> {
         self.background_color
