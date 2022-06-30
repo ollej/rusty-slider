@@ -1,4 +1,5 @@
 pub mod code_box_builder;
+pub mod drawbox;
 pub mod executable_code;
 pub mod hex_color;
 pub mod imagebox;
