@@ -1,6 +1,6 @@
 [package]
 name = "rusty-slider"
-version = "0.13.0"
+version = "0.14.0"
 authors = ["Olle Wreede <olle@wreede.se>"]
 edition = "2021"
 license = "MIT"
@@ -10,7 +10,7 @@ homepage = "https://ollej.github.io/rusty-slider/"
 readme = "README.md"
 categories = ["command-line-utilities"]
 keywords = ["markdown", "slideshow", "presentation", "graphics", "wasm"]
-default-run = "rusty-slider"
+default-run = "rusty_slider"
 
 [dependencies]
 colorsys = "0.6.5"
@@ -44,3 +44,10 @@ lto = true
 panic = 'abort'
 codegen-units = 1
 
+[lib]
+name = "rusty_slider"
+path = "src/lib.rs"
+
+[[bin]]
+name = "rusty_slider"
+path = "src/main.rs"
