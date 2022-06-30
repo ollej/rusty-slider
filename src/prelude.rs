@@ -3,6 +3,7 @@ pub use crate::drawbox::*;
 pub use crate::executable_code::*;
 pub use crate::hex_color::*;
 pub use crate::imagebox::*;
+pub use crate::markdowntoslides::*;
 pub use crate::shaders::*;
 pub use crate::slider::*;
 pub use crate::textbox::*;

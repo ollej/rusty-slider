@@ -3,6 +3,7 @@ pub mod drawbox;
 pub mod executable_code;
 pub mod hex_color;
 pub mod imagebox;
+pub mod markdowntoslides;
 pub mod prelude;
 pub mod shaders;
 pub mod slider;
