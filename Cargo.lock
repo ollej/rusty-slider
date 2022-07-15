@@ -963,7 +963,7 @@ dependencies = [
 
 [[package]]
 name = "rusty-slider"
-version = "0.15.0"
+version = "0.16.0"
 dependencies = [
  "colorsys",
  "getrandom",
