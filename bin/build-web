@@ -4,5 +4,5 @@ set -euo pipefail
 
 cargo build --release --target wasm32-unknown-unknown
 mkdir -p demo
-cp target/wasm32-unknown-unknown/release/rusty-slider.wasm demo/
+cp target/wasm32-unknown-unknown/release/rusty_slider.wasm demo/
 cp -pR assets demo/
