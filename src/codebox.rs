@@ -12,6 +12,7 @@ pub struct CodeBox {
 
 impl CodeBox {
     const TITLE_BAR_HEIGHT: f32 = 30.;
+    const CHROME_CORNER_RADIUS: f32 = 8.;
     const CHROME_CIRCLE_DISTANCE: f32 = 10.;
     const CHROME_CIRCLE_RADIUS: f32 = 8.;
     const DEFAULT_TITLE_BAR_COLOR: Color = Color::new(0.965, 0.961, 0.961, 1.0);
@@ -34,55 +35,100 @@ impl CodeBox {
 
     pub fn draw(&self, hpos: Hpos, vpos: Vpos) -> Vpos {
         let vpos = vpos + self.margin;
-        draw_rectangle(
+        self.draw_rounded_rectangle(
             hpos,
             vpos,
-            self.width,
-            self.height + Self::TITLE_BAR_HEIGHT,
+            self.width + Self::CHROME_CORNER_RADIUS,
+            self.height + Self::TITLE_BAR_HEIGHT + Self::CHROME_CORNER_RADIUS,
+            Self::CHROME_CORNER_RADIUS,
             self.background_color
                 .unwrap_or(Self::DEFAULT_TITLE_BAR_COLOR),
         );
-        draw_circle(
+        self.draw_outlined_circle(
             hpos + Self::CHROME_CIRCLE_DISTANCE + Self::CHROME_CIRCLE_RADIUS,
-            vpos + Self::TITLE_BAR_HEIGHT / 2.,
-            Self::CHROME_CIRCLE_RADIUS,
+            vpos,
             Self::CHROME_COLOR_RED,
-        );
-        draw_circle_lines(
-            hpos + Self::CHROME_CIRCLE_DISTANCE + Self::CHROME_CIRCLE_RADIUS,
-            vpos + Self::TITLE_BAR_HEIGHT / 2.,
-            Self::CHROME_CIRCLE_RADIUS,
-            1.,
             Self::CHROME_OUTLINE_RED,
         );
-        draw_circle(
+        self.draw_outlined_circle(
             hpos + Self::CHROME_CIRCLE_DISTANCE * 2. + Self::CHROME_CIRCLE_RADIUS * 3.,
-            vpos + Self::TITLE_BAR_HEIGHT / 2.,
-            Self::CHROME_CIRCLE_RADIUS,
+            vpos,
             Self::CHROME_COLOR_YELLOW,
-        );
-        draw_circle_lines(
-            hpos + Self::CHROME_CIRCLE_DISTANCE * 2. + Self::CHROME_CIRCLE_RADIUS * 3.,
-            vpos + Self::TITLE_BAR_HEIGHT / 2.,
-            Self::CHROME_CIRCLE_RADIUS,
-            1.,
             Self::CHROME_OUTLINE_YELLOW,
         );
-        draw_circle(
+        self.draw_outlined_circle(
             hpos + Self::CHROME_CIRCLE_DISTANCE * 3. + Self::CHROME_CIRCLE_RADIUS * 5.,
-            vpos + Self::TITLE_BAR_HEIGHT / 2.,
-            Self::CHROME_CIRCLE_RADIUS,
+            vpos,
             Self::CHROME_COLOR_GREEN,
-        );
-        draw_circle_lines(
-            hpos + Self::CHROME_CIRCLE_DISTANCE * 3. + Self::CHROME_CIRCLE_RADIUS * 5.,
-            vpos + Self::TITLE_BAR_HEIGHT / 2.,
-            Self::CHROME_CIRCLE_RADIUS,
-            1.,
             Self::CHROME_OUTLINE_GREEN,
         );
         let new_vpos = self.textbox.draw(hpos, vpos + Self::TITLE_BAR_HEIGHT);
         new_vpos + self.margin
+    }
+
+    fn draw_rounded_rectangle(
+        &self,
+        hpos: Hpos,
+        vpos: Vpos,
+        width: Width,
+        height: Height,
+        corner_radius: f32,
+        color: Color,
+    ) {
+        draw_circle(
+            hpos + corner_radius,
+            vpos + corner_radius,
+            corner_radius,
+            color,
+        );
+        draw_circle(
+            hpos + width - corner_radius,
+            vpos + corner_radius,
+            corner_radius,
+            color,
+        );
+        draw_rectangle(
+            hpos,
+            vpos + corner_radius,
+            width,
+            height - corner_radius * 2.,
+            color,
+        );
+        draw_rectangle(
+            hpos + corner_radius,
+            vpos,
+            width - corner_radius * 2.,
+            height,
+            color,
+        );
+        draw_circle(
+            hpos + corner_radius,
+            vpos + height - corner_radius,
+            corner_radius,
+            color,
+        );
+        draw_circle(
+            hpos + width - corner_radius,
+            vpos + height - corner_radius,
+            corner_radius,
+            color,
+        );
+    }
+
+    fn draw_outlined_circle(&self, hpos: Hpos, vpos: Vpos, color: Color, outline_color: Color) {
+        draw_circle(
+            hpos,
+            vpos + Self::TITLE_BAR_HEIGHT / 2.,
+            Self::CHROME_CIRCLE_RADIUS,
+            color,
+        );
+        draw_circle_lines(
+            hpos,
+            vpos + Self::TITLE_BAR_HEIGHT / 2.,
+            Self::CHROME_CIRCLE_RADIUS,
+            1.,
+            outline_color,
+        );
     }
 
     pub fn width(&self) -> Width {
@@ -90,11 +136,15 @@ impl CodeBox {
     }
 
     pub fn width_with_padding(&self) -> Width {
-        self.width
+        self.width + Self::CHROME_CORNER_RADIUS * 2.
     }
 
     pub fn height(&self) -> Height {
         self.height
+    }
+
+    pub fn height_with_padding(&self) -> Width {
+        self.height + Self::CHROME_CORNER_RADIUS
     }
 
     pub fn height_with_margin(&self) -> Height {
