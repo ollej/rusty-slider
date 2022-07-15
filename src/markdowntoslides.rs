@@ -190,7 +190,7 @@ impl MarkdownToSlides {
                         )));
                         text_lines = Vec::new();
                     }
-                    draw_boxes.push(DrawBox::Text(
+                    draw_boxes.push(DrawBox::Code(
                         self.code_box_builder
                             .build_draw_box(language.to_owned(), code.to_owned()),
                     ));

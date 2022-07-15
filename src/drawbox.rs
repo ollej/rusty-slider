@@ -5,6 +5,7 @@ use macroquad::prelude::*;
 pub enum DrawBox {
     Image(ImageBox),
     Text(TextBox),
+    Code(CodeBox),
 }
 
 impl DrawBox {
@@ -21,6 +22,7 @@ impl DrawBox {
                 }
             }
             DrawBox::Text(_) => (),
+            DrawBox::Code(_) => (),
         }
     }
 
@@ -28,6 +30,7 @@ impl DrawBox {
         match self {
             DrawBox::Image(image_box) => image_box.draw(hpos, vpos),
             DrawBox::Text(text_box) => text_box.draw(hpos, vpos),
+            DrawBox::Code(code_box) => code_box.draw(hpos, vpos),
         }
     }
 
@@ -35,6 +38,7 @@ impl DrawBox {
         match self {
             DrawBox::Image(image_box) => image_box.width_with_padding(),
             DrawBox::Text(text_box) => text_box.width_with_padding(),
+            DrawBox::Code(code_box) => code_box.width_with_padding(),
         }
     }
 }

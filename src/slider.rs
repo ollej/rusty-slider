@@ -11,6 +11,10 @@ pub struct Slide {
 }
 
 impl Slide {
+    pub fn add_code_box(&mut self, draw_box: CodeBox) {
+        self.draw_boxes.push(DrawBox::Code(draw_box));
+    }
+
     pub fn add_text_box(&mut self, draw_box: TextBox) {
         self.draw_boxes.push(DrawBox::Text(draw_box));
     }
@@ -148,7 +152,7 @@ impl Slides {
             let code_box = self
                 .code_box_builder
                 .build_draw_box(None, output.to_owned());
-            slide.add_text_box(code_box);
+            slide.add_code_box(code_box);
         }
     }
 
