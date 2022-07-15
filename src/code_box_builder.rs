@@ -41,11 +41,11 @@ impl CodeBoxBuilder {
         CodeBox::new(
             TextBox::new(
                 self.build_text_lines(language, code),
-                self.margin,
+                0.,
                 Some(self.background_color),
                 TextBoxStyle::Code,
             ),
-            0.,
+            self.margin,
             Some(self.background_color),
         )
     }

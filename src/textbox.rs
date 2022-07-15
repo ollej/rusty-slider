@@ -44,7 +44,7 @@ impl TextBox {
 
     pub fn draw(&self, hpos: Hpos, vpos: Vpos) -> Vpos {
         let vpos = self.style.top_position(vpos, self);
-        self.draw_background(hpos, vpos + self.margin + self.offset_y);
+        self.draw_background(hpos, vpos + self.margin);
         self.style.draw(hpos, vpos, self);
         let inner_hpos = hpos + self.padding;
         let mut new_position = vpos + self.padding + self.margin;
@@ -54,7 +54,7 @@ impl TextBox {
                 "right" => inner_hpos + self.width() - line.width,
                 _ => inner_hpos + self.width() / 2. - line.width / 2.,
             };
-            new_position = line.draw(line_hpos, new_position);
+            new_position = line.draw(line_hpos, new_position, self.offset_y);
         }
         vpos + self.height_with_margin()
     }
@@ -124,10 +124,10 @@ impl TextLine {
         }
     }
 
-    fn draw(&self, start_hpos: Hpos, vpos: Vpos) -> Vpos {
+    fn draw(&self, start_hpos: Hpos, vpos: Vpos, offset_y: Vpos) -> Vpos {
         let mut hpos = start_hpos;
         for partial in &self.partials {
-            hpos = partial.draw(hpos, vpos);
+            hpos = partial.draw(hpos, vpos, offset_y);
         }
         vpos + self.height
     }
@@ -164,11 +164,11 @@ impl TextPartial {
         }
     }
 
-    fn draw(&self, hpos: Hpos, vpos: Vpos) -> Vpos {
+    fn draw(&self, hpos: Hpos, vpos: Vpos, offset_y: Vpos) -> Vpos {
         draw_text_ex(
             &self.text,
             hpos,
-            vpos + self.height,
+            vpos + offset_y,
             TextParams {
                 font: self.font,
                 font_size: self.font_size,
