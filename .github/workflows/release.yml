@@ -17,21 +17,25 @@ jobs:
             artifact_name: rusty_slider
             zip_file: rusty-slider-linux.tar.gz
             asset_name: rusty-slider-linux-$tag.tar.gz
+            directory: rusty-slider-linux-${{ github.ref_name }}
             target: 'x86_64-unknown-linux-gnu'
           - os: windows-latest
             artifact_name: rusty_slider.exe
             zip_file: rusty-slider-windows.zip
             asset_name: rusty-slider-windows-$tag.zip
+            directory: rusty-slider-windows-${{ github.ref_name }}
             target: 'x86_64-pc-windows-msvc'
           - os: macos-latest
             artifact_name: rusty_slider
             zip_file: rusty-slider-macos.zip
             asset_name: rusty-slider-macos-$tag.zip
+            directory: rusty-slider-macos-${{ github.ref_name }}
             target: 'x86_64-apple-darwin'
           - os: ubuntu-latest
-            artifact_name: rusty-slider.wasm
+            artifact_name: rusty_slider.wasm
             zip_file: rusty-slider-wasm.zip
             asset_name: rusty-slider-wasm-$tag.zip
+            directory: rusty-slider-wasm-${{ github.ref_name }}
             target: 'wasm32-unknown-unknown'
         include:
           - os: ubuntu-latest
@@ -62,13 +66,25 @@ jobs:
           args: --release --locked --all-targets --target=${{ matrix.config.target }}
       - name: Zip release archive
         if: matrix.config.target == 'wasm32-unknown-unknown'
-        run: zip -j ${{ matrix.config.zip_file }} demo/*.js demo/*.json demo/*.html target/${{ matrix.config.target }}/release/${{ matrix.config.artifact_name }} ; zip -u ${{ matrix.config.zip_file }} assets/*
+        run: |
+          mkdir ${{ matrix.config.directory }}
+          cp -pR assets ${{ matrix.config.directory }}/
+          cp -pR target/${{ matrix.config.target }}/release/${{ matrix.config.artifact_name }} demo/*.html demo/*.js demo/*.json ${{ matrix.config.directory }}/
+          zip -r ${{ matrix.config.zip_file }} ${{ matrix.config.directory }}
       - name: Zip release archive
         if: matrix.config.target == 'x86_64-unknown-linux-gnu'
-        run: tar -zcf ${{ matrix.config.zip_file }} assets/ -C target/${{ matrix.config.target }}/release/ ${{ matrix.config.artifact_name }}
+        run: |
+          mkdir ${{ matrix.config.directory }}
+          cp -pR assets ${{ matrix.config.directory }}/
+          cp target/${{ matrix.config.target }}/release/${{ matrix.config.artifact_name }} ${{ matrix.config.directory }}/
+          tar -zcf ${{ matrix.config.zip_file }} ${{ matrix.config.directory }}
       - name: Zip release archive
         if: runner.os == 'Windows' || runner.os == 'macOS'
-        run: 7z a -tzip ${{ matrix.config.zip_file }} assets/* ./target/${{ matrix.config.target }}/release/${{ matrix.config.artifact_name }}
+        run: |
+          mkdir -p ${{ matrix.config.directory }}
+          cp -R assets ${{ matrix.config.directory }}/
+          cp target/${{ matrix.config.target }}/release/${{ matrix.config.artifact_name }} ${{ matrix.config.directory }}/
+          7z a -tzip ${{ matrix.config.zip_file }} ${{ matrix.config.directory }}
       - name: Upload binaries to release
         uses: svenstaro/upload-release-action@v2
         with:
