@@ -4,7 +4,7 @@ use maud::{html, Markup, PreEscaped, DOCTYPE};
 use rusty_slider::slider::Slides;
 use rusty_slider::theme::Theme;
 use std::borrow::Cow;
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 use structopt::StructOpt;
 
 #[derive(StructOpt, Debug)]
@@ -129,7 +129,7 @@ impl Filename {
         )
     }
 
-    fn files(path: &PathBuf, extension: &str) -> Vec<Self> {
+    fn files(path: &Path, extension: &str) -> Vec<Self> {
         glob(&format!("{}/*.{}", path.to_string_lossy(), extension))
             .expect("Couldn't read files")
             .filter(|entry| entry.is_ok())

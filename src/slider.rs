@@ -74,7 +74,7 @@ impl Slides {
             .expect("Couldn't load font");
         let background = match &theme.background_image {
             Some(path) => Some(
-                load_texture(&path)
+                load_texture(path)
                     .await
                     .expect("Couldn't load background texture"),
             ),
@@ -149,9 +149,7 @@ impl Slides {
         let slide = self.slides.get_mut(self.active_slide).unwrap();
         if let Some(code_block) = &slide.code_block {
             let output = code_block.execute();
-            let code_box = self
-                .code_box_builder
-                .build_draw_box(None, output.to_owned());
+            let code_box = self.code_box_builder.build_draw_box(None, output);
             slide.add_code_box(code_box);
         }
     }

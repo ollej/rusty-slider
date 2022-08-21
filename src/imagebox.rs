@@ -71,10 +71,10 @@ impl ImageBox {
     }
 
     pub fn width(&self) -> Width {
-        return match self.image {
+        match self.image {
             Some(image) => image.width(),
             None => 0.,
-        };
+        }
     }
 
     pub fn width_with_padding(&self) -> Width {
@@ -82,10 +82,10 @@ impl ImageBox {
     }
 
     pub fn height(&self) -> Height {
-        return match self.image {
+        match self.image {
             Some(image) => image.height(),
             None => 0.,
-        };
+        }
     }
 
     pub fn height_with_padding(&self) -> Height {

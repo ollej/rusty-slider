@@ -230,14 +230,14 @@ impl MarkdownToSlides {
         for span in spans.iter() {
             match span {
                 Span::Text(text) => partials.push(TextPartial::new(
-                    &text,
+                    text,
                     font,
                     font_size,
                     color,
                     self.theme.line_height,
                 )),
                 Span::Code(text) => partials.push(TextPartial::new(
-                    &text,
+                    text,
                     self.font_code,
                     font_size,
                     self.theme.text_color, // TODO: Add code text color to theme
