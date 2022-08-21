@@ -1,6 +1,6 @@
 [package]
 name = "rusty-slider"
-version = "0.17.0"
+version = "0.17.1"
 authors = ["Olle Wreede <olle@wreede.se>"]
 edition = "2021"
 license = "MIT"
