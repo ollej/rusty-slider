@@ -7,6 +7,6 @@ TARGET=x86_64-pc-windows-gnu
 cargo build --release --target $TARGET
 
 # Package windows zip
-APP=rusty-slider
+APP=rusty_slider
 zip -jq target/$APP-win.zip target/$TARGET/release/$APP.exe
 zip -ulq target/$APP-win.zip assets/*
