@@ -42,6 +42,7 @@ opt-level = 'z'
 lto = true
 panic = 'abort'
 codegen-units = 1
+strip = true
 
 [lib]
 name = "rusty_slider"
