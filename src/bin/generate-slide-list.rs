@@ -1,10 +1,9 @@
 use glob::glob;
-use macroquad::prelude::*;
 use maud::{html, Markup, PreEscaped, DOCTYPE};
-use rusty_slider::slider::Slides;
-use rusty_slider::theme::Theme;
 use std::borrow::Cow;
+use std::collections::HashMap;
 use std::path::{Path, PathBuf};
+use std::process::Command;
 use structopt::StructOpt;
 
 #[derive(StructOpt, Debug)]
@@ -113,6 +112,7 @@ pub fn page(title: &str, content: Markup) -> Markup {
     }
 }
 
+#[derive(Debug)]
 struct Filename {
     path: PathBuf,
 }
@@ -129,12 +129,15 @@ impl Filename {
         )
     }
 
-    fn files(path: &Path, extension: &str) -> Vec<Self> {
+    fn files(path: &Path, extension: &str) -> HashMap<String, Self> {
         glob(&format!("{}/*.{}", path.to_string_lossy(), extension))
             .expect("Couldn't read files")
             .filter(|entry| entry.is_ok())
-            .map(|entry| Filename {
-                path: entry.unwrap(),
+            .map(|entry| {
+                let file = Filename {
+                    path: entry.unwrap(),
+                };
+                (file.basename(), file)
             })
             .collect()
     }
@@ -152,9 +155,24 @@ impl Filename {
             .into()
     }
 
+    fn basename(&self) -> String {
+        self.path
+            .as_path()
+            .with_extension("")
+            .file_name()
+            .unwrap()
+            .to_string_lossy()
+            .into()
+    }
     fn png_path(&self) -> PathBuf {
         let mut path = self.path.to_owned();
         path.set_extension("png");
+        path
+    }
+
+    fn with_extension(&self, extension: &str) -> PathBuf {
+        let mut path = self.path.to_owned();
+        path.set_extension(extension);
         path
     }
 
@@ -166,32 +184,33 @@ impl Filename {
     }
 }
 
-#[macroquad::main("generate-slide-list")]
-async fn main() {
+fn take_screenshot(slideshow: String, theme: String, filename: String) {
+    Command::new("cargo")
+        .args(&["run", "--", "--slides", &slideshow, "--theme", &theme])
+        .env("RUSTFLAGS", "--cfg one_screenshot")
+        .current_dir("./")
+        .output()
+        .unwrap();
+    std::fs::copy("./screenshot.png", filename).unwrap();
+}
+
+fn main() {
     let opt = CliOptions::from_args();
 
     let slides = Filename::files(&opt.path, "md");
     let themes = Filename::files(&opt.path, "json");
 
-    let render_target = render_target(screen_width() as u32, screen_height() as u32);
-    render_target.texture.set_filter(FilterMode::Linear);
-    let theme = Theme::load(PathBuf::from("assets/theme.json")).await;
-    let scr_w = screen_width();
-    let scr_h = screen_height();
-    for slide in slides.iter() {
-        set_camera(&Camera2D {
-            zoom: vec2(1. / scr_w * 2., -1. / scr_h * 2.),
-            target: vec2(scr_w / 2., scr_h / 2.),
-            render_target: Some(render_target),
-            ..Default::default()
-        });
-        let mut slideshow = Slides::load(slide.path.to_owned(), theme.clone(), 0.0).await;
-        slideshow.draw(0.);
-        set_default_camera();
-        render_target
-            .texture
-            .get_texture_data()
-            .export_png(&slide.png_path().to_string_lossy());
+    for (_, slide) in slides.iter() {
+        let theme_path = if let Some(filename) = themes.get(&slide.basename()) {
+            filename.filename()
+        } else {
+            "default-theme.json".to_string()
+        };
+        take_screenshot(
+            slide.filename(),
+            theme_path,
+            slide.png_path().to_string_lossy().into(),
+        );
     }
 
     let html = page(
@@ -200,7 +219,7 @@ async fn main() {
             form {
                 label for="theme" { "Theme:" }
                 select #theme {
-                    @for theme in &themes {
+                    @for (_, theme) in &themes {
                         option value=(theme.filename()) {
                             (theme.name())
                         }
@@ -208,9 +227,9 @@ async fn main() {
                 }
             }
             ul {
-                @for slide in &slides {
+                @for (_, slide) in &slides {
                     li {
-                        a href=(PreEscaped(slide.href(themes.first()))) onclick="change_theme(this)" {
+                        a href=(PreEscaped(slide.href(themes.get(&slide.basename())))) onclick="change_theme(this)" {
                             figure {
                                 img src=(slide.png_path().to_string_lossy()) title=(slide.name());
                                 figcaption { (slide.name()) }
