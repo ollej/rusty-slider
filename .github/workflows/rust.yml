@@ -45,6 +45,7 @@ jobs:
           sudo cp /usr/x86_64-w64-mingw32/lib/crt2.o  ~/.rustup/toolchains/stable-x86_64-unknown-linux-gnu/lib/rustlib/x86_64-pc-windows-gnu/lib/crt2.o
           echo "[target.x86_64-pc-windows-gnu]" >> ~/.cargo/config
           echo "linker = \"/usr/bin/x86_64-w64-mingw32-gcc\"" >> ~/.cargo/config
+      - uses: Swatinem/rust-cache@v2
       - uses: actions-rs/cargo@v1
         with:
           command: build
