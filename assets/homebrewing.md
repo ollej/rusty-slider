@@ -4,17 +4,27 @@
 
 ## Types of beer
 
-### Bottom fermented
+* Bottom fermented
+* Top fermented
+* Wild and sour beers
+
+---
+
+## Bottom fermented
 
 * Lager, pilsner, bock
 * Cold fermentation
 
-### Top fermented
+---
+
+## Top fermented
 
 * Ale, porter, stout
 * Warm fermentation
 
-### Wild and sour beers
+---
+
+## Wild and sour beers
 
 * Spontaneous fermentation
 * Acidifying bacteria
