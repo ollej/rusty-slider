@@ -43,11 +43,13 @@ fn stylesheet() -> &'static str {
     body {
         font-family: 'Amble'
     }
-    h1 {
+    .theme-chooser {
         text-align: center;
-        font-size: 3em;
     }
-    ul {
+    .theme-chooser label {
+        margin-right: 0.5rem;
+    }
+    ul.thumbnails {
         display: flex;
         flex-wrap: wrap;
         justify-content: flex-start;
@@ -55,19 +57,15 @@ fn stylesheet() -> &'static str {
         margin: 0;
         padding: 0;
     }
-    a {
-        color: black;
-        text-decoration: none;
+    img.thumbnail {
+        max-width: 17.5rem;
+        border: solid thin black;
     }
-    img {
-        max-width: 20rem;
+    ul.thumbnails figure {
+        margin: 1rem;
     }
     figcaption {
         text-align: center;
-    }
-    footer {
-        text-align: center;
-        font-size: small;
     }
     "#
 }
@@ -91,6 +89,7 @@ fn header(page_title: &str) -> Markup {
             meta charset="utf-8";
             title { (page_title) }
             meta name="viewport" content="width=device-width";
+            link rel="stylesheet" href="https://ollej.github.io/rusty-slider/assets/css/style.css";
             style { (PreEscaped(stylesheet())) }
             script { (PreEscaped(javascript())) }
         }
@@ -100,8 +99,15 @@ fn header(page_title: &str) -> Markup {
 fn footer() -> Markup {
     html! {
         footer {
-            p {
-                a href="https://github.com/ollej/rusty-slider" { "Copyright 2022 Olle Wreede" }
+            div class="owner" {
+                p {
+                    a href="https://github.com/ollej" class="avatar" {
+                        img src="https://github.com/ollej.png" width="48" height="48";
+                    }
+                    a href="https://github.com/ollej" { "ollej" }
+                    " maintains "
+                    a href="https://github.com/ollej/rusty-slider" { "Rusty Slider" }
+                }
             }
         }
     }
@@ -113,9 +119,31 @@ pub fn page(title: &str, content: Markup) -> Markup {
         html lang="en" {
             (header(title))
             body {
-                h1 { (title) }
-                (content)
-                (footer())
+                div class="wrapper" {
+                    header {
+                        h1 { (title) }
+                    }
+                    div id="container" {
+                        p class="tagline" {
+                            "A list of example slideshows made with Rusty Slider."
+                        }
+                        div id="main" role="main" {
+                            div class="download-bar" {
+                                div class="inner" {
+                                    a href="https://github.com/ollej/rusty-slider" class="code" {
+                                        "View rusty-slider on GitHub"
+                                    }
+                                }
+                                span class="blc" {}
+                                span class="trc" {}
+                            }
+                            article class="markdown-body" {
+                                (content)
+                            }
+                        }
+                    }
+                    (footer())
+                }
             }
         }
     }
@@ -229,8 +257,8 @@ fn generate_html(slides: Files, themes: Files) -> PreEscaped<String> {
     page(
         "Rusty Slider Example Slideshows",
         html! {
-            form {
-                label for="theme" { "Theme:" }
+            form class="theme-chooser" {
+                label for="theme" { "Choose theme to view slideshow with: " }
                 select #theme {
                     @for (_, theme) in &themes {
                         option value=(theme.filename()) {
@@ -239,12 +267,12 @@ fn generate_html(slides: Files, themes: Files) -> PreEscaped<String> {
                     }
                 }
             }
-            ul {
+            ul class="thumbnails" {
                 @for (_, slide) in &slides {
                     li {
                         a href=(PreEscaped(slide.href(themes.get(&slide.basename())))) onclick="change_theme(this)" {
                             figure {
-                                img src=(slide.png_path().to_string_lossy()) title=(slide.name());
+                                img class="thumbnail" src=(slide.png_path().to_string_lossy()) title=(slide.name());
                                 figcaption { (slide.name()) }
                             }
                         }
