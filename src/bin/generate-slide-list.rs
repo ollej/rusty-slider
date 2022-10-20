@@ -1,4 +1,5 @@
 use glob::glob;
+use macroquad::rand::gen_range;
 use maud::{html, Markup, PreEscaped, DOCTYPE};
 use std::borrow::Cow;
 use std::collections::HashMap;
@@ -204,7 +205,12 @@ fn main() {
         let theme_path = if let Some(filename) = themes.get(&slide.basename()) {
             filename.filename()
         } else {
-            "default-theme.json".to_string()
+            let mut keys = themes.keys();
+            let random = gen_range(0, keys.len());
+            keys.nth(random)
+                .map(|k| themes.get(k).map(|t| t.filename()))
+                .flatten()
+                .unwrap_or_else(|| "default-theme.json".to_string())
         };
         take_screenshot(
             slide.filename(),
