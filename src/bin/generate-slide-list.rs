@@ -36,13 +36,6 @@ struct CliOptions {
 
 fn stylesheet() -> &'static str {
     r#"
-    @font-face{
-        font-family: 'Amble';
-        src: url('assets/Amble.woff') format('woff');
-    }
-    body {
-        font-family: 'Amble'
-    }
     .theme-chooser {
         text-align: center;
     }
@@ -121,7 +114,7 @@ pub fn page(title: &str, content: Markup) -> Markup {
             body {
                 div class="wrapper" {
                     header {
-                        h1 { (title) }
+                        h1 class="title" { (title) }
                     }
                     div id="container" {
                         p class="tagline" {
@@ -255,7 +248,7 @@ fn generate_screenshots(slides: Files, themes: Files) {
 
 fn generate_html(slides: Files, themes: Files) -> PreEscaped<String> {
     page(
-        "Rusty Slider Example Slideshows",
+        "rusty slider",
         html! {
             form class="theme-chooser" {
                 label for="theme" { "Choose theme to view slideshow with: " }
