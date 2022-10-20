@@ -1,10 +1,15 @@
 use glob::glob;
 use macroquad::rand::gen_range;
 use maud::{html, Markup, PreEscaped, DOCTYPE};
-use std::borrow::Cow;
-use std::collections::HashMap;
-use std::path::{Path, PathBuf};
-use std::process::Command;
+use std::{
+    borrow::Cow,
+    collections::HashMap,
+    error::Error,
+    fs::File,
+    io::prelude::*,
+    path::{Path, PathBuf},
+    process::Command,
+};
 use structopt::StructOpt;
 
 #[derive(StructOpt, Debug)]
@@ -21,7 +26,7 @@ struct CliOptions {
         short,
         long,
         parse(from_os_str),
-        default_value = "./assets/slides.html"
+        default_value = "./demo/example-slideshows.html"
     )]
     pub output: PathBuf,
 }
@@ -195,7 +200,7 @@ fn take_screenshot(slideshow: String, theme: String, filename: String) {
     std::fs::copy("./screenshot.png", filename).unwrap();
 }
 
-fn main() {
+fn main() -> Result<(), Box<dyn Error>> {
     let opt = CliOptions::from_args();
 
     let slides = Filename::files(&opt.path, "md");
@@ -220,7 +225,7 @@ fn main() {
     }
 
     let html = page(
-        "Rusty Slider example slideshows",
+        "Rusty Slider Example Slideshows",
         html! {
             form {
                 label for="theme" { "Theme:" }
@@ -246,5 +251,8 @@ fn main() {
             }
         },
     );
-    println!("{}", html.into_string());
+
+    File::create(opt.output)?.write_all(html.into_string().as_bytes())?;
+
+    Ok(())
 }
