@@ -29,6 +29,9 @@ struct CliOptions {
         default_value = "./demo/example-slideshows.html"
     )]
     pub output: PathBuf,
+    /// Regenerate screenshots
+    #[structopt(short, long)]
+    pub screenshots: bool,
 }
 
 fn stylesheet() -> &'static str {
@@ -118,7 +121,9 @@ pub fn page(title: &str, content: Markup) -> Markup {
     }
 }
 
-#[derive(Debug)]
+type Files = HashMap<String, Filename>;
+
+#[derive(Debug, Clone)]
 struct Filename {
     path: PathBuf,
 }
@@ -135,7 +140,7 @@ impl Filename {
         )
     }
 
-    fn files(path: &Path, extension: &str) -> HashMap<String, Self> {
+    fn files(path: &Path, extension: &str) -> Files {
         glob(&format!("{}/*.{}", path.to_string_lossy(), extension))
             .expect("Couldn't read files")
             .filter(|entry| entry.is_ok())
@@ -200,12 +205,7 @@ fn take_screenshot(slideshow: String, theme: String, filename: String) {
     std::fs::copy("./screenshot.png", filename).unwrap();
 }
 
-fn main() -> Result<(), Box<dyn Error>> {
-    let opt = CliOptions::from_args();
-
-    let slides = Filename::files(&opt.path, "md");
-    let themes = Filename::files(&opt.path, "json");
-
+fn generate_screenshots(slides: Files, themes: Files) {
     for (_, slide) in slides.iter() {
         let theme_path = if let Some(filename) = themes.get(&slide.basename()) {
             filename.filename()
@@ -223,8 +223,10 @@ fn main() -> Result<(), Box<dyn Error>> {
             slide.png_path().to_string_lossy().into(),
         );
     }
+}
 
-    let html = page(
+fn generate_html(slides: Files, themes: Files) -> PreEscaped<String> {
+    page(
         "Rusty Slider Example Slideshows",
         html! {
             form {
@@ -250,7 +252,20 @@ fn main() -> Result<(), Box<dyn Error>> {
                 }
             }
         },
-    );
+    )
+}
+
+fn main() -> Result<(), Box<dyn Error>> {
+    let opt = CliOptions::from_args();
+
+    let slides = Filename::files(&opt.path, "md");
+    let themes = Filename::files(&opt.path, "json");
+
+    if opt.screenshots {
+        generate_screenshots(slides.clone(), themes.clone());
+    }
+
+    let html = generate_html(slides, themes);
 
     File::create(opt.output)?.write_all(html.into_string().as_bytes())?;
 
