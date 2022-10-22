@@ -28,6 +28,7 @@ pub struct Slides {
     automatic: Duration,
     active_slide: usize,
     time: Duration,
+    render_target: RenderTarget,
 }
 
 impl Slides {
@@ -46,6 +47,7 @@ impl Slides {
             automatic,
             time: 0.,
             active_slide: 0,
+            render_target: Self::render_target(),
         }
     }
 
@@ -103,6 +105,16 @@ impl Slides {
         )
     }
 
+    fn render_target() -> RenderTarget {
+        let render_target = render_target(screen_width() as u32, screen_height() as u32);
+        render_target.texture.set_filter(FilterMode::Linear);
+        render_target
+    }
+
+    pub fn texture(&self) -> Texture2D {
+        self.render_target.texture
+    }
+
     pub fn sanitize_markdown(text: String) -> String {
         let no_comments = Self::strip_comments(text);
         Self::strip_yaml_header(no_comments)
@@ -134,6 +146,7 @@ impl Slides {
     }
 
     pub fn draw(&mut self, delta: Duration) {
+        self.set_camera();
         if self.automatic > 0. && self.time > self.automatic {
             self.next();
         } else {
@@ -142,6 +155,21 @@ impl Slides {
         clear_background(self.theme.background_color);
         self.draw_background(self.background);
         self.draw_slide();
+    }
+
+    /// set camera with following coordinate system:
+    /// (0., 0)     .... (SCR_W, 0.)
+    /// (0., SCR_H) .... (SCR_W, SCR_H)
+    fn set_camera(&self) {
+        let scr_w = screen_width();
+        let scr_h = screen_height();
+
+        set_camera(&Camera2D {
+            zoom: vec2(1. / scr_w * 2., -1. / scr_h * 2.),
+            target: vec2(scr_w / 2., scr_h / 2.),
+            render_target: Some(self.render_target),
+            ..Default::default()
+        });
     }
 
     #[cfg(not(target_arch = "wasm32"))]

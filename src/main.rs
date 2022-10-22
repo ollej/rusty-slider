@@ -69,8 +69,6 @@ async fn main() {
     let mut shader_activated = theme.shader;
     let mut slides = Slides::load(opt.slides_path(), theme, opt.automatic).await;
 
-    let render_target = render_target(screen_width() as u32, screen_height() as u32);
-    render_target.texture.set_filter(FilterMode::Linear);
     let shader_material = load_material(crt::VERTEX, crt::FRAGMENT, Default::default()).unwrap();
 
     loop {
@@ -94,8 +92,8 @@ async fn main() {
             shader_activated = !shader_activated;
         }
         if is_key_pressed(KeyCode::S) {
-            render_target
-                .texture
+            slides
+                .texture()
                 .get_texture_data()
                 .export_png(&opt.screenshot.to_string_lossy());
         }
@@ -103,19 +101,6 @@ async fn main() {
         if opt.enable_code_execution && is_key_pressed(KeyCode::Enter) {
             slides.run_code_block();
         }
-
-        let scr_w = screen_width();
-        let scr_h = screen_height();
-
-        // build camera with following coordinate system:
-        // (0., 0)     .... (SCR_W, 0.)
-        // (0., SCR_H) .... (SCR_W, SCR_H)
-        set_camera(&Camera2D {
-            zoom: vec2(1. / scr_w * 2., -1. / scr_h * 2.),
-            target: vec2(scr_w / 2., scr_h / 2.),
-            render_target: Some(render_target),
-            ..Default::default()
-        });
 
         slides.draw(get_frame_time());
 
@@ -126,12 +111,12 @@ async fn main() {
             gl_use_material(shader_material);
         }
         draw_texture_ex(
-            render_target.texture,
+            slides.texture(),
             0.,
             0.,
             WHITE,
             DrawTextureParams {
-                dest_size: Some(vec2(scr_w, scr_h)),
+                dest_size: Some(vec2(screen_width(), screen_height())),
                 flip_y: true,
                 ..Default::default()
             },
