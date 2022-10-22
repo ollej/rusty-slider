@@ -50,8 +50,12 @@ fn stylesheet() -> &'static str {
         margin: 0;
         padding: 0;
     }
+    @media screen and (min-width: 35.5em) {
+      img.thumbnail {
+          max-width: 17.5rem;
+      }
+    }
     img.thumbnail {
-        max-width: 17.5rem;
         border: solid thin black;
     }
     ul.thumbnails figure {
