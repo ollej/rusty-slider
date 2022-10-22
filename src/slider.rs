@@ -29,6 +29,7 @@ pub struct Slides {
     active_slide: usize,
     time: Duration,
     render_target: RenderTarget,
+    last_texture: Option<Texture2D>,
 }
 
 impl Slides {
@@ -48,6 +49,7 @@ impl Slides {
             time: 0.,
             active_slide: 0,
             render_target: Self::render_target(),
+            last_texture: None,
         }
     }
 
@@ -135,6 +137,7 @@ impl Slides {
         if self.active_slide < (self.slides.len() - 1) {
             self.time = 0.;
             self.active_slide += 1;
+            self.last_texture = Some(self.texture().clone());
         }
     }
 
@@ -142,6 +145,7 @@ impl Slides {
         if self.active_slide > 0 {
             self.time = 0.;
             self.active_slide -= 1;
+            self.last_texture = Some(self.texture().clone());
         }
     }
 
