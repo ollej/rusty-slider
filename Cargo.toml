@@ -25,6 +25,7 @@ glob = "0.3.0"
 maud = "0.22.2"
 regex = "1.5.4"
 tempdir = "0.3.7"
+simple-easing = "1.0.0"
 
 # Doesn't work with android build
 [profile.dev.package.'*']

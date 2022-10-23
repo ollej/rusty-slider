@@ -29,7 +29,8 @@ pub struct Slides {
     active_slide: usize,
     time: Duration,
     render_target: RenderTarget,
-    last_texture: Option<Texture2D>,
+    pub last_texture: Option<Texture2D>,
+    pub transition_progress: f32,
 }
 
 impl Slides {
@@ -50,6 +51,7 @@ impl Slides {
             active_slide: 0,
             render_target: Self::render_target(),
             last_texture: None,
+            transition_progress: 0.,
         }
     }
 
@@ -137,7 +139,7 @@ impl Slides {
         if self.active_slide < (self.slides.len() - 1) {
             self.time = 0.;
             self.active_slide += 1;
-            self.last_texture = Some(self.texture().clone());
+            self.update_last_texture();
         }
     }
 
@@ -145,8 +147,13 @@ impl Slides {
         if self.active_slide > 0 {
             self.time = 0.;
             self.active_slide -= 1;
-            self.last_texture = Some(self.texture().clone());
+            self.update_last_texture();
         }
+    }
+
+    fn update_last_texture(&mut self) {
+        self.last_texture = Some(Texture2D::from_image(&self.texture().get_texture_data()));
+        self.transition_progress = 0.;
     }
 
     pub fn draw(&mut self, delta: Duration) {
@@ -155,6 +162,11 @@ impl Slides {
             self.next();
         } else {
             self.time += delta;
+            self.transition_progress += simple_easing::cubic_in_out(delta * 16.);
+            if self.transition_progress > 1. {
+                self.last_texture = None;
+                self.transition_progress = 0.;
+            }
         }
         clear_background(self.theme.background_color);
         self.draw_background(self.background);

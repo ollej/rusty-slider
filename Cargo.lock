@@ -775,6 +775,7 @@ dependencies = [
  "nanoserde",
  "quad-url",
  "regex",
+ "simple-easing",
  "structopt",
  "syntect",
  "tempdir",
@@ -834,6 +835,12 @@ dependencies = [
  "ryu",
  "serde",
 ]
+
+[[package]]
+name = "simple-easing"
+version = "1.0.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "2d27ce00599090be80336a61223db24348c42fdf864a430af62e6175b0dbd41a"
 
 [[package]]
 name = "smallvec"

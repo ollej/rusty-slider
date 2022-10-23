@@ -9,6 +9,7 @@ pub use crate::shaders::*;
 pub use crate::slider::*;
 pub use crate::textbox::*;
 pub use crate::theme::*;
+pub use crate::transition::*;
 
 pub type Vpos = f32;
 pub type Hpos = f32;
