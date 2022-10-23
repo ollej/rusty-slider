@@ -37,6 +37,7 @@ pub struct Theme {
     pub code_tab_width: usize,
     pub bullet: String,
     pub shader: bool,
+    pub transition: Transitioning,
 }
 
 impl Default for Theme {
@@ -68,6 +69,7 @@ impl Default for Theme {
             code_tab_width: 4,
             bullet: "• ".to_string(),
             shader: true,
+            transition: Transitioning::Swipe,
         }
     }
 }

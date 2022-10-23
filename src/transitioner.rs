@@ -1,11 +1,22 @@
 use crate::prelude::*;
 use macroquad::prelude::*;
+use nanoserde::DeJson;
 use std::path::{Path, PathBuf};
 
+#[derive(Copy, Clone, Debug, DeJson)]
 pub enum Transitioning {
+    #[nserde(rename = "swipe")]
     Swipe,
+    #[nserde(rename = "swirl")]
     Swirl,
+    #[nserde(rename = "split")]
     Split,
+}
+
+impl Default for Transitioning {
+    fn default() -> Self {
+        Transitioning::Split
+    }
 }
 
 impl Transitioning {

@@ -109,7 +109,7 @@ impl Slides {
         let code_box_builder =
             CodeBoxBuilder::new(theme.clone(), font_code, font_bold, font_italic);
 
-        let transitioner = Transitioner::load(assets_dir, Transitioning::Swirl, 0.1).await;
+        let transitioner = Transitioner::load(assets_dir, theme.transition, 0.1).await;
 
         Self::from_slides(
             slides,
