@@ -40,7 +40,6 @@ Images can be added to the slideshow by using the image markdown
 `(title text)[path]`. It needs to be placed on its own at the start of a line,
 anything else in the same paragraph will be ignored.
 
-
 ### Shortcuts
 
 Use left and right arrow keys or left and right mouse button to move
@@ -82,6 +81,8 @@ Only the first code block on a slide can be executed.
 
 Create a file called `assets/default-theme.json` to modify default display values.
 
+Supported transitions between slides are: `swirl`, `split`, and `swipe`.
+
 If you make your own theme file, and want to share it, I'd be happy
 to add it to the release.
 
@@ -114,7 +115,8 @@ to add it to the release.
     "code_theme": "Solarized (dark)",
     "code_tab_width": 2,
     "bullet": "• ",
-    "shader": true
+    "shader": true,
+    "transition": "swirl"
 }
 ```
 
@@ -162,4 +164,7 @@ Copyright Chris Simpkins
 SIL OFL 1.1 and Bitstream Vera v0.00
 https://www.fontsquirrel.com/license/hack
 
+### Transition
 
+Copyright (c) 2021 TanTanDev
+MIT License
