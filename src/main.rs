@@ -67,16 +67,9 @@ async fn main() {
         theme.background_color, theme.text_color, theme.heading_color,
     );
     let mut shader_activated = theme.shader;
-    let mut slides = Slides::load(opt.slides_path(), theme, opt.automatic).await;
+    let mut slides = Slides::load(opt.slides_path(), theme, opt.automatic, opt.directory).await;
 
     let shader_material = load_material(crt::VERTEX, crt::FRAGMENT, Default::default()).unwrap();
-    let transition_tex: Texture2D = load_texture("assets/transition_slide.png").await.unwrap();
-    let fade = 0.1f32;
-    let mut transition = Transition::new(transition_tex, fade);
-    let transition_render_target = render_target(screen_width() as u32, screen_height() as u32);
-    transition_render_target
-        .texture
-        .set_filter(FilterMode::Linear);
 
     loop {
         #[cfg(not(target_arch = "wasm32"))]
@@ -109,28 +102,9 @@ async fn main() {
             slides.run_code_block();
         }
 
-        slides.draw(get_frame_time());
-
-        let texture = if let Some(last_texture) = slides.last_texture {
-            let scr_w = screen_width();
-            let scr_h = screen_height();
-
-            set_camera(&Camera2D {
-                zoom: vec2(1. / scr_w * 2., -1. / scr_h * 2.),
-                target: vec2(scr_w / 2., scr_h / 2.),
-                render_target: Some(transition_render_target),
-                ..Default::default()
-            });
-            transition.draw_ex(
-                slides.texture(),
-                last_texture,
-                slides.transition_progress,
-                rusty_slider::transition::DrawParam { flip_y: false },
-            );
-            transition_render_target.texture
-        } else {
-            slides.texture()
-        };
+        slides.update(get_frame_time());
+        slides.draw();
+        let texture = slides.texture();
 
         set_default_camera();
         clear_background(BLACK);

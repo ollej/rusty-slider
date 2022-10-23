@@ -2,7 +2,7 @@ use crate::prelude::*;
 
 use macroquad::prelude::*;
 use regex::Regex;
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 
 #[derive(Clone)]
 pub struct Slide {
@@ -30,7 +30,7 @@ pub struct Slides {
     time: Duration,
     render_target: RenderTarget,
     pub last_texture: Option<Texture2D>,
-    pub transition_progress: f32,
+    transitioner: Transitioner,
 }
 
 impl Slides {
@@ -40,6 +40,7 @@ impl Slides {
         code_box_builder: CodeBoxBuilder,
         background: Option<Texture2D>,
         automatic: Duration,
+        transitioner: Transitioner,
     ) -> Slides {
         Slides {
             slides,
@@ -51,11 +52,19 @@ impl Slides {
             active_slide: 0,
             render_target: Self::render_target(),
             last_texture: None,
-            transition_progress: 0.,
+            transitioner,
         }
     }
 
-    pub async fn load(slides_path: PathBuf, theme: Theme, automatic: Duration) -> Self {
+    pub async fn load<P>(
+        slides_path: PathBuf,
+        theme: Theme,
+        automatic: Duration,
+        assets_dir: P,
+    ) -> Self
+    where
+        P: AsRef<Path>,
+    {
         let path = slides_path.as_path().to_str().unwrap().to_owned();
         let markdown = match load_string(&path).await {
             Ok(text) => Self::sanitize_markdown(text),
@@ -100,23 +109,16 @@ impl Slides {
         let code_box_builder =
             CodeBoxBuilder::new(theme.clone(), font_code, font_bold, font_italic);
 
+        let transitioner = Transitioner::load(assets_dir, Transitioning::Swirl, 0.1).await;
+
         Self::from_slides(
             slides,
             theme.clone(),
             code_box_builder,
             background,
             automatic,
+            transitioner,
         )
-    }
-
-    fn render_target() -> RenderTarget {
-        let render_target = render_target(screen_width() as u32, screen_height() as u32);
-        render_target.texture.set_filter(FilterMode::Linear);
-        render_target
-    }
-
-    pub fn texture(&self) -> Texture2D {
-        self.render_target.texture
     }
 
     pub fn sanitize_markdown(text: String) -> String {
@@ -140,6 +142,7 @@ impl Slides {
             self.time = 0.;
             self.active_slide += 1;
             self.update_last_texture();
+            self.transitioner.start();
         }
     }
 
@@ -148,54 +151,24 @@ impl Slides {
             self.time = 0.;
             self.active_slide -= 1;
             self.update_last_texture();
+            self.transitioner.start();
         }
     }
 
-    fn update_last_texture(&mut self) {
-        self.last_texture = Some(Texture2D::from_image(&self.texture().get_texture_data()));
-        self.transition_progress = 0.;
-    }
-
-    pub fn draw(&mut self, delta: Duration) {
-        self.set_camera();
+    pub fn update(&mut self, delta: Duration) {
         if self.automatic > 0. && self.time > self.automatic {
             self.next();
         } else {
             self.time += delta;
-            self.transition_progress += simple_easing::cubic_in_out(delta * 16.);
-            if self.transition_progress > 1. {
-                self.last_texture = None;
-                self.transition_progress = 0.;
-            }
         }
+        self.transitioner.update(delta);
+    }
+
+    pub fn draw(&self) {
+        self.set_camera();
         clear_background(self.theme.background_color);
         self.draw_background(self.background);
         self.draw_slide();
-    }
-
-    /// set camera with following coordinate system:
-    /// (0., 0)     .... (SCR_W, 0.)
-    /// (0., SCR_H) .... (SCR_W, SCR_H)
-    fn set_camera(&self) {
-        let scr_w = screen_width();
-        let scr_h = screen_height();
-
-        set_camera(&Camera2D {
-            zoom: vec2(1. / scr_w * 2., -1. / scr_h * 2.),
-            target: vec2(scr_w / 2., scr_h / 2.),
-            render_target: Some(self.render_target),
-            ..Default::default()
-        });
-    }
-
-    #[cfg(not(target_arch = "wasm32"))]
-    pub fn run_code_block(&mut self) {
-        let slide = self.slides.get_mut(self.active_slide).unwrap();
-        if let Some(code_block) = &slide.code_block {
-            let output = code_block.execute();
-            let code_box = self.code_box_builder.build_draw_box(None, output);
-            slide.add_code_box(code_box);
-        }
     }
 
     fn draw_background(&self, background: Option<Texture2D>) {
@@ -213,12 +186,33 @@ impl Slides {
         }
     }
 
-    fn draw_slide(&mut self) {
+    fn draw_slide(&self) {
         let slide = &self.slides[self.active_slide];
         let mut new_position: Vpos = 0.;
         for draw_box in slide.draw_boxes.iter() {
             let hpos = self.horizontal_position(draw_box.width_with_padding());
             new_position = draw_box.draw(hpos, new_position);
+        }
+    }
+
+    pub fn texture(&mut self) -> Texture2D {
+        match self.last_texture {
+            Some(last_texture) if self.transitioner.transitioning => {
+                self.transitioner
+                    .draw(last_texture, self.render_target.texture);
+                self.transitioner.texture()
+            }
+            _ => self.render_target.texture,
+        }
+    }
+
+    #[cfg(not(target_arch = "wasm32"))]
+    pub fn run_code_block(&mut self) {
+        let slide = self.slides.get_mut(self.active_slide).unwrap();
+        if let Some(code_block) = &slide.code_block {
+            let output = code_block.execute();
+            let code_box = self.code_box_builder.build_draw_box(None, output);
+            slide.add_code_box(code_box);
         }
     }
 
@@ -228,5 +222,30 @@ impl Slides {
             "right" => screen_width() - self.theme.horizontal_offset - width,
             _ => screen_width() / 2. - width / 2.,
         }
+    }
+
+    fn update_last_texture(&mut self) {
+        self.last_texture = Some(Texture2D::from_image(&self.texture().get_texture_data()));
+    }
+
+    fn render_target() -> RenderTarget {
+        let render_target = render_target(screen_width() as u32, screen_height() as u32);
+        render_target.texture.set_filter(FilterMode::Linear);
+        render_target
+    }
+
+    /// set camera with following coordinate system:
+    /// (0., 0)     .... (SCR_W, 0.)
+    /// (0., SCR_H) .... (SCR_W, SCR_H)
+    fn set_camera(&self) {
+        let scr_w = screen_width();
+        let scr_h = screen_height();
+
+        set_camera(&Camera2D {
+            zoom: vec2(1. / scr_w * 2., -1. / scr_h * 2.),
+            target: vec2(scr_w / 2., scr_h / 2.),
+            render_target: Some(self.render_target),
+            ..Default::default()
+        });
     }
 }

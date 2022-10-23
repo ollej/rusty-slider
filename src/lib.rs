@@ -11,3 +11,4 @@ pub mod slider;
 pub mod textbox;
 pub mod theme;
 pub mod transition;
+pub mod transitioner;
