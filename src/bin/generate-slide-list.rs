@@ -175,6 +175,7 @@ fn generate_html(slides: Files, themes: Files) -> PreEscaped<String> {
         "rusty slider",
         html! {
             h2 { "Themes" }
+            p { "These are the themes included with Rusty Slider. You can also create your own." }
             ul id="themes" class="thumbnails" {
                 @for theme in &themes {
                     li {
@@ -188,6 +189,7 @@ fn generate_html(slides: Files, themes: Files) -> PreEscaped<String> {
                 }
             }
             h2 id="slideshows-heading" { "Slideshows" }
+            p { "Click on a presentation to run it with the selected theme." }
             ul id="slideshows" class="thumbnails" {
                 @for slide in &slides {
                     li {
