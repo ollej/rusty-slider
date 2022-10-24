@@ -1,5 +1,4 @@
 use glob::glob;
-use macroquad::rand::gen_range;
 use maud::{html, Markup, PreEscaped, DOCTYPE};
 use std::{
     borrow::Cow,
@@ -21,13 +20,8 @@ struct CliOptions {
     /// Path to directory with slides
     #[structopt(short, long, parse(from_os_str), default_value = "./assets/")]
     pub path: PathBuf,
-    /// Path to where html file will be saved
-    #[structopt(
-        short,
-        long,
-        parse(from_os_str),
-        default_value = "./demo/example-slideshows.html"
-    )]
+    /// Path to where html file and screenshots will be saved
+    #[structopt(short, long, parse(from_os_str), default_value = "./demo/")]
     pub output: PathBuf,
     /// Regenerate screenshots
     #[structopt(short, long)]
@@ -200,10 +194,17 @@ impl Filename {
             .to_string_lossy()
             .into()
     }
+
     fn png_path(&self) -> PathBuf {
         let mut path = self.path.to_owned();
         path.set_extension("png");
         path
+    }
+
+    fn thumbnail_path(&self) -> String {
+        let thumbnail_path = self.png_path();
+        let filename = thumbnail_path.file_name().unwrap().to_string_lossy();
+        format!("assets/default-theme-{}", filename)
     }
 
     fn name(&self) -> Cow<str> {
@@ -214,7 +215,7 @@ impl Filename {
     }
 }
 
-fn take_screenshot(slideshow: String, theme: String, filename: String) {
+fn take_screenshot(slideshow: String, theme: String, filename: PathBuf) {
     Command::new("cargo")
         .args(&["run", "--", "--slides", &slideshow, "--theme", &theme])
         .env("RUSTFLAGS", "--cfg one_screenshot")
@@ -224,23 +225,22 @@ fn take_screenshot(slideshow: String, theme: String, filename: String) {
     std::fs::copy("./screenshot.png", filename).unwrap();
 }
 
-fn generate_screenshots(slides: Files, themes: Files) {
-    for (_, slide) in slides.iter() {
-        let theme_path = if let Some(filename) = themes.get(&slide.basename()) {
-            filename.filename()
-        } else {
-            let mut keys = themes.keys();
-            let random = gen_range(0, keys.len());
-            keys.nth(random)
-                .map(|k| themes.get(k).map(|t| t.filename()))
-                .flatten()
-                .unwrap_or_else(|| "default-theme.json".to_string())
-        };
-        take_screenshot(
-            slide.filename(),
-            theme_path,
-            slide.png_path().to_string_lossy().into(),
-        );
+fn generate_screenshots(slides: Files, themes: Files, output_path: &PathBuf) {
+    for (_, theme) in themes.iter() {
+        for (_, slide) in slides.iter() {
+            let mut screenshot_path = output_path.clone();
+            screenshot_path.push("assets");
+            screenshot_path.push(format!("{}-{}.png", theme.name(), slide.name()));
+            take_screenshot(slide.filename(), theme.filename(), screenshot_path);
+        }
+    }
+}
+
+fn selected(theme: &Filename) -> &'static str {
+    if theme.name() == "default-theme" {
+        "selected"
+    } else {
+        ""
     }
 }
 
@@ -252,7 +252,7 @@ fn generate_html(slides: Files, themes: Files) -> PreEscaped<String> {
                 label for="theme" { "Choose theme to view slideshow with: " }
                 select #theme {
                     @for (_, theme) in &themes {
-                        option value=(theme.filename()) {
+                        option value=(theme.filename()) selected=(selected(theme)) {
                             (theme.name())
                         }
                     }
@@ -263,7 +263,7 @@ fn generate_html(slides: Files, themes: Files) -> PreEscaped<String> {
                     li {
                         a href=(PreEscaped(slide.href(themes.get(&slide.basename())))) onclick="change_theme(this)" {
                             figure {
-                                img class="thumbnail" src=(slide.png_path().to_string_lossy()) title=(slide.name());
+                                img class="thumbnail" src=(slide.thumbnail_path()) title=(slide.name());
                                 figcaption { (slide.name()) }
                             }
                         }
@@ -281,12 +281,14 @@ fn main() -> Result<(), Box<dyn Error>> {
     let themes = Filename::files(&opt.path, "json");
 
     if opt.screenshots {
-        generate_screenshots(slides.clone(), themes.clone());
+        generate_screenshots(slides.clone(), themes.clone(), &opt.output);
     }
 
     let html = generate_html(slides, themes);
 
-    File::create(opt.output)?.write_all(html.into_string().as_bytes())?;
+    let mut output_path = opt.output;
+    output_path.push("example-slideshows.html");
+    File::create(output_path)?.write_all(html.into_string().as_bytes())?;
 
     Ok(())
 }
