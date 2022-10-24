@@ -1,15 +1,20 @@
-use glob::glob;
-use maud::{html, Markup, PreEscaped, DOCTYPE};
-use std::{
-    borrow::Cow,
-    collections::HashMap,
-    error::Error,
-    fs::File,
-    io::prelude::*,
-    path::{Path, PathBuf},
-    process::Command,
+use {
+    glob::glob,
+    std::{
+        borrow::Cow,
+        collections::HashMap,
+        error::Error,
+        fs::File,
+        io::prelude::*,
+        path::{Path, PathBuf},
+        process::Command,
+    },
+    structopt::StructOpt,
 };
-use structopt::StructOpt;
+
+use convert_case::{Case, Casing};
+use maud::{html, Markup, PreEscaped, DOCTYPE};
+use tempfile::tempdir;
 
 #[derive(StructOpt, Debug)]
 #[structopt(
@@ -71,11 +76,20 @@ fn javascript() -> &'static str {
         url.search = query;
         el.href = url;
     }
-    function change_theme(el) {
-        const theme = document.getElementById("theme").selectedOptions[0].value;
-        const thumbnails = document.getElementsByClassName("thumbnail");
+    function choose_theme(el) {
+        const theme = el.getAttribute("title");
+        update_thumbnails(theme);
+        setTimeout(function () {
+            document.getElementById("slideshows-heading").scrollIntoView({
+              behavior: "smooth"
+            });
+        }, 1);
+        return false;
+    }
+    function update_thumbnails(theme) {
+        const thumbnails = document.getElementsByClassName("slideshow");
         for (var thumbnail of thumbnails) {
-            const path = `assets/${theme.replace(".json", "")}-${thumbnail.getAttribute("title")}.png`;
+            const path = `assets/${theme}-${thumbnail.getAttribute("title")}.png`;
             thumbnail.setAttribute("src", path);
         }
     }
@@ -152,23 +166,27 @@ fn generate_html(slides: Files, themes: Files) -> PreEscaped<String> {
     page(
         "rusty slider",
         html! {
-            form class="theme-chooser" {
-                label for="theme" { "Choose theme to view slideshow with: " }
-                select #theme onchange="change_theme(this)" {
-                    @for (_, theme) in &themes {
-                        option value=(theme.filename()) selected=(selected(theme)) {
-                            (theme.name())
+            h2 { "Themes" }
+            ul id="themes" class="thumbnails" {
+                @for (_, theme) in &themes {
+                    li {
+                        a href="#" onclick="choose_theme(this)" title=(theme.name()) {
+                            figure {
+                                img class="thumbnail theme" src=(theme.png_path().to_string_lossy().to_string()) title=(theme.name());
+                                figcaption { (theme.display_name()) }
+                            }
                         }
                     }
                 }
             }
-            ul class="thumbnails" {
+            h2 id="slideshows-heading" { "Slideshows" }
+            ul id="slideshows" class="thumbnails" {
                 @for (_, slide) in &slides {
                     li {
                         a href=(PreEscaped(slide.href(themes.get(&slide.basename())))) onclick="open_slideshow(this)" {
                             figure {
-                                img class="thumbnail" src=(slide.thumbnail_path()) title=(slide.name());
-                                figcaption { (slide.name()) }
+                                img class="thumbnail slideshow" src=(slide.default_thumbnail_path()) title=(slide.name());
+                                figcaption { (slide.display_name()) }
                             }
                         }
                     }
@@ -239,7 +257,7 @@ impl Filename {
         path
     }
 
-    fn thumbnail_path(&self) -> String {
+    fn default_thumbnail_path(&self) -> String {
         let thumbnail_path = self.png_path();
         let filename = thumbnail_path.file_name().unwrap().to_string_lossy();
         format!("assets/default-theme-{}", filename)
@@ -251,9 +269,17 @@ impl Filename {
             None => Cow::from(""),
         }
     }
+
+    fn display_name(&self) -> String {
+        self.name().to_string().to_case(Case::Title)
+    }
 }
 
 fn take_screenshot(slideshow: String, theme: String, filename: PathBuf) {
+    //eprintln!(
+    //    "RUSTFLAGS=--cfg one_screenshot cargo run -- --slides {} --theme {}",
+    //    slideshow, theme
+    //);
     Command::new("cargo")
         .args(&["run", "--", "--slides", &slideshow, "--theme", &theme])
         .env("RUSTFLAGS", "--cfg one_screenshot")
@@ -263,15 +289,46 @@ fn take_screenshot(slideshow: String, theme: String, filename: PathBuf) {
     std::fs::copy("./screenshot.png", filename).unwrap();
 }
 
+fn build_path(output_path: &PathBuf, filename: String) -> PathBuf {
+    let mut screenshot_path = output_path.clone();
+    screenshot_path.push("assets");
+    screenshot_path.push(filename);
+    screenshot_path
+}
+
 fn generate_screenshots(slides: Files, themes: Files, output_path: &PathBuf) {
     for (_, theme) in themes.iter() {
+        generate_theme_slideshow(theme, output_path);
         for (_, slide) in slides.iter() {
-            let mut screenshot_path = output_path.clone();
-            screenshot_path.push("assets");
-            screenshot_path.push(format!("{}-{}.png", theme.name(), slide.name()));
+            let screenshot_path = build_path(
+                output_path,
+                format!("{}-{}.png", theme.name(), slide.name()),
+            );
             take_screenshot(slide.filename(), theme.filename(), screenshot_path);
         }
     }
+}
+
+fn generate_theme_slideshow(theme: &Filename, output_path: &PathBuf) {
+    let temp_dir = tempdir().expect("Failed creating tempdir");
+    let theme_filename = format!("{}.md", theme.name());
+    let slideshow_path = temp_dir.path().join(theme_filename);
+    let mut theme_file = File::create(&slideshow_path).expect("Failed creating theme slideshow");
+    writeln!(theme_file, "# {}", theme.display_name()).expect("Couldn't write theme slideshow");
+    let theme_slideshow_thumbnail = build_path(
+        output_path,
+        theme
+            .png_path()
+            .file_name()
+            .unwrap()
+            .to_string_lossy()
+            .to_string(),
+    );
+    take_screenshot(
+        slideshow_path.to_string_lossy().to_string(),
+        theme.filename(),
+        theme_slideshow_thumbnail,
+    );
 }
 
 fn selected(theme: &Filename) -> &'static str {
