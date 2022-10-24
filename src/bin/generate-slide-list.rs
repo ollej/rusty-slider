@@ -2,7 +2,6 @@ use {
     glob::glob,
     std::{
         borrow::Cow,
-        collections::HashMap,
         error::Error,
         fs::File,
         io::prelude::*,
@@ -168,7 +167,7 @@ fn generate_html(slides: Files, themes: Files) -> PreEscaped<String> {
         html! {
             h2 { "Themes" }
             ul id="themes" class="thumbnails" {
-                @for (_, theme) in &themes {
+                @for theme in &themes {
                     li {
                         a href="#" onclick="choose_theme(this)" title=(theme.name()) {
                             figure {
@@ -181,9 +180,9 @@ fn generate_html(slides: Files, themes: Files) -> PreEscaped<String> {
             }
             h2 id="slideshows-heading" { "Slideshows" }
             ul id="slideshows" class="thumbnails" {
-                @for (_, slide) in &slides {
+                @for slide in &slides {
                     li {
-                        a href=(PreEscaped(slide.href(themes.get(&slide.basename())))) onclick="open_slideshow(this)" {
+                        a href=(PreEscaped(slide.href(themes.get(0)))) onclick="open_slideshow(this)" {
                             figure {
                                 img class="thumbnail slideshow" src=(slide.default_thumbnail_path()) title=(slide.name());
                                 figcaption { (slide.display_name()) }
@@ -196,7 +195,7 @@ fn generate_html(slides: Files, themes: Files) -> PreEscaped<String> {
     )
 }
 
-type Files = HashMap<String, Filename>;
+type Files = Vec<Filename>;
 
 #[derive(Debug, Clone)]
 struct Filename {
@@ -216,35 +215,17 @@ impl Filename {
     }
 
     fn files(path: &Path, extension: &str) -> Files {
-        glob(&format!("{}/*.{}", path.to_string_lossy(), extension))
+        let mut files: Vec<PathBuf> = glob(&format!("{}/*.{}", path.to_string_lossy(), extension))
             .expect("Couldn't read files")
-            .filter(|entry| entry.is_ok())
-            .map(|entry| {
-                let file = Filename {
-                    path: entry.unwrap(),
-                };
-                (file.basename(), file)
-            })
-            .collect()
-    }
-
-    fn path(&self) -> &str {
-        self.path.to_str().unwrap()
+            .filter_map(Result::ok)
+            .collect();
+        files.sort();
+        files.into_iter().map(|path| Filename { path }).collect()
     }
 
     fn filename(&self) -> String {
         self.path
             .as_path()
-            .file_name()
-            .unwrap()
-            .to_string_lossy()
-            .into()
-    }
-
-    fn basename(&self) -> String {
-        self.path
-            .as_path()
-            .with_extension("")
             .file_name()
             .unwrap()
             .to_string_lossy()
@@ -297,9 +278,9 @@ fn build_path(output_path: &PathBuf, filename: String) -> PathBuf {
 }
 
 fn generate_screenshots(slides: Files, themes: Files, output_path: &PathBuf) {
-    for (_, theme) in themes.iter() {
+    for theme in themes.iter() {
         generate_theme_slideshow(theme, output_path);
-        for (_, slide) in slides.iter() {
+        for slide in slides.iter() {
             let screenshot_path = build_path(
                 output_path,
                 format!("{}-{}.png", theme.name(), slide.name()),
@@ -329,14 +310,6 @@ fn generate_theme_slideshow(theme: &Filename, output_path: &PathBuf) {
         theme.filename(),
         theme_slideshow_thumbnail,
     );
-}
-
-fn selected(theme: &Filename) -> &'static str {
-    if theme.name() == "default-theme" {
-        "selected"
-    } else {
-        ""
-    }
 }
 
 fn main() -> Result<(), Box<dyn Error>> {
