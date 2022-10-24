@@ -66,18 +66,19 @@ fn stylesheet() -> &'static str {
 }
 
 fn javascript() -> &'static str {
-    r#"
-    function open_slideshow(el) {
-        let url = new URL(el.href);
+    r##"
+    function url_for(href, slideshow, theme) {
+        let url = new URL(href);
         let query = new URLSearchParams(url.search);
-        const theme = document.getElementById("theme").selectedOptions[0].value;
-        query.set("theme", theme);
+        query.set("theme", theme + ".json");
+        query.set("slides", slideshow + ".md");
         url.search = query;
-        el.href = url;
+        return url;
     }
     function choose_theme(el) {
-        const theme = el.getAttribute("title");
-        update_thumbnails(theme);
+        const theme = el.dataset.theme;
+        update_slideshow_thumbnails(theme);
+        update_slideshow_href(theme);
         setTimeout(function () {
             document.getElementById("slideshows-heading").scrollIntoView({
               behavior: "smooth"
@@ -85,14 +86,22 @@ fn javascript() -> &'static str {
         }, 1);
         return false;
     }
-    function update_thumbnails(theme) {
+    function update_slideshow_href(theme) {
+        const links = document.querySelectorAll("#slideshows a");
+        for (var link of links) {
+            const url = url_for(link.href, link.getAttribute("data-slideshow"), theme);
+            console.log("update href", theme, link.dataset.slideshow, url);
+            link.setAttribute("href", url);
+        }
+    }
+    function update_slideshow_thumbnails(theme) {
         const thumbnails = document.getElementsByClassName("slideshow");
         for (var thumbnail of thumbnails) {
-            const path = `assets/${theme}-${thumbnail.getAttribute("title")}.png`;
+            const path = `assets/${theme}-${thumbnail.dataset.slideshow}.png`;
             thumbnail.setAttribute("src", path);
         }
     }
-    "#
+    "##
 }
 
 fn header(page_title: &str) -> Markup {
@@ -169,9 +178,9 @@ fn generate_html(slides: Files, themes: Files) -> PreEscaped<String> {
             ul id="themes" class="thumbnails" {
                 @for theme in &themes {
                     li {
-                        a href="#" onclick="choose_theme(this)" title=(theme.name()) {
+                        a href="#" onclick="choose_theme(this)" data-theme=(theme.name()) {
                             figure {
-                                img class="thumbnail theme" src=(theme.png_path().to_string_lossy().to_string()) title=(theme.name());
+                                img class="thumbnail theme" src=(theme.theme_thumbnail_path("assets/"));
                                 figcaption { (theme.display_name()) }
                             }
                         }
@@ -182,9 +191,9 @@ fn generate_html(slides: Files, themes: Files) -> PreEscaped<String> {
             ul id="slideshows" class="thumbnails" {
                 @for slide in &slides {
                     li {
-                        a href=(PreEscaped(slide.href(themes.get(0)))) onclick="open_slideshow(this)" {
+                        a href=(PreEscaped(slide.href("default-theme.json"))) data-slideshow=(slide.name()) {
                             figure {
-                                img class="thumbnail slideshow" src=(slide.default_thumbnail_path()) title=(slide.name());
+                                img class="thumbnail slideshow" src=(slide.default_thumbnail_path()) data-slideshow=(slide.name());
                                 figcaption { (slide.display_name()) }
                             }
                         }
@@ -203,15 +212,8 @@ struct Filename {
 }
 
 impl Filename {
-    fn href(&self, theme: Option<&Filename>) -> String {
-        format!(
-            "index.html?slides={}&theme={}",
-            self.filename(),
-            match theme {
-                Some(t) => t.filename(),
-                None => "".to_string(),
-            }
-        )
+    fn href(&self, theme: &str) -> String {
+        format!("index.html?slides={}&theme={}", self.filename(), theme)
     }
 
     fn files(path: &Path, extension: &str) -> Files {
@@ -242,6 +244,14 @@ impl Filename {
         let thumbnail_path = self.png_path();
         let filename = thumbnail_path.file_name().unwrap().to_string_lossy();
         format!("assets/default-theme-{}", filename)
+    }
+
+    fn theme_thumbnail_path(&self, directory: &str) -> String {
+        format!(
+            "{}thumbnail-{}",
+            directory,
+            self.png_path().file_name().unwrap().to_string_lossy()
+        )
     }
 
     fn name(&self) -> Cow<str> {
@@ -296,15 +306,7 @@ fn generate_theme_slideshow(theme: &Filename, output_path: &PathBuf) {
     let slideshow_path = temp_dir.path().join(theme_filename);
     let mut theme_file = File::create(&slideshow_path).expect("Failed creating theme slideshow");
     writeln!(theme_file, "# {}", theme.display_name()).expect("Couldn't write theme slideshow");
-    let theme_slideshow_thumbnail = build_path(
-        output_path,
-        theme
-            .png_path()
-            .file_name()
-            .unwrap()
-            .to_string_lossy()
-            .to_string(),
-    );
+    let theme_slideshow_thumbnail = build_path(output_path, theme.theme_thumbnail_path(""));
     take_screenshot(
         slideshow_path.to_string_lossy().to_string(),
         theme.filename(),
