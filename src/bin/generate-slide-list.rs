@@ -63,13 +63,21 @@ fn stylesheet() -> &'static str {
 
 fn javascript() -> &'static str {
     r#"
-    function change_theme(el) {
+    function open_slideshow(el) {
         let url = new URL(el.href);
         let query = new URLSearchParams(url.search);
         const theme = document.getElementById("theme").selectedOptions[0].value;
         query.set("theme", theme);
         url.search = query;
         el.href = url;
+    }
+    function change_theme(el) {
+        const theme = document.getElementById("theme").selectedOptions[0].value;
+        const thumbnails = document.getElementsByClassName("thumbnail");
+        for (var thumbnail of thumbnails) {
+            const path = `assets/${theme.replace(".json", "")}-${thumbnail.getAttribute("title")}.png`;
+            thumbnail.setAttribute("src", path);
+        }
     }
     "#
 }
@@ -250,7 +258,7 @@ fn generate_html(slides: Files, themes: Files) -> PreEscaped<String> {
         html! {
             form class="theme-chooser" {
                 label for="theme" { "Choose theme to view slideshow with: " }
-                select #theme {
+                select #theme onchange="change_theme(this)" {
                     @for (_, theme) in &themes {
                         option value=(theme.filename()) selected=(selected(theme)) {
                             (theme.name())
@@ -261,7 +269,7 @@ fn generate_html(slides: Files, themes: Files) -> PreEscaped<String> {
             ul class="thumbnails" {
                 @for (_, slide) in &slides {
                     li {
-                        a href=(PreEscaped(slide.href(themes.get(&slide.basename())))) onclick="change_theme(this)" {
+                        a href=(PreEscaped(slide.href(themes.get(&slide.basename())))) onclick="open_slideshow(this)" {
                             figure {
                                 img class="thumbnail" src=(slide.thumbnail_path()) title=(slide.name());
                                 figcaption { (slide.name()) }
