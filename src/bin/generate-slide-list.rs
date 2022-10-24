@@ -206,12 +206,6 @@ impl Filename {
         path
     }
 
-    fn with_extension(&self, extension: &str) -> PathBuf {
-        let mut path = self.path.to_owned();
-        path.set_extension(extension);
-        path
-    }
-
     fn name(&self) -> Cow<str> {
         match self.path.file_stem() {
             Some(name) => name.to_string_lossy(),
