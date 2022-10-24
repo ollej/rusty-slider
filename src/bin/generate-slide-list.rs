@@ -148,6 +148,36 @@ pub fn page(title: &str, content: Markup) -> Markup {
     }
 }
 
+fn generate_html(slides: Files, themes: Files) -> PreEscaped<String> {
+    page(
+        "rusty slider",
+        html! {
+            form class="theme-chooser" {
+                label for="theme" { "Choose theme to view slideshow with: " }
+                select #theme onchange="change_theme(this)" {
+                    @for (_, theme) in &themes {
+                        option value=(theme.filename()) selected=(selected(theme)) {
+                            (theme.name())
+                        }
+                    }
+                }
+            }
+            ul class="thumbnails" {
+                @for (_, slide) in &slides {
+                    li {
+                        a href=(PreEscaped(slide.href(themes.get(&slide.basename())))) onclick="open_slideshow(this)" {
+                            figure {
+                                img class="thumbnail" src=(slide.thumbnail_path()) title=(slide.name());
+                                figcaption { (slide.name()) }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+    )
+}
+
 type Files = HashMap<String, Filename>;
 
 #[derive(Debug, Clone)]
@@ -250,36 +280,6 @@ fn selected(theme: &Filename) -> &'static str {
     } else {
         ""
     }
-}
-
-fn generate_html(slides: Files, themes: Files) -> PreEscaped<String> {
-    page(
-        "rusty slider",
-        html! {
-            form class="theme-chooser" {
-                label for="theme" { "Choose theme to view slideshow with: " }
-                select #theme onchange="change_theme(this)" {
-                    @for (_, theme) in &themes {
-                        option value=(theme.filename()) selected=(selected(theme)) {
-                            (theme.name())
-                        }
-                    }
-                }
-            }
-            ul class="thumbnails" {
-                @for (_, slide) in &slides {
-                    li {
-                        a href=(PreEscaped(slide.href(themes.get(&slide.basename())))) onclick="open_slideshow(this)" {
-                            figure {
-                                img class="thumbnail" src=(slide.thumbnail_path()) title=(slide.name());
-                                figcaption { (slide.name()) }
-                            }
-                        }
-                    }
-                }
-            }
-        },
-    )
 }
 
 fn main() -> Result<(), Box<dyn Error>> {
