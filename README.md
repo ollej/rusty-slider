@@ -86,6 +86,18 @@ Supported transitions between slides are: `swirl`, `split`, and `swipe`.
 If you make your own theme file, and want to share it, I'd be happy
 to add it to the release.
 
+### Available code themes
+
+The following code themes can be set in the config option `code_theme`:
+
+* base16-ocean.dark
+* base16-eighties.dark
+* base16-mocha.dark
+* base16-ocean.light
+* InspiredGitHub
+* Solarized (dark)
+* Solarized (light)
+
 ### Example theme.json
 
 ```json
