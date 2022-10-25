@@ -14,19 +14,19 @@ default-run = "rusty_slider"
 
 [dependencies]
 colorsys = "0.6.5"
+convert_case = "0.6.0"
+glob = "0.3.0"
 image = { version = "0.24.3", default-features = false, features = ["png"] }
 macroquad = { version = "0.3.24" } # Add back default-features = false when issue is solved: https://github.com/not-fl3/macroquad/issues/492
 markdown = { git = "https://github.com/johannhof/markdown.rs" }
-nanoserde = "0.1.29"
-structopt = "0.3.26"
-syntect = { version = "4.5", default-features = false, features = ["default-fancy"] }
-quad-url = "0.1.0"
-glob = "0.3.0"
 maud = "0.22.2"
+nanoserde = "0.1.29"
+quad-url = "0.1.0"
 regex = "1.5.4"
 simple-easing = "1.0.0"
+structopt = "0.3.26"
+syntect = { version = "4.5", default-features = false, features = ["default-fancy"] }
 tempfile = "3.3.0"
-convert_case = "0.6.0"
 
 # Doesn't work with android build
 [profile.dev.package.'*']
