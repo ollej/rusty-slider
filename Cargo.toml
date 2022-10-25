@@ -19,7 +19,7 @@ glob = "0.3.0"
 image = { version = "0.24.3", default-features = false, features = ["png"] }
 macroquad = { version = "0.3.24" } # Add back default-features = false when issue is solved: https://github.com/not-fl3/macroquad/issues/492
 markdown = { git = "https://github.com/johannhof/markdown.rs" }
-maud = "0.22.2"
+maud = "0.24.0"
 nanoserde = "0.1.29"
 quad-url = "0.1.0"
 regex = "1.5.4"
