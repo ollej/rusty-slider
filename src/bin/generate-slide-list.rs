@@ -268,7 +268,7 @@ impl Filename {
     }
 }
 
-fn take_screenshot(slideshow: String, theme: String, filename: PathBuf) {
+fn take_screenshot(slideshow: String, theme: String, filename: &Path) {
     //eprintln!(
     //    "RUSTFLAGS=--cfg one_screenshot cargo run -- --slides {} --theme {}",
     //    slideshow, theme
@@ -282,14 +282,14 @@ fn take_screenshot(slideshow: String, theme: String, filename: PathBuf) {
     std::fs::copy("./screenshot.png", filename).unwrap();
 }
 
-fn build_path(output_path: &PathBuf, filename: String) -> PathBuf {
-    let mut screenshot_path = output_path.clone();
+fn build_path(output_path: &Path, filename: String) -> PathBuf {
+    let mut screenshot_path = output_path.to_path_buf();
     screenshot_path.push("assets");
     screenshot_path.push(filename);
     screenshot_path
 }
 
-fn generate_screenshots(slides: Files, themes: Files, output_path: &PathBuf) {
+fn generate_screenshots(slides: Files, themes: Files, output_path: &Path) {
     for theme in themes.iter() {
         generate_theme_slideshow(theme, output_path);
         for slide in slides.iter() {
@@ -297,12 +297,12 @@ fn generate_screenshots(slides: Files, themes: Files, output_path: &PathBuf) {
                 output_path,
                 format!("{}-{}.png", theme.name(), slide.name()),
             );
-            take_screenshot(slide.filename(), theme.filename(), screenshot_path);
+            take_screenshot(slide.filename(), theme.filename(), &screenshot_path);
         }
     }
 }
 
-fn generate_theme_slideshow(theme: &Filename, output_path: &PathBuf) {
+fn generate_theme_slideshow(theme: &Filename, output_path: &Path) {
     let temp_dir = tempdir().expect("Failed creating tempdir");
     let theme_filename = format!("{}.md", theme.name());
     let slideshow_path = temp_dir.path().join(theme_filename);
@@ -312,7 +312,7 @@ fn generate_theme_slideshow(theme: &Filename, output_path: &PathBuf) {
     take_screenshot(
         slideshow_path.to_string_lossy().to_string(),
         theme.filename(),
-        theme_slideshow_thumbnail,
+        &theme_slideshow_thumbnail,
     );
 }
 

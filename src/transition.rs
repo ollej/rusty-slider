@@ -22,14 +22,9 @@
 
 use macroquad::prelude::*;
 
+#[derive(Default)]
 pub struct DrawParam {
     pub flip_y: bool,
-}
-
-impl Default for DrawParam {
-    fn default() -> Self {
-        DrawParam { flip_y: false }
-    }
 }
 
 pub struct Transition {
