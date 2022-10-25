@@ -59,7 +59,8 @@ impl CodeBoxBuilder {
         let theme = &self.ts.themes[&self.highlighting_theme];
         let mut h = HighlightLines::new(syntax, theme);
         let lines = LinesWithEndings::from(&code)
-            .map(|line| h.highlight(line, &self.ps))
+            .map(|line| h.highlight_line(line, &self.ps))
+            .filter_map(Result::ok)
             .collect::<Vec<_>>();
 
         let mut text_lines = vec![];
