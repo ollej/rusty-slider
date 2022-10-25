@@ -1,6 +1,6 @@
 [package]
 name = "rusty-slider"
-version = "0.19.0"
+version = "0.20.0"
 authors = ["Olle Wreede <olle@wreede.se>"]
 edition = "2021"
 license = "MIT"
@@ -11,6 +11,13 @@ readme = "README.md"
 categories = ["command-line-utilities"]
 keywords = ["markdown", "slideshow", "presentation", "graphics", "wasm"]
 default-run = "rusty_slider"
+
+[package.metadata.scripts]
+build-web = "bin/build-web"
+build-linux = "bin/build-linux"
+build-win = "bin/build-win"
+serve-web = "bin/serve-web"
+build-apk = "bin/build-apk"
 
 [dependencies]
 clap = { version = "4.0.18", features = ["derive"] }
@@ -31,13 +38,6 @@ tempfile = "3.3.0"
 # Doesn't work with android build
 [profile.dev.package.'*']
 opt-level = 3
-
-[package.metadata.scripts]
-build-web = "bin/build-web"
-build-linux = "bin/build-linux"
-build-win = "bin/build-win"
-serve-web = "bin/serve-web"
-build-apk = "bin/build-apk"
 
 [profile.release]
 opt-level = 'z'

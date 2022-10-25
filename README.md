@@ -173,7 +173,7 @@ The command line options can also be used as URL arguments to the
 web demo.
 
 ```
-rusty-slider 0.19.0
+rusty-slider 0.20.0
 A small tool to display markdown files as a slideshow.
 
 USAGE:
