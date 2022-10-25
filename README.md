@@ -81,10 +81,45 @@ Only the first code block on a slide can be executed.
 
 Create a file called `assets/default-theme.json` to modify default display values.
 
-Supported transitions between slides are: `swirl`, `split`, and `swipe`.
+If you make your own theme file, and want to share it, I'd be happy to add it
+to the release.
 
-If you make your own theme file, and want to share it, I'd be happy
-to add it to the release.
+### Transitions
+
+These are all the available transitions that can be used in the option
+`transition`.
+
+* bignoise
+* blobs
+* checkerboard
+* circleswipe
+* cubicnoise
+* curtains
+* diagonalleft
+* diagonalright
+* fade
+* fan
+* halftone
+* implode
+* lines
+* maze
+* mosaic
+* noise
+* plasma
+* radial
+* smoke
+* split
+* starburst
+* stripes
+* swipedown
+* swipeleft
+* swiperight
+* swipeup
+* swirl
+* triangles
+* vortex
+* waves
+* zebra
 
 ### Available code themes
 

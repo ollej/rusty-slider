@@ -1,21 +1,55 @@
 use crate::prelude::*;
-use macroquad::prelude::*;
-use nanoserde::DeJson;
-use std::path::{Path, PathBuf};
+use std::{
+    fmt,
+    path::{Path, PathBuf},
+};
+use {macroquad::prelude::*, nanoserde::DeJson};
 
 #[derive(Copy, Clone, Debug, DeJson)]
+#[allow(non_camel_case_types)]
 pub enum Transitioning {
-    #[nserde(rename = "swipe")]
-    Swipe,
-    #[nserde(rename = "swirl")]
-    Swirl,
-    #[nserde(rename = "split")]
-    Split,
+    bignoise,
+    blobs,
+    checkerboard,
+    circleswipe,
+    cubicnoise,
+    curtains,
+    diagonalleft,
+    diagonalright,
+    fade,
+    fan,
+    halftone,
+    implode,
+    lines,
+    maze,
+    mosaic,
+    noise,
+    plasma,
+    radial,
+    smoke,
+    split,
+    starburst,
+    stripes,
+    swipedown,
+    swipeleft,
+    swiperight,
+    swipeup,
+    swirl,
+    triangles,
+    vortex,
+    waves,
+    zebra,
 }
 
 impl Default for Transitioning {
     fn default() -> Self {
-        Transitioning::Split
+        Transitioning::split
+    }
+}
+
+impl fmt::Display for Transitioning {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "{:?}", self)
     }
 }
 
@@ -24,17 +58,14 @@ impl Transitioning {
     where
         P: AsRef<Path>,
     {
-        Self::with_dir(
-            directory,
-            match self {
-                Transitioning::Swipe => "transition_slide.png",
-                Transitioning::Swirl => "transition_swirl.png",
-                Transitioning::Split => "transition_split.png",
-            },
-        )
+        Self::with_dir(directory, self.filename())
     }
 
-    fn with_dir<P>(directory: P, path: &str) -> PathBuf
+    fn filename(&self) -> String {
+        format!("transition_{}.png", self.to_string())
+    }
+
+    fn with_dir<P>(directory: P, path: String) -> PathBuf
     where
         P: AsRef<Path>,
     {
@@ -96,12 +127,8 @@ impl Transitioner {
             render_target: Some(self.render_target),
             ..Default::default()
         });
-        self.transition.draw_ex(
-            to_texture,
-            from_texture,
-            self.transition_progress,
-            DrawParam { flip_y: false },
-        );
+        self.transition
+            .draw(to_texture, from_texture, self.transition_progress);
     }
 
     pub fn texture(&self) -> Texture2D {

@@ -69,7 +69,7 @@ impl Default for Theme {
             code_tab_width: 4,
             bullet: "• ".to_string(),
             shader: true,
-            transition: Transitioning::Swipe,
+            transition: Transitioning::swiperight,
         }
     }
 }
