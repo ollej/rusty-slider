@@ -2,7 +2,6 @@ use std::ffi::OsStr;
 use std::fmt;
 use std::io::prelude::*;
 use std::process::{Command, Stdio};
-use tempdir::TempDir;
 
 #[derive(Clone)]
 pub enum ExecutableCode {
@@ -44,7 +43,7 @@ impl ExecutableCode {
             ExecutableCode::Ruby(code) => self.execute_command("ruby", ["-"], code),
             ExecutableCode::Perl(code) => self.execute_command("perl", ["-"], code),
             ExecutableCode::Rust(code) => {
-                if let Ok(tmp_dir) = TempDir::new("rusty-slider") {
+                if let Ok(tmp_dir) = tempfile::tempdir() {
                     if let Some(file_path) = tmp_dir.path().join("rustc.out").to_str() {
                         self.execute_command("rustc", ["-v", "-o", file_path, "-"], code);
                         return self.run_command_capture_output(file_path);
