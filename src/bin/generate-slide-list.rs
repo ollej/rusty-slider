@@ -1,4 +1,5 @@
 use {
+    clap::Parser,
     glob::glob,
     std::{
         borrow::Cow,
@@ -8,27 +9,26 @@ use {
         path::{Path, PathBuf},
         process::Command,
     },
-    structopt::StructOpt,
 };
 
 use convert_case::{Case, Casing};
 use maud::{html, Markup, PreEscaped, DOCTYPE};
 use tempfile::tempdir;
 
-#[derive(StructOpt, Debug)]
-#[structopt(
+#[derive(Parser, Debug)]
+#[command(
     name = "generate-slide-list",
     about = "Generates an html file with links to Rusty Slider slideshows."
 )]
 struct CliOptions {
     /// Path to directory with slides
-    #[structopt(short, long, parse(from_os_str), default_value = "./assets/")]
+    #[arg(short, long, default_value = "./assets/")]
     pub path: PathBuf,
     /// Path to where html file and screenshots will be saved
-    #[structopt(short, long, parse(from_os_str), default_value = "./demo/")]
+    #[arg(short, long, default_value = "./demo/")]
     pub output: PathBuf,
     /// Regenerate screenshots
-    #[structopt(short, long)]
+    #[arg(short, long)]
     pub screenshots: bool,
 }
 
@@ -317,7 +317,7 @@ fn generate_theme_slideshow(theme: &Filename, output_path: &Path) {
 }
 
 fn main() -> Result<(), Box<dyn Error>> {
-    let opt = CliOptions::from_args();
+    let opt = CliOptions::parse();
 
     let slides = Filename::files(&opt.path, "md");
     let themes = Filename::files(&opt.path, "json");

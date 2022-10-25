@@ -2,36 +2,34 @@
 
 extern crate markdown;
 
-use macroquad::prelude::*;
-use quad_url::get_program_parameters;
 use std::path::PathBuf;
-use structopt::StructOpt;
+use {clap::Parser, macroquad::prelude::*, quad_url::get_program_parameters};
 
 use rusty_slider::prelude::*;
 
-#[derive(StructOpt, Debug)]
-#[structopt(
+#[derive(Parser, Debug)]
+#[command(
     name = "rusty-slider",
     about = "A small tool to display markdown files as a slideshow."
 )]
 struct CliOptions {
     /// Path to directory to load files from
-    #[structopt(short, long, parse(from_os_str), default_value = "assets")]
+    #[arg(short, long, default_value = "assets")]
     pub directory: PathBuf,
     /// Markdown files with slides text.
-    #[structopt(short, long, parse(from_os_str), default_value = "rusty-slider.md")]
+    #[arg(short, long, default_value = "rusty-slider.md")]
     pub slides: PathBuf,
     /// File with theme options.
-    #[structopt(short, long, parse(from_os_str), default_value = "default-theme.json")]
+    #[arg(short, long, default_value = "default-theme.json")]
     pub theme: PathBuf,
     /// Automatically switch slides every N seconds.
-    #[structopt(short, long, default_value = "0")]
+    #[arg(short, long, default_value = "0")]
     pub automatic: Duration,
     /// When taking screenshot, store PNG at this path
-    #[structopt(short = "S", long, default_value = "screenshot.png")]
+    #[arg(short = 'S', long, default_value = "screenshot.png")]
     pub screenshot: PathBuf,
     /// Enable executing code in code blocks
-    #[structopt(long)]
+    #[arg(long)]
     pub enable_code_execution: bool,
 }
 
@@ -59,7 +57,7 @@ fn window_conf() -> Conf {
 
 #[macroquad::main(window_conf())]
 async fn main() {
-    let opt = CliOptions::from_iter(get_program_parameters().iter());
+    let opt = CliOptions::parse_from(get_program_parameters().iter());
 
     let theme = Theme::load(opt.theme_path()).await;
     debug!(
