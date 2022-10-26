@@ -120,7 +120,8 @@ These are all the available transitions that can be used in the option
 * mosaic
 * noise
 * plasma
-* radial
+* radialin
+* radialout
 * smoke
 * split
 * starburst
