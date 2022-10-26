@@ -66,10 +66,10 @@ impl MarkdownToSlides {
     }
 
     fn build_slide(&self, blocks: &[Block]) -> Slide {
-        Slide {
-            draw_boxes: self.blocks_to_draw_boxes(blocks, None, TextBoxStyle::Standard),
-            code_block: self.find_first_code_block(blocks),
-        }
+        Slide::new(
+            self.blocks_to_draw_boxes(blocks, None, TextBoxStyle::Standard),
+            self.find_first_code_block(blocks),
+        )
     }
 
     fn find_first_code_block(&self, blocks: &[Block]) -> Option<ExecutableCode> {

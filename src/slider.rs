@@ -11,6 +11,13 @@ pub struct Slide {
 }
 
 impl Slide {
+    pub fn new(draw_boxes: Vec<DrawBox>, code_block: Option<ExecutableCode>) -> Self {
+        Self {
+            draw_boxes,
+            code_block,
+        }
+    }
+
     pub fn add_code_box(&mut self, draw_box: CodeBox) {
         self.draw_boxes.push(DrawBox::Code(draw_box));
     }
@@ -187,11 +194,12 @@ impl Slides {
     }
 
     fn draw_slide(&self) {
-        let slide = &self.slides[self.active_slide];
-        let mut new_position: Vpos = 0.;
-        for draw_box in slide.draw_boxes.iter() {
-            let hpos = self.horizontal_position(draw_box.width_with_padding());
-            new_position = draw_box.draw(hpos, new_position);
+        if let Some(slide) = self.slides.get(self.active_slide) {
+            let mut new_position: Vpos = 0.;
+            for draw_box in slide.draw_boxes.iter() {
+                let hpos = self.horizontal_position(draw_box.width_with_padding());
+                new_position = draw_box.draw(hpos, new_position);
+            }
         }
     }
 
