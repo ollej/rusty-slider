@@ -188,6 +188,12 @@ fn generate_html(slides: Files, themes: Files) -> PreEscaped<String> {
                     }
                 }
             }
+            h2 { "Transitions" }
+            p { "There are a number of transitions available, this is how they look." }
+            video controls="controls" width="100%" {
+                source type="video/mp4" src="assets/transition-demo.mp4";
+                img src="assets/transition-demo.gif" alt="Animation of transitions" width="100%";
+            }
             h2 id="slideshows-heading" { "Slideshows" }
             p { "Click on a presentation to run it with the selected theme." }
             ul id="slideshows" class="thumbnails" {
