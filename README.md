@@ -36,9 +36,23 @@ don't want to be shown.
 
 ### Images
 
-Images can be added to the slideshow by using the image markdown
-`(title text)[path]`. It needs to be placed on its own at the start of a line,
-anything else in the same paragraph will be ignored.
+Images can be added to the slideshow by using the image markdown It needs to
+be placed on its own at the start of a line, anything else in the same
+paragraph will be ignored.
+
+```
+![ignored](assets/image.png)
+```
+
+### Background image
+
+A default background image can be set in the theme file. In addition to this,
+it is possible to override this and set a background image per slide. This is
+done by adding an image markdown tag with `background` as the title text.
+
+```
+![background](assets/new-background-image.png)
+```
 
 ### Shortcuts
 

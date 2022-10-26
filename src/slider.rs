@@ -25,6 +25,8 @@ pub struct Slide {
     pub code_block: Option<ExecutableCode>,
     align: DrawAlignment,
     horizontal_offset: Hpos,
+    background_texture: Option<Texture2D>,
+    background_path: Option<String>,
 }
 
 impl Slide {
@@ -33,12 +35,26 @@ impl Slide {
         code_block: Option<ExecutableCode>,
         align: DrawAlignment,
         horizontal_offset: Hpos,
+        background_path: Option<String>,
     ) -> Self {
         Self {
             draw_boxes,
             code_block,
             align,
             horizontal_offset,
+            background_texture: None,
+            background_path,
+        }
+    }
+
+    pub fn empty(align: DrawAlignment, horizontal_offset: Hpos) -> Self {
+        Self {
+            draw_boxes: vec![],
+            code_block: None,
+            align,
+            horizontal_offset,
+            background_texture: None,
+            background_path: None,
         }
     }
 
@@ -51,6 +67,20 @@ impl Slide {
         }
     }
 
+    pub async fn load_images(&mut self) {
+        self.load_background_image().await;
+        for draw_box in &mut self.draw_boxes.iter_mut() {
+            draw_box.load_image().await;
+        }
+    }
+
+    /// Ignores missing backgrounds.
+    async fn load_background_image(&mut self) {
+        if let Some(path) = &self.background_path {
+            self.background_texture = load_texture(path).await.ok()
+        }
+    }
+
     pub fn add_code_box(&mut self, draw_box: CodeBox) {
         self.draw_boxes.push(DrawBox::Code(draw_box));
     }
@@ -60,7 +90,7 @@ impl Slide {
     }
 
     fn draw_background(&self, default_background: Option<Texture2D>) {
-        if let Some(texture) = default_background {
+        if let Some(texture) = self.background_texture.or(default_background) {
             draw_texture_ex(
                 texture,
                 0.,
@@ -163,10 +193,9 @@ impl Slides {
             MarkdownToSlides::new(theme.clone(), font_text, font_bold, font_italic, font_code)
                 .parse(markdown);
 
+        // Load images for all slides
         for slide in &mut slides.iter_mut() {
-            for draw_box in &mut slide.draw_boxes.iter_mut() {
-                draw_box.load_image().await;
-            }
+            slide.load_images().await;
         }
 
         let code_box_builder =

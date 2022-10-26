@@ -66,11 +66,14 @@ impl MarkdownToSlides {
     }
 
     fn build_slide(&self, blocks: &[Block]) -> Slide {
+        let (draw_boxes, background_path) =
+            self.blocks_to_draw_boxes(blocks, None, TextBoxStyle::Standard);
         Slide::new(
-            self.blocks_to_draw_boxes(blocks, None, TextBoxStyle::Standard),
+            draw_boxes,
             self.find_first_code_block(blocks),
             self.theme.align,
             self.theme.horizontal_offset,
+            background_path,
         )
     }
 
@@ -90,9 +93,10 @@ impl MarkdownToSlides {
         blocks: &[Block],
         background_color: Option<Color>,
         style: TextBoxStyle,
-    ) -> Vec<DrawBox> {
+    ) -> (Vec<DrawBox>, Option<String>) {
         let mut draw_boxes = vec![];
         let mut text_lines = vec![];
+        let mut background_path: Option<String> = None;
         for block in blocks.iter() {
             match block {
                 Block::Header(spans, 1) => {
@@ -141,8 +145,12 @@ impl MarkdownToSlides {
                         )));
                         text_lines = Vec::new();
                     }
-                    if let Some(Span::Image(_title, path, _)) = spans.first() {
-                        draw_boxes.push(DrawBox::Image(ImageBox::new(path, 0., None)));
+                    if let Some(Span::Image(title, path, _)) = spans.first() {
+                        if title == &"background".to_string() {
+                            background_path = Some(path.clone());
+                        } else {
+                            draw_boxes.push(DrawBox::Image(ImageBox::new(path, 0., None)));
+                        }
                     }
                 }
                 Block::Paragraph(spans) => {
@@ -172,7 +180,7 @@ impl MarkdownToSlides {
                         )));
                         text_lines = Vec::new();
                     }
-                    draw_boxes.extend(self.blocks_to_draw_boxes(
+                    let (inner_blocks, image_path) = self.blocks_to_draw_boxes(
                         blocks,
                         Some(self.theme.blockquote_background_color),
                         TextBoxStyle::Blockquote {
@@ -180,7 +188,11 @@ impl MarkdownToSlides {
                             font: self.font_text,
                             color: self.theme.text_color,
                         },
-                    ));
+                    );
+                    if image_path.is_some() {
+                        background_path = image_path;
+                    }
+                    draw_boxes.extend(inner_blocks);
                 }
                 Block::CodeBlock(language, code) => {
                     if !text_lines.is_empty() {
@@ -209,7 +221,7 @@ impl MarkdownToSlides {
                 style,
             )));
         }
-        draw_boxes
+        (draw_boxes, background_path)
     }
 
     fn is_image(&self, spans: &[Span]) -> bool {
