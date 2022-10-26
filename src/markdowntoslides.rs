@@ -69,6 +69,8 @@ impl MarkdownToSlides {
         Slide::new(
             self.blocks_to_draw_boxes(blocks, None, TextBoxStyle::Standard),
             self.find_first_code_block(blocks),
+            self.theme.align.clone(),
+            self.theme.horizontal_offset,
         )
     }
 

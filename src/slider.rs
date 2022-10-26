@@ -8,13 +8,31 @@ use std::path::{Path, PathBuf};
 pub struct Slide {
     pub draw_boxes: Vec<DrawBox>,
     pub code_block: Option<ExecutableCode>,
+    align: String,
+    horizontal_offset: Hpos,
 }
 
 impl Slide {
-    pub fn new(draw_boxes: Vec<DrawBox>, code_block: Option<ExecutableCode>) -> Self {
+    pub fn new(
+        draw_boxes: Vec<DrawBox>,
+        code_block: Option<ExecutableCode>,
+        align: String,
+        horizontal_offset: Hpos,
+    ) -> Self {
         Self {
             draw_boxes,
             code_block,
+            align,
+            horizontal_offset,
+        }
+    }
+
+    pub fn draw(&self, default_background: Option<Texture2D>) {
+        self.draw_background(default_background);
+        let mut new_position: Vpos = 0.;
+        for draw_box in self.draw_boxes.iter() {
+            let hpos = self.horizontal_position(draw_box.width_with_padding());
+            new_position = draw_box.draw(hpos, new_position);
         }
     }
 
@@ -24,6 +42,29 @@ impl Slide {
 
     pub fn add_text_box(&mut self, draw_box: TextBox) {
         self.draw_boxes.push(DrawBox::Text(draw_box));
+    }
+
+    fn draw_background(&self, default_background: Option<Texture2D>) {
+        if let Some(texture) = default_background {
+            draw_texture_ex(
+                texture,
+                0.,
+                0.,
+                WHITE,
+                DrawTextureParams {
+                    dest_size: Some(vec2(screen_width(), screen_height())),
+                    ..Default::default()
+                },
+            )
+        }
+    }
+
+    fn horizontal_position(&self, width: Width) -> Hpos {
+        match self.align.as_str() {
+            "left" => self.horizontal_offset,
+            "right" => screen_width() - self.horizontal_offset - width,
+            _ => screen_width() / 2. - width / 2.,
+        }
     }
 }
 
@@ -174,32 +215,12 @@ impl Slides {
     pub fn draw(&self) {
         self.set_camera();
         clear_background(self.theme.background_color);
-        self.draw_background(self.background);
         self.draw_slide();
-    }
-
-    fn draw_background(&self, background: Option<Texture2D>) {
-        if let Some(texture) = background {
-            draw_texture_ex(
-                texture,
-                0.,
-                0.,
-                WHITE,
-                DrawTextureParams {
-                    dest_size: Some(vec2(screen_width(), screen_height())),
-                    ..Default::default()
-                },
-            )
-        }
     }
 
     fn draw_slide(&self) {
         if let Some(slide) = self.slides.get(self.active_slide) {
-            let mut new_position: Vpos = 0.;
-            for draw_box in slide.draw_boxes.iter() {
-                let hpos = self.horizontal_position(draw_box.width_with_padding());
-                new_position = draw_box.draw(hpos, new_position);
-            }
+            slide.draw(self.background);
         }
     }
 
