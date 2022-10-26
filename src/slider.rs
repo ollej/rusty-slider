@@ -123,7 +123,7 @@ pub struct Slides {
     time: Duration,
     render_target: RenderTarget,
     pub last_texture: Option<Texture2D>,
-    transitioner: Transitioner,
+    transitioner: Option<Transitioner>,
 }
 
 impl Slides {
@@ -133,7 +133,7 @@ impl Slides {
         code_box_builder: CodeBoxBuilder,
         background: Option<Texture2D>,
         automatic: Duration,
-        transitioner: Transitioner,
+        transitioner: Option<Transitioner>,
     ) -> Slides {
         Slides {
             slides,
@@ -201,7 +201,10 @@ impl Slides {
         let code_box_builder =
             CodeBoxBuilder::new(theme.clone(), font_code, font_bold, font_italic);
 
-        let transitioner = Transitioner::load(assets_dir, theme.transition, 0.1).await;
+        let transitioner = match theme.transition {
+            Some(transition) => Some(Transitioner::load(assets_dir, transition, 0.1).await),
+            None => None,
+        };
 
         Self::from_slides(
             slides,
@@ -234,7 +237,7 @@ impl Slides {
             self.time = 0.;
             self.active_slide += 1;
             self.update_last_texture();
-            self.transitioner.start();
+            self.start_transition();
         }
     }
 
@@ -243,7 +246,13 @@ impl Slides {
             self.time = 0.;
             self.active_slide -= 1;
             self.update_last_texture();
-            self.transitioner.start();
+            self.start_transition();
+        }
+    }
+
+    fn start_transition(&mut self) {
+        if let Some(transitioner) = &mut self.transitioner {
+            transitioner.start();
         }
     }
 
@@ -253,7 +262,9 @@ impl Slides {
         } else {
             self.time += delta;
         }
-        self.transitioner.update(delta);
+        if let Some(transitioner) = &mut self.transitioner {
+            transitioner.update(delta);
+        }
     }
 
     pub fn draw(&self) {
@@ -269,14 +280,15 @@ impl Slides {
     }
 
     pub fn texture(&mut self) -> Texture2D {
-        match self.last_texture {
-            Some(last_texture) if self.transitioner.transitioning => {
-                self.transitioner
-                    .draw(last_texture, self.render_target.texture);
-                self.transitioner.texture()
+        if let Some(transitioner) = &mut self.transitioner {
+            if let Some(last_texture) = self.last_texture {
+                if transitioner.transitioning {
+                    transitioner.draw(last_texture, self.render_target.texture);
+                    return transitioner.texture();
+                }
             }
-            _ => self.render_target.texture,
         }
+        self.render_target.texture
     }
 
     #[cfg(not(target_arch = "wasm32"))]
