@@ -108,10 +108,10 @@ These are all the available transitions that can be used in the option
 * checkerboard
 * circleswipe
 * cubicnoise
-* curtains
+* curtainsclose
+* curtainsopen
 * diagonalleft
 * diagonalright
-* fade
 * fan
 * halftone
 * implode
@@ -188,23 +188,19 @@ The command line options can also be used as URL arguments to the
 web demo.
 
 ```
-rusty-slider 0.20.0
 A small tool to display markdown files as a slideshow.
 
-USAGE:
-    rusty-slider [OPTIONS]
+Usage: rusty_slider [OPTIONS]
 
-FLAGS:
-        --enable-code-execution    Enable executing code in code blocks
-    -h, --help                     Prints help information
-    -V, --version                  Prints version information
-
-OPTIONS:
-    -a, --automatic <automatic>      Automatically switch slides every N seconds [default: 0]
-    -d, --directory <directory>      Path to directory to load files from [default: assets]
-    -S, --screenshot <screenshot>    When taking screenshot, store PNG at this path [default: screenshot.png]
-    -s, --slides <slides>            Markdown files with slides text [default: assets/rusty-slider.md]
-    -t, --theme <theme>              File with theme options [default: assets/default-theme.json]
+Options:
+  -d, --directory <DIRECTORY>    Path to directory to load files from [default: assets]
+  -s, --slides <SLIDES>          Markdown files with slides text [default: rusty-slider.md]
+  -t, --theme <THEME>            File with theme options [default: default-theme.json]
+  -a, --automatic <AUTOMATIC>    Automatically switch slides every N seconds [default: 0]
+      --demo-transitions         Switch transitions for every slide
+  -S, --screenshot <SCREENSHOT>  When taking screenshot, store PNG at this path [default: screenshot.png]
+      --enable-code-execution    Enable executing code in code blocks
+  -h, --help                     Print help information
 ```
 
 ## Licenses
