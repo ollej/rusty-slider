@@ -25,6 +25,9 @@ struct CliOptions {
     /// Automatically switch slides every N seconds.
     #[arg(short, long, default_value = "0")]
     pub automatic: Duration,
+    /// Switch transitions for every slide
+    #[arg(long)]
+    pub demo_transitions: bool,
     /// When taking screenshot, store PNG at this path
     #[arg(short = 'S', long, default_value = "screenshot.png")]
     pub screenshot: PathBuf,
@@ -65,7 +68,14 @@ async fn main() {
         theme.background_color, theme.text_color, theme.heading_color,
     );
     let mut shader_activated = theme.shader;
-    let mut slides = Slides::load(opt.slides_path(), theme, opt.automatic, opt.directory).await;
+    let mut slides = Slides::load(
+        opt.slides_path(),
+        theme,
+        opt.automatic,
+        opt.demo_transitions,
+        opt.directory,
+    )
+    .await;
 
     let shader_material = load_material(crt::VERTEX, crt::FRAGMENT, Default::default()).unwrap();
 

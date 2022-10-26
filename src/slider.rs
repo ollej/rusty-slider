@@ -123,6 +123,7 @@ pub struct Slides {
     time: Duration,
     render_target: RenderTarget,
     pub last_texture: Option<Texture2D>,
+    demo_transitions: bool,
     transitioner: Option<Transitioner>,
 }
 
@@ -133,6 +134,7 @@ impl Slides {
         code_box_builder: CodeBoxBuilder,
         background: Option<Texture2D>,
         automatic: Duration,
+        demo_transitions: bool,
         transitioner: Option<Transitioner>,
     ) -> Slides {
         Slides {
@@ -145,6 +147,7 @@ impl Slides {
             active_slide: 0,
             render_target: Self::render_target(),
             last_texture: None,
+            demo_transitions,
             transitioner,
         }
     }
@@ -153,6 +156,7 @@ impl Slides {
         slides_path: PathBuf,
         theme: Theme,
         automatic: Duration,
+        demo_transitions: bool,
         assets_dir: P,
     ) -> Self
     where
@@ -212,6 +216,7 @@ impl Slides {
             code_box_builder,
             background,
             automatic,
+            demo_transitions,
             transitioner,
         )
     }
@@ -252,6 +257,11 @@ impl Slides {
 
     fn start_transition(&mut self) {
         if let Some(transitioner) = &mut self.transitioner {
+            if self.demo_transitions {
+                let current_transition = transitioner.current_transition().unwrap().clone();
+                transitioner.set_transition(&current_transition);
+                transitioner.next_transition();
+            }
             transitioner.start();
         }
     }

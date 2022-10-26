@@ -1,12 +1,14 @@
 use crate::prelude::*;
 use std::{
+    collections::HashMap,
     fmt,
     path::{Path, PathBuf},
 };
 use {macroquad::prelude::*, nanoserde::DeJson};
+use {strum::IntoEnumIterator, strum_macros::EnumIter};
 
-#[derive(Copy, Clone, Debug, DeJson)]
 #[allow(non_camel_case_types)]
+#[derive(Copy, Clone, Debug, Hash, Eq, PartialEq, PartialOrd, Ord, DeJson, EnumIter)]
 pub enum Transitioning {
     bignoise,
     blobs,
@@ -81,6 +83,9 @@ pub struct Transitioner {
     transition: Transition,
     transition_progress: Duration,
     pub transitioning: bool,
+    textures: HashMap<Transitioning, Texture2D>,
+    transitions: Vec<Transitioning>,
+    current_transition: usize,
 }
 
 impl Transitioner {
@@ -90,9 +95,17 @@ impl Transitioner {
     where
         P: AsRef<Path>,
     {
-        let texture_path = transitioning.texture(asset_dir);
-        let transition_tex: Texture2D = load_texture(texture_path.to_str().unwrap()).await.unwrap();
-        let transition = Transition::new(transition_tex, fade);
+        let mut textures: HashMap<Transitioning, Texture2D> = HashMap::new();
+        for transitioning in Transitioning::iter() {
+            let transition_tex: Texture2D =
+                load_texture(transitioning.texture(&asset_dir).to_str().unwrap())
+                    .await
+                    .expect("Failed loading transition texture");
+            textures.insert(transitioning, transition_tex);
+        }
+        let mut transitions = textures.keys().cloned().collect::<Vec<Transitioning>>();
+        transitions.sort();
+        let transition = Transition::new(*textures.get(&transitioning).unwrap(), fade);
         let render_target = render_target(screen_width() as u32, screen_height() as u32);
         render_target.texture.set_filter(FilterMode::Linear);
         Self {
@@ -100,11 +113,30 @@ impl Transitioner {
             transition,
             transition_progress: 0.,
             transitioning: false,
+            textures,
+            transitions,
+            current_transition: 0,
         }
     }
 
     pub fn start(&mut self) {
         self.transitioning = true;
+    }
+
+    pub fn current_transition(&self) -> Option<&Transitioning> {
+        self.transitions.get(self.current_transition)
+    }
+
+    pub fn set_transition(&mut self, transitioning: &Transitioning) {
+        self.transition
+            .change_transition_tex(*self.textures.get(transitioning).unwrap());
+    }
+
+    pub fn next_transition(&mut self) {
+        self.current_transition += 1;
+        if self.current_transition == self.textures.len() {
+            self.current_transition = 0;
+        }
     }
 
     pub fn update(&mut self, delta: Duration) {
