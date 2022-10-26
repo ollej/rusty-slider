@@ -49,10 +49,10 @@ impl TextBox {
         let inner_hpos = hpos + self.padding;
         let mut new_position = vpos + self.padding + self.margin;
         for line in self.lines.iter() {
-            let line_hpos = match line.align.as_str() {
-                "left" => inner_hpos,
-                "right" => inner_hpos + self.width() - line.width,
-                _ => inner_hpos + self.width() / 2. - line.width / 2.,
+            let line_hpos = match line.align {
+                DrawAlignment::left => inner_hpos,
+                DrawAlignment::right => inner_hpos + self.width() - line.width,
+                DrawAlignment::center => inner_hpos + self.width() / 2. - line.width / 2.,
             };
             new_position = line.draw(line_hpos, new_position, self.offset_y);
         }
@@ -101,12 +101,12 @@ pub struct TextLine {
     width: Width,
     height: Height,
     offset_y: Vpos,
-    align: String,
+    align: DrawAlignment,
     partials: Vec<TextPartial>,
 }
 
 impl TextLine {
-    pub fn new(align: String, partials: Vec<TextPartial>) -> Self {
+    pub fn new(align: DrawAlignment, partials: Vec<TextPartial>) -> Self {
         let mut width: Width = 0.;
         let mut height: Height = 0.;
         let mut offset_y: Vpos = 0.;

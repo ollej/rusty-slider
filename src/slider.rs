@@ -1,14 +1,29 @@
 use crate::prelude::*;
 
 use macroquad::prelude::*;
+use nanoserde::DeJson;
 use regex::Regex;
 use std::path::{Path, PathBuf};
+
+#[derive(Copy, Clone, Debug, DeJson)]
+#[allow(non_camel_case_types)]
+pub enum DrawAlignment {
+    left,
+    right,
+    center,
+}
+
+impl Default for DrawAlignment {
+    fn default() -> Self {
+        DrawAlignment::left
+    }
+}
 
 #[derive(Clone)]
 pub struct Slide {
     pub draw_boxes: Vec<DrawBox>,
     pub code_block: Option<ExecutableCode>,
-    align: String,
+    align: DrawAlignment,
     horizontal_offset: Hpos,
 }
 
@@ -16,7 +31,7 @@ impl Slide {
     pub fn new(
         draw_boxes: Vec<DrawBox>,
         code_block: Option<ExecutableCode>,
-        align: String,
+        align: DrawAlignment,
         horizontal_offset: Hpos,
     ) -> Self {
         Self {
@@ -60,10 +75,10 @@ impl Slide {
     }
 
     fn horizontal_position(&self, width: Width) -> Hpos {
-        match self.align.as_str() {
-            "left" => self.horizontal_offset,
-            "right" => screen_width() - self.horizontal_offset - width,
-            _ => screen_width() / 2. - width / 2.,
+        match self.align {
+            DrawAlignment::left => self.horizontal_offset,
+            DrawAlignment::right => screen_width() - self.horizontal_offset - width,
+            DrawAlignment::center => screen_width() / 2. - width / 2.,
         }
     }
 }
@@ -242,14 +257,6 @@ impl Slides {
             let output = code_block.execute();
             let code_box = self.code_box_builder.build_draw_box(None, output);
             slide.add_code_box(code_box);
-        }
-    }
-
-    fn horizontal_position(&self, width: Width) -> Hpos {
-        match self.theme.align.as_str() {
-            "left" => self.theme.horizontal_offset,
-            "right" => screen_width() - self.theme.horizontal_offset - width,
-            _ => screen_width() / 2. - width / 2.,
         }
     }
 

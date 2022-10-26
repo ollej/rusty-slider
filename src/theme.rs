@@ -13,7 +13,7 @@ pub struct Theme {
     pub heading_color: Color,
     #[nserde(proxy = "HexColor")]
     pub text_color: Color,
-    pub align: String,
+    pub align: DrawAlignment,
     pub font: String,
     pub font_bold: String,
     pub font_italic: String,
@@ -47,7 +47,7 @@ impl Default for Theme {
             background_color: Color::from_rgba(48, 25, 52, 255),
             heading_color: Color::from_rgba(177, 156, 217, 255),
             text_color: WHITE,
-            align: "center".to_string(),
+            align: DrawAlignment::center,
             font: "assets/Amble-Regular.ttf".to_string(),
             font_bold: "assets/Amble-Bold.ttf".to_string(),
             font_italic: "assets/Amble-Italic.ttf".to_string(),

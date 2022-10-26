@@ -87,7 +87,7 @@ impl CodeBoxBuilder {
                     self.line_height,
                 ));
             }
-            text_lines.push(TextLine::new("left".to_owned(), partials));
+            text_lines.push(TextLine::new(DrawAlignment::left, partials));
             partials = Vec::new();
         }
 

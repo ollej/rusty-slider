@@ -69,7 +69,7 @@ impl MarkdownToSlides {
         Slide::new(
             self.blocks_to_draw_boxes(blocks, None, TextBoxStyle::Standard),
             self.find_first_code_block(blocks),
-            self.theme.align.clone(),
+            self.theme.align,
             self.theme.horizontal_offset,
         )
     }
@@ -107,7 +107,7 @@ impl MarkdownToSlides {
                     }
                     draw_boxes.push(DrawBox::Text(TextBox::new(
                         vec![TextLine::new(
-                            self.theme.align.to_owned(),
+                            self.theme.align,
                             self.spans_to_text_partials(
                                 spans,
                                 self.font_text,
@@ -122,7 +122,7 @@ impl MarkdownToSlides {
                 }
                 Block::Header(spans, _size) => {
                     text_lines.push(TextLine::new(
-                        self.theme.align.to_owned(),
+                        self.theme.align,
                         self.spans_to_text_partials(
                             spans,
                             self.font_text,
@@ -147,7 +147,7 @@ impl MarkdownToSlides {
                 }
                 Block::Paragraph(spans) => {
                     text_lines.push(TextLine::new(
-                        self.theme.align.to_owned(),
+                        self.theme.align,
                         self.spans_to_text_partials(
                             spans,
                             self.font_text,
@@ -274,7 +274,7 @@ impl MarkdownToSlides {
                     self.theme.font_size_text,
                     self.theme.text_color,
                 ));
-                let text_line = TextLine::new("left".to_string(), partials);
+                let text_line = TextLine::new(DrawAlignment::left, partials);
                 lines.push(text_line);
             };
         }
