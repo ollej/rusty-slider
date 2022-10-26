@@ -146,7 +146,7 @@ impl MarkdownToSlides {
                         text_lines = Vec::new();
                     }
                     if let Some(Span::Image(title, path, _)) = spans.first() {
-                        if title == &"background".to_string() {
+                        if title.as_str() == "background" {
                             background_path = Some(path.clone());
                         } else {
                             draw_boxes.push(DrawBox::Image(ImageBox::new(path, 0., None)));
