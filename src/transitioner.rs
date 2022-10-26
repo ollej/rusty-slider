@@ -65,7 +65,7 @@ impl Transitioning {
     }
 
     fn filename(&self) -> String {
-        format!("transitions/{}.png", self.to_string())
+        format!("transitions/{}.png", self)
     }
 
     fn with_dir<P>(directory: P, path: String) -> PathBuf

@@ -258,7 +258,7 @@ impl Slides {
     fn start_transition(&mut self) {
         if let Some(transitioner) = &mut self.transitioner {
             if self.demo_transitions {
-                let current_transition = transitioner.current_transition().unwrap().clone();
+                let current_transition = *transitioner.current_transition().unwrap();
                 transitioner.set_transition(&current_transition);
                 transitioner.next_transition();
             }
