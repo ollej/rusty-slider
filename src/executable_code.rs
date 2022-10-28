@@ -75,14 +75,16 @@ impl ExecutableCode {
             ExecutableCode::Python(code) => self.execute_command("python3", ["-"], code),
             ExecutableCode::Ruby(code) => self.execute_command("ruby", ["-"], code),
             ExecutableCode::Perl(code) => self.execute_command("perl", ["-"], code),
-            ExecutableCode::Rust(code) => {
-                let temp_file = NamedTempFile::new()?;
-                let file_path = temp_file.path().to_string_lossy();
-                self.execute_command("rustc", ["-v", "-o", &file_path, "-"], code)
-                    .map_err(|e| ExecutionError::Compile(e.to_string()))?;
-                self.run_command_capture_output(&file_path)
-            }
+            ExecutableCode::Rust(code) => self.compile_rust(code),
         }
+    }
+
+    fn compile_rust(&self, code: &String) -> Result<String, ExecutionError> {
+        let temp_file = NamedTempFile::new()?;
+        let file_path = temp_file.path().to_string_lossy();
+        self.execute_command("rustc", ["-v", "-o", &file_path, "-"], code)
+            .map_err(|e| ExecutionError::Compile(e.to_string()))?;
+        self.run_command_capture_output(&file_path)
     }
 
     fn run_command_capture_output(&self, command: &str) -> Result<String, ExecutionError> {
