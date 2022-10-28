@@ -82,8 +82,7 @@ impl ExecutableCode {
     fn compile_rust(&self, code: &String) -> Result<String, ExecutionError> {
         let temp_file = NamedTempFile::new()?;
         let file_path = temp_file.path().to_string_lossy();
-        self.execute_command("rustc", ["-v", "-o", &file_path, "-"], code)
-            .map_err(|e| ExecutionError::Compile(e.to_string()))?;
+        self.execute_command("rustc", ["-v", "-o", &file_path, "-"], code)?;
         self.run_command_capture_output(&file_path)
     }
 
@@ -104,20 +103,32 @@ impl ExecutableCode {
         I: IntoIterator<Item = S>,
         S: AsRef<OsStr>,
     {
-        let process = Command::new(command)
+        let mut process = Command::new(command)
             .args(arguments)
             .stdin(Stdio::piped())
             .stdout(Stdio::piped())
+            .stderr(Stdio::piped())
             .spawn()?;
         process
             .stdin
+            .take()
             .ok_or(ExecutionError::InputOutput)?
             .write_all(code.as_bytes())?;
         let mut output = String::new();
-        process
-            .stdout
-            .ok_or(ExecutionError::InputOutput)?
-            .read_to_string(&mut output)?;
-        Ok(output)
+        if process.wait()?.success() {
+            process
+                .stdout
+                .take()
+                .ok_or(ExecutionError::InputOutput)?
+                .read_to_string(&mut output)?;
+            Ok(output)
+        } else {
+            process
+                .stderr
+                .take()
+                .ok_or(ExecutionError::InputOutput)?
+                .read_to_string(&mut output)?;
+            Err(ExecutionError::Compile(output))
+        }
     }
 }
