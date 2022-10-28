@@ -13,6 +13,7 @@ pub enum ExecutionError {
     InputOutput,
     CreateTempFile(String),
     Compile(String),
+    UnknkownLanguage(String),
 }
 
 impl fmt::Display for ExecutionError {
@@ -24,6 +25,9 @@ impl fmt::Display for ExecutionError {
                 write!(f, "Creating build file: {}", message)
             }
             ExecutionError::Compile(message) => write!(f, "Compile error: {}", message),
+            ExecutionError::UnknkownLanguage(language) => {
+                write!(f, "Don't know how to compile {}", language)
+            }
         }
     }
 }
@@ -43,16 +47,18 @@ pub enum ExecutableCode {
     Ruby(String),
     Perl(String),
     Rust(String),
+    Unknown(String, String),
 }
 
 impl fmt::Display for ExecutableCode {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        match *self {
+        match &*self {
             ExecutableCode::Bash(_) => write!(f, "bash"),
             ExecutableCode::Python(_) => write!(f, "python"),
             ExecutableCode::Ruby(_) => write!(f, "ruby"),
             ExecutableCode::Perl(_) => write!(f, "perl"),
             ExecutableCode::Rust(_) => write!(f, "rust"),
+            ExecutableCode::Unknown(language, _) => write!(f, "unknown: {}", language),
         }
     }
 }
@@ -65,7 +71,21 @@ impl ExecutableCode {
             "ruby" => Some(ExecutableCode::Ruby(code.to_string())),
             "perl" => Some(ExecutableCode::Perl(code.to_string())),
             "rust" => Some(ExecutableCode::Rust(code.to_string())),
-            _ => None,
+            language => Some(ExecutableCode::Unknown(
+                language.to_string(),
+                code.to_string(),
+            )),
+        }
+    }
+
+    pub fn code(&self) -> String {
+        match self {
+            ExecutableCode::Bash(code) => code.clone(),
+            ExecutableCode::Python(code) => code.clone(),
+            ExecutableCode::Ruby(code) => code.clone(),
+            ExecutableCode::Perl(code) => code.clone(),
+            ExecutableCode::Rust(code) => code.clone(),
+            ExecutableCode::Unknown(_language, code) => code.clone(),
         }
     }
 
@@ -76,6 +96,9 @@ impl ExecutableCode {
             ExecutableCode::Ruby(code) => self.execute_command("ruby", ["-"], code),
             ExecutableCode::Perl(code) => self.execute_command("perl", ["-"], code),
             ExecutableCode::Rust(code) => self.compile_rust(code),
+            ExecutableCode::Unknown(language, _code) => {
+                Err(ExecutionError::UnknkownLanguage(language.to_string()))
+            }
         }
     }
 

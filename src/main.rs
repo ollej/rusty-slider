@@ -99,6 +99,9 @@ async fn main() {
         if is_key_pressed(KeyCode::Space) {
             shader_activated = !shader_activated;
         }
+        if is_key_pressed(KeyCode::C) {
+            slides.copy_codeblock();
+        }
         match get_char_pressed() {
             Some('?') => show_help.toggle_show(),
             _ => (),

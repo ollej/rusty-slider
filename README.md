@@ -61,6 +61,8 @@ back and forth between slides.
 
 The `S` key saves the current slide as a PNG on disk.
 
+On supported platforms `C` copies the first codeblock to the clipboard.
+
 Use the key `Q` or `Escape` to exit the slideshow.
 
 Press `?` to show a help screen.

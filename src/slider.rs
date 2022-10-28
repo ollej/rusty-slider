@@ -283,12 +283,6 @@ impl Slides {
         self.draw_slide();
     }
 
-    fn draw_slide(&self) {
-        if let Some(slide) = self.slides.get(self.active_slide) {
-            slide.draw(self.background);
-        }
-    }
-
     pub fn texture(&mut self) -> Texture2D {
         if let Some(transitioner) = &mut self.transitioner {
             if let Some(last_texture) = self.last_texture {
@@ -314,6 +308,24 @@ impl Slides {
                 .build_draw_box(None, output.to_string());
             slide.add_code_box(code_box);
         }
+    }
+
+    pub fn copy_codeblock(&self) {
+        if let Some(slide) = self.current_slide() {
+            if let Some(code) = &slide.code_block {
+                set_clipboard(&code.code());
+            }
+        }
+    }
+
+    fn draw_slide(&self) {
+        if let Some(slide) = self.current_slide() {
+            slide.draw(self.background);
+        }
+    }
+
+    fn current_slide(&self) -> Option<&Slide> {
+        self.slides.get(self.active_slide)
     }
 
     fn update_last_texture(&mut self) {

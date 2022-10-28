@@ -6,5 +6,6 @@ Right arrow - Go to next slide
 Space - Toggle shader
 Enter - Execute code in first code block
 S - Save screenshot
+C - Copy first codblock to clipboard
 ? - Show this help screen
 
