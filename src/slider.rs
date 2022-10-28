@@ -305,8 +305,13 @@ impl Slides {
     pub fn run_code_block(&mut self) {
         let slide = self.slides.get_mut(self.active_slide).unwrap();
         if let Some(code_block) = &slide.code_block {
-            let output = code_block.execute();
-            let code_box = self.code_box_builder.build_draw_box(None, output);
+            let output = match code_block.execute() {
+                Ok(output) => output,
+                Err(err) => err.to_string(),
+            };
+            let code_box = self
+                .code_box_builder
+                .build_draw_box(None, output.to_string());
             slide.add_code_box(code_box);
         }
     }

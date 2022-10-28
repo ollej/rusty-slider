@@ -1,7 +1,38 @@
-use std::ffi::OsStr;
-use std::fmt;
-use std::io::prelude::*;
-use std::process::{Command, Stdio};
+use std::{
+    ffi::OsStr,
+    fmt,
+    io::prelude::*,
+    process::{Command, Stdio},
+};
+
+#[derive(Debug)]
+pub enum ExecutionError {
+    Execute(std::io::Error),
+    InputOutput,
+    CreateTempFile(String),
+    Compile(String),
+}
+
+impl fmt::Display for ExecutionError {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        match self {
+            ExecutionError::Execute(error) => write!(f, "Execution error: {:?}", error.to_string()),
+            ExecutionError::InputOutput => write!(f, "Coulnt't read Std I/O"),
+            ExecutionError::CreateTempFile(message) => {
+                write!(f, "Creating build file: {}", message)
+            }
+            ExecutionError::Compile(message) => write!(f, "Compile error: {}", message),
+        }
+    }
+}
+
+impl std::error::Error for ExecutionError {}
+
+impl From<std::io::Error> for ExecutionError {
+    fn from(e: std::io::Error) -> Self {
+        ExecutionError::Execute(e)
+    }
+}
 
 #[derive(Clone)]
 pub enum ExecutableCode {
@@ -36,7 +67,7 @@ impl ExecutableCode {
         }
     }
 
-    pub fn execute(&self) -> String {
+    pub fn execute(&self) -> Result<String, ExecutionError> {
         match self {
             ExecutableCode::Bash(code) => self.execute_command("bash", ["-"], code),
             ExecutableCode::Python(code) => self.execute_command("python3", ["-"], code),
@@ -45,52 +76,49 @@ impl ExecutableCode {
             ExecutableCode::Rust(code) => {
                 if let Ok(tmp_dir) = tempfile::tempdir() {
                     if let Some(file_path) = tmp_dir.path().join("rustc.out").to_str() {
-                        self.execute_command("rustc", ["-v", "-o", file_path, "-"], code);
+                        self.execute_command("rustc", ["-v", "-o", file_path, "-"], code)
+                            .map_err(|e| ExecutionError::Compile(e.to_string()))?;
                         return self.run_command_capture_output(file_path);
                     }
                 }
-                "Error: could not create temp file".to_string()
+                Err(ExecutionError::CreateTempFile(
+                    "Could not create temp file".to_string(),
+                ))
             }
         }
     }
 
-    fn run_command_capture_output(&self, command: &str) -> String {
-        let process = match Command::new(command).stdout(Stdio::piped()).spawn() {
-            Err(why) => return self.error(why),
-            Ok(process) => process,
-        };
+    fn run_command_capture_output(&self, command: &str) -> Result<String, ExecutionError> {
+        let process = Command::new(command).stdout(Stdio::piped()).spawn()?;
         let mut output = String::new();
-        if let Err(why) = process.stdout.unwrap().read_to_string(&mut output) {
-            return self.error(why);
-        }
-        output
+        process.stdout.unwrap().read_to_string(&mut output)?;
+        Ok(output)
     }
 
-    fn execute_command<I, S>(&self, command: &str, arguments: I, code: &String) -> String
+    fn execute_command<I, S>(
+        &self,
+        command: &str,
+        arguments: I,
+        code: &String,
+    ) -> Result<String, ExecutionError>
     where
         I: IntoIterator<Item = S>,
         S: AsRef<OsStr>,
     {
-        let process = match Command::new(command)
+        let process = Command::new(command)
             .args(arguments)
             .stdin(Stdio::piped())
             .stdout(Stdio::piped())
-            .spawn()
-        {
-            Err(why) => return self.error(why),
-            Ok(process) => process,
-        };
-        if let Err(why) = process.stdin.unwrap().write_all(code.as_bytes()) {
-            return self.error(why);
-        }
+            .spawn()?;
+        process
+            .stdin
+            .ok_or(ExecutionError::InputOutput)?
+            .write_all(code.as_bytes())?;
         let mut output = String::new();
-        if let Err(why) = process.stdout.unwrap().read_to_string(&mut output) {
-            return self.error(why);
-        }
-        output
-    }
-
-    fn error(&self, error: std::io::Error) -> String {
-        format!("Error running {}:\n{}", self, error)
+        process
+            .stdout
+            .ok_or(ExecutionError::InputOutput)?
+            .read_to_string(&mut output)?;
+        Ok(output)
     }
 }
