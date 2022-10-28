@@ -1,0 +1,10 @@
+Shortcuts
+
+ESC / Q - Quit program
+Left arrow - Go to previous slide
+Right arrow - Go to next slide
+Space - Toggle shader
+Enter - Execute code in first code block
+S - Save screenshot
+? - Show this help screen
+

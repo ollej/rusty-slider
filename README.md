@@ -63,6 +63,8 @@ The `S` key saves the current slide as a PNG on disk.
 
 Use the key `Q` or `Escape` to exit the slideshow.
 
+Press `?` to show a help screen.
+
 ### Command line options
 
 Use flag `--automatic N` when starting the application to automatically switch

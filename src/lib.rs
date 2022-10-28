@@ -7,6 +7,7 @@ pub mod imagebox;
 pub mod markdowntoslides;
 pub mod prelude;
 pub mod shaders;
+pub mod show_help;
 pub mod slider;
 pub mod textbox;
 pub mod theme;

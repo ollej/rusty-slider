@@ -76,7 +76,7 @@ async fn main() {
         opt.directory,
     )
     .await;
-
+    let mut show_help = ShowHelp::new();
     let shader_material = load_material(crt::VERTEX, crt::FRAGMENT, Default::default()).unwrap();
 
     loop {
@@ -99,11 +99,9 @@ async fn main() {
         if is_key_pressed(KeyCode::Space) {
             shader_activated = !shader_activated;
         }
-        if is_key_pressed(KeyCode::S) {
-            slides
-                .texture()
-                .get_texture_data()
-                .export_png(&opt.screenshot.to_string_lossy());
+        match get_char_pressed() {
+            Some('?') => show_help.toggle_show(),
+            _ => (),
         }
         #[cfg(not(target_arch = "wasm32"))]
         if opt.enable_code_execution && is_key_pressed(KeyCode::Enter) {
@@ -132,6 +130,11 @@ async fn main() {
         );
         if shader_activated {
             gl_use_default_material();
+        }
+        show_help.draw();
+
+        if is_key_pressed(KeyCode::S) {
+            get_screen_data().export_png(&opt.screenshot.to_string_lossy());
         }
 
         next_frame().await
