@@ -5,6 +5,8 @@ use std::{
     process::{Command, Stdio},
 };
 
+use tempfile::NamedTempFile;
+
 #[derive(Debug)]
 pub enum ExecutionError {
     Execute(std::io::Error),
@@ -74,16 +76,11 @@ impl ExecutableCode {
             ExecutableCode::Ruby(code) => self.execute_command("ruby", ["-"], code),
             ExecutableCode::Perl(code) => self.execute_command("perl", ["-"], code),
             ExecutableCode::Rust(code) => {
-                if let Ok(tmp_dir) = tempfile::tempdir() {
-                    if let Some(file_path) = tmp_dir.path().join("rustc.out").to_str() {
-                        self.execute_command("rustc", ["-v", "-o", file_path, "-"], code)
-                            .map_err(|e| ExecutionError::Compile(e.to_string()))?;
-                        return self.run_command_capture_output(file_path);
-                    }
-                }
-                Err(ExecutionError::CreateTempFile(
-                    "Could not create temp file".to_string(),
-                ))
+                let temp_file = NamedTempFile::new()?;
+                let file_path = temp_file.path().to_string_lossy();
+                self.execute_command("rustc", ["-v", "-o", &file_path, "-"], code)
+                    .map_err(|e| ExecutionError::Compile(e.to_string()))?;
+                self.run_command_capture_output(&file_path)
             }
         }
     }
