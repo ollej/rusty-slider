@@ -230,3 +230,9 @@ https://www.fontsquirrel.com/license/hack
 
 Copyright (c) 2021 TanTanDev
 MIT License
+
+# Related links
+
+ * <a rel="me" href="https://hachyderm.io/@ollej">ollej @ mastodon</a>
+ * [Rusty Aquarium](https://ollej.github.io/rusty-aquarium/)
+ * [Olle's portfolio](https://olle.wreede.se/)
