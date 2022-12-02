@@ -12,7 +12,7 @@
     "font_size_text": 40,
     "vertical_offset": 60.0,
     "horizontal_offset": 100.0,
-    "line_height": 2.0,
+    "line_height": 1.5,
     "blockquote_background_color": "#333333",
     "blockquote_padding": 20.0,
     "blockquote_left_quote": "“",

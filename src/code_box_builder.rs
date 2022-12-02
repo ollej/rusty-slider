@@ -33,7 +33,7 @@ impl CodeBoxBuilder {
             background_color: theme.code_background_color.to_owned(),
             tab_spaces: " ".repeat(theme.code_tab_width),
             highlighting_theme: theme.code_theme.to_owned(),
-            margin: theme.vertical_offset.to_owned(),
+            margin: 10.0,
         }
     }
 
