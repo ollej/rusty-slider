@@ -36,6 +36,7 @@ fn main() -> Result<(), Box<dyn Error>> {
             calories += line.parse::<i32>()?;
         }
     }
+    gnomes.push(calories);
     gnomes.sort_by(|a, b| b.partial_cmp(a).unwrap());
     println!("Gnome with most calories: {}", gnomes.first().unwrap());
     Ok(())
@@ -61,6 +62,7 @@ fn main() -> Result<(), Box<dyn Error>> {
             calories += line.parse::<i32>()?;
         }
     }
+    gnomes.push(calories);
     gnomes.sort_by(|a, b| b.partial_cmp(a).unwrap());
     let top_three: i32 = gnomes.iter().take(3).sum();
     println!("Calories from top three gnomes: {}", top_three);
