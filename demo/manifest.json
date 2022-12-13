@@ -1,5 +1,5 @@
 {
-    "display": "fullscreen", /* Could be "fullscreen", "standalone", "minimal-ui", or "browser" */
+    "display": "fullscreen",
     "orientation": "landscape",
     "start_url": "/"
 }
