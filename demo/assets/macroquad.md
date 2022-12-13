@@ -112,6 +112,18 @@ async fn main() {
 
 ---
 
+## Texture API
+
+ * `build_textures_atlas`
+ * `draw_texture`
+ * `draw_texture_ex`
+ * `get_screen_data`
+ * `load_image`
+ * `load_texture`
+ * `render_target`
+
+---
+
 ## Rita
 
 ```rust
@@ -274,6 +286,92 @@ async fn main() {
  * `play_sound_once(sound: Sound)`
  * `set_sound_volume(sound: Sound, volume: f32)`
  * `stop_sound(sound: Sound)`
+
+---
+
+## Filladdning
+
+```rust
+use macroquad::prelude::*;
+
+#[macroquad::main("File")]
+async fn main() -> Result<(), FileError> {
+    set_pc_assets_folder("assets");
+    let text = load_string("test.txt").await?;
+    println!("Content: {}", text);
+    Ok(())
+}
+```
+
+---
+
+## File API
+
+ * `load_file(path: &str)`
+ * `load_string(path: &str)`
+ * `set_pc_assets_folder(path: &str)`
+
+---
+
+## Tid
+
+```rust
+use macroquad::prelude::*;
+
+#[macroquad::main("Time")]
+async fn main() {
+    let start_time = get_time();
+    let mut elapsed: f32 = 0.0;
+    loop {
+        elapsed += get_frame_time();
+        if elapsed > 1.0 {
+            println!(
+                "FPS: {} Elapsed time: {:.3}",
+                get_fps(),
+                get_time() - start_time
+            );
+            elapsed = 0.0;
+        }
+        next_frame().await
+    }
+}
+```
+
+---
+
+## Färger
+
+```rust
+use macroquad::prelude::*;
+
+#[macroquad::main("Colors")]
+async fn main() {
+    let red = Color::from_rgba(255, 0, 0, 0);
+    loop {
+        clear_background(red);
+        next_frame().await
+    }
+}
+```
+
+---
+
+## Color API
+
+ * `Color::new(r: f32, g: f32, b: f32, a: f32)`
+ * `Color::from_rgba(r: u8, g: u8, b: u8, a: u8)`
+ * `Color::from_vec(vec: Vec4)`
+ * `hsl_to_rgb(h: f32, s: f32, l: f32)`
+ * `rgb_to_hsl(color: Color) -> (f32, f32, f32)`
+ * `macroquad::color::colors::BLACK` ...
+
+---
+
+## Time API
+
+ * `get_fps() -> i32`
+ * `get_frame_time() -> f32`
+ * `get_time() -> f64`
 
 ---
 
