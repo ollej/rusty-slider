@@ -1,3 +1,4 @@
+pub use crate::app_options::*;
 pub use crate::clipboard::*;
 pub use crate::code_box_builder::*;
 pub use crate::codebox::*;

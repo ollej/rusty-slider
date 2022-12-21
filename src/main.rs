@@ -2,53 +2,9 @@
 
 extern crate markdown;
 
-use std::path::PathBuf;
 use {clap::Parser, macroquad::prelude::*, quad_url::get_program_parameters};
 
 use rusty_slider::prelude::*;
-
-#[derive(Parser, Debug)]
-#[command(
-    name = "rusty-slider",
-    about = "A small tool to display markdown files as a slideshow."
-)]
-struct CliOptions {
-    /// Path to directory to load files from
-    #[arg(short, long, default_value = "assets")]
-    pub directory: PathBuf,
-    /// Markdown files with slides text.
-    #[arg(short, long, default_value = "rusty-slider.md")]
-    pub slides: PathBuf,
-    /// File with theme options.
-    #[arg(short, long, default_value = "default-theme.json")]
-    pub theme: PathBuf,
-    /// Automatically switch slides every N seconds.
-    #[arg(short, long, default_value = "0")]
-    pub automatic: Duration,
-    /// Switch transitions for every slide
-    #[arg(long)]
-    pub demo_transitions: bool,
-    /// When taking screenshot, store PNG at this path
-    #[arg(short = 'S', long, default_value = "screenshot.png")]
-    pub screenshot: PathBuf,
-    /// Enable executing code in code blocks
-    #[arg(long)]
-    pub enable_code_execution: bool,
-}
-
-impl CliOptions {
-    fn slides_path(&self) -> PathBuf {
-        let mut path = self.directory.clone();
-        path.push(self.slides.clone());
-        path
-    }
-
-    fn theme_path(&self) -> PathBuf {
-        let mut path = self.directory.clone();
-        path.push(self.theme.clone());
-        path
-    }
-}
 
 fn window_conf() -> Conf {
     Conf {
@@ -60,22 +16,15 @@ fn window_conf() -> Conf {
 
 #[macroquad::main(window_conf())]
 async fn main() {
-    let opt = CliOptions::parse_from(get_program_parameters().iter());
+    let options = AppOptions::parse_from(get_program_parameters().iter());
 
-    let theme = Theme::load(opt.theme_path()).await;
+    let theme = Theme::load(options.theme_path()).await;
     debug!(
         "background_color: {:?} text_color: {:?} heading_color{:?}",
         theme.background_color, theme.text_color, theme.heading_color,
     );
     let mut shader_activated = theme.shader;
-    let mut slides = Slides::load(
-        opt.slides_path(),
-        theme,
-        opt.automatic,
-        opt.demo_transitions,
-        opt.directory,
-    )
-    .await;
+    let mut slides = Slides::load(options.clone(), theme).await;
     let mut show_help = ShowHelp::new();
     let shader_material = load_material(crt::VERTEX, crt::FRAGMENT, Default::default()).unwrap();
 
@@ -107,7 +56,7 @@ async fn main() {
             _ => (),
         }
         #[cfg(not(target_arch = "wasm32"))]
-        if opt.enable_code_execution && is_key_pressed(KeyCode::Enter) {
+        if options.enable_code_execution && is_key_pressed(KeyCode::Enter) {
             slides.run_code_block();
         }
 
@@ -137,7 +86,7 @@ async fn main() {
         show_help.draw();
 
         if is_key_pressed(KeyCode::S) {
-            get_screen_data().export_png(&opt.screenshot.to_string_lossy());
+            get_screen_data().export_png(&options.screenshot.to_string_lossy());
         }
 
         next_frame().await

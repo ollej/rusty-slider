@@ -3,7 +3,6 @@ use crate::prelude::*;
 use macroquad::prelude::*;
 use nanoserde::DeJson;
 use regex::Regex;
-use std::path::{Path, PathBuf};
 
 #[derive(Copy, Clone, Debug, DeJson)]
 #[allow(non_camel_case_types)]
@@ -152,21 +151,12 @@ impl Slides {
         }
     }
 
-    pub async fn load<P>(
-        slides_path: PathBuf,
-        theme: Theme,
-        automatic: Duration,
-        demo_transitions: bool,
-        assets_dir: P,
-    ) -> Self
-    where
-        P: AsRef<Path>,
-    {
-        let path = slides_path.as_path().to_str().unwrap().to_owned();
-        let markdown = match load_string(&path).await {
+    pub async fn load(options: AppOptions, theme: Theme) -> Self {
+        let path = options.slides_path();
+        let markdown = match load_string(&path.to_str().unwrap()).await {
             Ok(text) => Self::sanitize_markdown(text),
             Err(_) => {
-                eprintln!("Couldn't parse markdown document: {}", path);
+                eprintln!("Couldn't parse markdown document: {:?}", path);
                 std::process::exit(1);
             }
         };
@@ -206,7 +196,7 @@ impl Slides {
             CodeBoxBuilder::new(theme.clone(), font_code, font_bold, font_italic);
 
         let transitioner = match theme.transition {
-            Some(transition) => Some(Transitioner::load(assets_dir, transition, 0.1).await),
+            Some(transition) => Some(Transitioner::load(options.assets, transition, 0.1).await),
             None => None,
         };
 
@@ -215,8 +205,8 @@ impl Slides {
             theme.clone(),
             code_box_builder,
             background,
-            automatic,
-            demo_transitions,
+            options.automatic,
+            options.demo_transitions,
             transitioner,
         )
     }

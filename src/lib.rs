@@ -1,3 +1,4 @@
+pub mod app_options;
 pub mod clipboard;
 pub mod code_box_builder;
 pub mod codebox;

@@ -197,13 +197,14 @@ A small tool to display markdown files as a slideshow.
 Usage: rusty_slider [OPTIONS]
 
 Options:
-  -d, --directory <DIRECTORY>    Path to directory to load files from [default: assets]
+  -d, --directory <DIRECTORY>    Path to directory to load slideshow files from [default: assets]
   -s, --slides <SLIDES>          Markdown files with slides text [default: rusty-slider.md]
   -t, --theme <THEME>            File with theme options [default: default-theme.json]
   -a, --automatic <AUTOMATIC>    Automatically switch slides every N seconds [default: 0]
       --demo-transitions         Switch transitions for every slide
   -S, --screenshot <SCREENSHOT>  When taking screenshot, store PNG at this path [default: screenshot.png]
       --enable-code-execution    Enable executing code in code blocks
+  -A, --assets <ASSETS>          Path to directory where application files are loaded from [default: assets]
   -h, --help                     Print help information
 ```
 
