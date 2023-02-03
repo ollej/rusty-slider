@@ -137,7 +137,7 @@ impl Slides {
         transitioner: Option<Transitioner>,
         active_slide: usize,
     ) -> Slides {
-        let active_slide = active_slide.min(slides.len() - 1);
+        let active_slide = active_slide.min(slides.len()).max(1) - 1;
         Slides {
             slides,
             theme,
@@ -210,7 +210,7 @@ impl Slides {
             options.automatic,
             options.demo_transitions,
             transitioner,
-            options.number,
+            options.number.try_into().unwrap_or(1),
         )
     }
 

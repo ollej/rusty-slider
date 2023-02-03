@@ -35,8 +35,8 @@ pub struct AppOptions {
     #[arg(short = 'A', long, default_value = "assets")]
     pub assets: PathBuf,
     /// Slide number to start at
-    #[arg(short = 'n', long, default_value = "0")]
-    pub number: usize,
+    #[arg(short = 'n', long, default_value = "1", value_parser = clap::value_parser!(u32).range(1..))]
+    pub number: u32,
 }
 
 impl AppOptions {

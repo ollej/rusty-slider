@@ -73,6 +73,8 @@ Press `?` to show a help screen.
 Use flag `--automatic N` when starting the application to automatically switch
 slide every N seconds.
 
+The flag `--number N` can be used to start the slideshow at that slide.
+
 ### Run code blocks
 
 When the command line flag `--enable-code-execution` is used, it is possible
