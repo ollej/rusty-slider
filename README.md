@@ -56,8 +56,9 @@ done by adding an image markdown tag with `background` as the title text.
 
 ### Shortcuts
 
-Use left and right arrow keys or left and right mouse button to move
-back and forth between slides.
+Use `Left`/`H` and `Right`/`L` keys or left and right mouse button to move
+back and forth between slides. `Up`/`K`/`Home` keys jump to first slide,
+and `Down`/`J`/`End` keys jump to last slide.
 
 The `S` key saves the current slide as a PNG on disk.
 

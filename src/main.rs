@@ -45,6 +45,18 @@ async fn main() {
         {
             slides.next();
         }
+        if is_key_pressed(KeyCode::Up)
+            || is_key_pressed(KeyCode::K)
+            || is_key_pressed(KeyCode::Home)
+        {
+            slides.first();
+        }
+        if is_key_pressed(KeyCode::Down)
+            || is_key_pressed(KeyCode::J)
+            || is_key_pressed(KeyCode::End)
+        {
+            slides.last();
+        }
         if is_key_pressed(KeyCode::Space) {
             shader_activated = !shader_activated;
         }
