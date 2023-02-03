@@ -172,9 +172,8 @@ impl TextPartial {
             TextParams {
                 font: self.font,
                 font_size: self.font_size,
-                font_scale: 1.,
                 color: self.color,
-                font_scale_aspect: 1.,
+                ..Default::default()
             },
         );
         hpos + self.width
@@ -224,9 +223,8 @@ impl TextBoxStyle {
         let text_params = TextParams {
             font,
             font_size,
-            font_scale: 1.,
             color,
-            font_scale_aspect: 1.,
+            ..Default::default()
         };
         let dimensions = measure_text("“", Some(font), font_size, 1.);
         draw_text_ex(
