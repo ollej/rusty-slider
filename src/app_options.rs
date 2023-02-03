@@ -34,6 +34,9 @@ pub struct AppOptions {
     /// Path to directory where application files are loaded from
     #[arg(short = 'A', long, default_value = "assets")]
     pub assets: PathBuf,
+    /// Slide number to start at
+    #[arg(short = 'n', long, default_value = "0")]
+    pub number: usize,
 }
 
 impl AppOptions {

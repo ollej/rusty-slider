@@ -205,6 +205,7 @@ Options:
   -S, --screenshot <SCREENSHOT>  When taking screenshot, store PNG at this path [default: screenshot.png]
       --enable-code-execution    Enable executing code in code blocks
   -A, --assets <ASSETS>          Path to directory where application files are loaded from [default: assets]
+  -n, --number <NUMBER>          Slide number to start at [default: 0]
   -h, --help                     Print help information
 ```
 

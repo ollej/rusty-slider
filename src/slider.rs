@@ -135,7 +135,9 @@ impl Slides {
         automatic: Duration,
         demo_transitions: bool,
         transitioner: Option<Transitioner>,
+        active_slide: usize,
     ) -> Slides {
+        let active_slide = active_slide.min(slides.len() - 1);
         Slides {
             slides,
             theme,
@@ -143,7 +145,7 @@ impl Slides {
             background,
             automatic,
             time: 0.,
-            active_slide: 0,
+            active_slide,
             render_target: Self::render_target(),
             last_texture: None,
             demo_transitions,
@@ -208,6 +210,7 @@ impl Slides {
             options.automatic,
             options.demo_transitions,
             transitioner,
+            options.number,
         )
     }
 
