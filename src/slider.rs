@@ -232,33 +232,30 @@ impl Slides {
 
     pub fn next(&mut self) {
         if self.active_slide < (self.slides.len() - 1) {
-            self.active_slide += 1;
-            self.restart_transition();
+            self.set_active_slide(self.active_slide + 1);
         }
     }
 
     pub fn prev(&mut self) {
         if self.active_slide > 0 {
-            self.active_slide -= 1;
-            self.restart_transition();
+            self.set_active_slide(self.active_slide - 1);
         }
     }
 
     pub fn first(&mut self) {
         if self.active_slide > 0 {
-            self.active_slide = 0;
-            self.restart_transition();
+            self.set_active_slide(0);
         }
     }
 
     pub fn last(&mut self) {
         if self.active_slide < (self.slides.len() - 1) {
-            self.active_slide = self.slides.len() - 1;
-            self.restart_transition();
+            self.set_active_slide(self.slides.len() - 1);
         }
     }
 
-    fn restart_transition(&mut self) {
+    fn set_active_slide(&mut self, active_slide: usize) {
+        self.active_slide = active_slide;
         self.time = 0.;
         self.update_last_texture();
         self.start_transition();
