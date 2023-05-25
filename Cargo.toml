@@ -37,8 +37,12 @@ strum_macros = "0.24.3"
 syntect = { version = "5.0.0", default-features = false, features = ["default-fancy"] }
 tempfile = "3.3.0"
 
+[profile.dev]
+debug = 1 # less precise locations
+
 # Doesn't work with android build
 [profile.dev.package.'*']
+debug = false # no debug symbols for deps
 opt-level = 3
 
 [profile.release]
