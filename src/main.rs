@@ -26,7 +26,15 @@ async fn main() {
     let mut shader_activated = theme.shader;
     let mut slides = Slides::load(options.clone(), theme).await;
     let mut show_help = ShowHelp::new();
-    let shader_material = load_material(crt::VERTEX, crt::FRAGMENT, Default::default()).unwrap();
+    let shader_material = load_material(
+        ShaderSource {
+            glsl_vertex: Some(crt::VERTEX),
+            glsl_fragment: Some(crt::FRAGMENT),
+            metal_shader: None,
+        },
+        Default::default(),
+    )
+    .unwrap();
 
     loop {
         #[cfg(not(target_arch = "wasm32"))]
@@ -79,10 +87,10 @@ async fn main() {
         set_default_camera();
         clear_background(BLACK);
         if shader_activated {
-            gl_use_material(shader_material);
+            gl_use_material(&shader_material);
         }
         draw_texture_ex(
-            texture,
+            &texture,
             0.,
             0.,
             WHITE,

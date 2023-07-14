@@ -89,9 +89,9 @@ impl Slide {
     }
 
     fn draw_background(&self, default_background: Option<Texture2D>) {
-        if let Some(texture) = self.background_texture.or(default_background) {
+        if let Some(texture) = self.background_texture.clone().or(default_background) {
             draw_texture_ex(
-                texture,
+                &texture,
                 0.,
                 0.,
                 WHITE,
@@ -185,17 +185,26 @@ impl Slides {
             None => None,
         };
 
-        let mut slides =
-            MarkdownToSlides::new(theme.clone(), font_text, font_bold, font_italic, font_code)
-                .parse(markdown);
+        let mut slides = MarkdownToSlides::new(
+            theme.clone(),
+            font_text,
+            font_bold.clone(),
+            font_italic.clone(),
+            font_code.clone(),
+        )
+        .parse(markdown);
 
         // Load images for all slides
         for slide in &mut slides.iter_mut() {
             slide.load_images().await;
         }
 
-        let code_box_builder =
-            CodeBoxBuilder::new(theme.clone(), font_code, font_bold, font_italic);
+        let code_box_builder = CodeBoxBuilder::new(
+            theme.clone(),
+            font_code.clone(),
+            font_bold.clone(),
+            font_italic.clone(),
+        );
 
         let transitioner = match theme.transition {
             Some(transition) => Some(Transitioner::load(options.assets, transition, 0.1).await),
@@ -291,14 +300,14 @@ impl Slides {
 
     pub fn texture(&mut self) -> Texture2D {
         if let Some(transitioner) = &mut self.transitioner {
-            if let Some(last_texture) = self.last_texture {
+            if let Some(last_texture) = self.last_texture.clone() {
                 if transitioner.transitioning {
-                    transitioner.draw(last_texture, self.render_target.texture);
+                    transitioner.draw(last_texture, self.render_target.texture.clone());
                     return transitioner.texture();
                 }
             }
         }
-        self.render_target.texture
+        self.render_target.texture.clone()
     }
 
     #[cfg(not(target_arch = "wasm32"))]
@@ -326,7 +335,7 @@ impl Slides {
 
     fn draw_slide(&self) {
         if let Some(slide) = self.current_slide() {
-            slide.draw(self.background);
+            slide.draw(self.background.clone());
         }
     }
 
@@ -354,7 +363,7 @@ impl Slides {
         set_camera(&Camera2D {
             zoom: vec2(1. / scr_w * 2., -1. / scr_h * 2.),
             target: vec2(scr_w / 2., scr_h / 2.),
-            render_target: Some(self.render_target),
+            render_target: Some(self.render_target.clone()),
             ..Default::default()
         });
     }

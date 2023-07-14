@@ -105,7 +105,7 @@ impl Transitioner {
         }
         let mut transitions = textures.keys().cloned().collect::<Vec<Transitioning>>();
         transitions.sort();
-        let transition = Transition::new(*textures.get(&transitioning).unwrap(), fade);
+        let transition = Transition::new(textures.get(&transitioning).unwrap().to_owned(), fade);
         let render_target = render_target(screen_width() as u32, screen_height() as u32);
         render_target.texture.set_filter(FilterMode::Linear);
         Self {
@@ -129,7 +129,7 @@ impl Transitioner {
 
     pub fn set_transition(&mut self, transitioning: &Transitioning) {
         self.transition
-            .change_transition_tex(*self.textures.get(transitioning).unwrap());
+            .change_transition_tex(self.textures.get(transitioning).unwrap().to_owned());
     }
 
     pub fn next_transition(&mut self) {
@@ -157,7 +157,7 @@ impl Transitioner {
         set_camera(&Camera2D {
             zoom: vec2(1. / scr_w * 2., -1. / scr_h * 2.),
             target: vec2(scr_w / 2., scr_h / 2.),
-            render_target: Some(self.render_target),
+            render_target: Some(self.render_target.clone()),
             ..Default::default()
         });
         self.transition
@@ -165,6 +165,6 @@ impl Transitioner {
     }
 
     pub fn texture(&self) -> Texture2D {
-        self.render_target.texture
+        self.render_target.texture.clone()
     }
 }

@@ -31,9 +31,9 @@ impl ImageBox {
         //    self.width(),
         //    self.height()
         //);
-        if let Some(image) = self.image {
+        if let Some(image) = self.image.clone() {
             draw_texture_ex(
-                image,
+                &image,
                 hpos,
                 vpos + self.padding + self.margin,
                 WHITE,
@@ -71,7 +71,7 @@ impl ImageBox {
     }
 
     pub fn width(&self) -> Width {
-        match self.image {
+        match self.image.clone() {
             Some(image) => image.width(),
             None => 0.,
         }
@@ -82,7 +82,7 @@ impl ImageBox {
     }
 
     pub fn height(&self) -> Height {
-        match self.image {
+        match self.image.clone() {
             Some(image) => image.height(),
             None => 0.,
         }

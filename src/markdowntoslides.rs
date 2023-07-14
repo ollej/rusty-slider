@@ -20,8 +20,12 @@ impl MarkdownToSlides {
         font_italic: Font,
         font_code: Font,
     ) -> Self {
-        let code_box_builder =
-            CodeBoxBuilder::new(theme.clone(), font_code, font_bold, font_italic);
+        let code_box_builder = CodeBoxBuilder::new(
+            theme.clone(),
+            font_code.clone(),
+            font_bold.clone(),
+            font_italic.clone(),
+        );
         Self {
             theme,
             code_box_builder,
@@ -105,7 +109,7 @@ impl MarkdownToSlides {
                             text_lines,
                             self.theme.vertical_offset,
                             background_color,
-                            style,
+                            style.clone(),
                         )));
                         text_lines = Vec::new();
                     }
@@ -114,7 +118,7 @@ impl MarkdownToSlides {
                             self.theme.align,
                             self.spans_to_text_partials(
                                 spans,
-                                self.font_text,
+                                self.font_text.clone(),
                                 self.theme.font_size_header_title,
                                 self.theme.heading_color,
                             ),
@@ -129,7 +133,7 @@ impl MarkdownToSlides {
                         self.theme.align,
                         self.spans_to_text_partials(
                             spans,
-                            self.font_text,
+                            self.font_text.clone(),
                             self.theme.font_size_header_slides,
                             self.theme.heading_color,
                         ),
@@ -141,7 +145,7 @@ impl MarkdownToSlides {
                             text_lines,
                             self.theme.vertical_offset,
                             background_color,
-                            style,
+                            style.clone(),
                         )));
                         text_lines = Vec::new();
                     }
@@ -158,7 +162,7 @@ impl MarkdownToSlides {
                         self.theme.align,
                         self.spans_to_text_partials(
                             spans,
-                            self.font_text,
+                            self.font_text.clone(),
                             self.theme.font_size_text,
                             self.theme.text_color,
                         ),
@@ -176,7 +180,7 @@ impl MarkdownToSlides {
                             text_lines,
                             self.theme.vertical_offset,
                             background_color,
-                            style,
+                            style.clone(),
                         )));
                         text_lines = Vec::new();
                     }
@@ -185,7 +189,7 @@ impl MarkdownToSlides {
                         Some(self.theme.blockquote_background_color),
                         TextBoxStyle::Blockquote {
                             size: self.theme.font_size_header_title * 2,
-                            font: self.font_text,
+                            font: self.font_text.clone(),
                             color: self.theme.text_color,
                         },
                     );
@@ -200,7 +204,7 @@ impl MarkdownToSlides {
                             text_lines,
                             self.theme.vertical_offset,
                             background_color,
-                            style,
+                            style.clone(),
                         )));
                         text_lines = Vec::new();
                     }
@@ -245,27 +249,27 @@ impl MarkdownToSlides {
             match span {
                 Span::Text(text) => partials.push(TextPartial::new(
                     text,
-                    font,
+                    font.clone(),
                     font_size,
                     color,
                     self.theme.line_height,
                 )),
                 Span::Code(text) => partials.push(TextPartial::new(
                     text,
-                    self.font_code,
+                    self.font_code.clone(),
                     font_size,
                     self.theme.text_color, // TODO: Add code text color to theme
                     self.theme.line_height,
                 )),
                 Span::Emphasis(spans) => partials.extend(self.spans_to_text_partials(
                     spans,
-                    self.font_italic,
+                    self.font_italic.clone(),
                     font_size,
                     color,
                 )),
                 Span::Strong(spans) => partials.extend(self.spans_to_text_partials(
                     spans,
-                    self.font_bold,
+                    self.font_bold.clone(),
                     font_size,
                     color,
                 )),
@@ -282,7 +286,7 @@ impl MarkdownToSlides {
                 let mut partials = vec![self.build_bullet_partial(index, bullet)];
                 partials.extend(self.spans_to_text_partials(
                     spans,
-                    self.font_text,
+                    self.font_text.clone(),
                     self.theme.font_size_text,
                     self.theme.text_color,
                 ));
@@ -300,7 +304,7 @@ impl MarkdownToSlides {
         };
         TextPartial::new(
             &item_bullet,
-            self.font_text,
+            self.font_text.clone(),
             self.theme.font_size_text,
             self.theme.text_color,
             self.theme.line_height,

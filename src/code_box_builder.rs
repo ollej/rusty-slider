@@ -74,9 +74,9 @@ impl CodeBoxBuilder {
 
                 let c = style.foreground;
                 let font_style = match style.font_style {
-                    FontStyle::BOLD => self.font_bold,
-                    FontStyle::ITALIC => self.font_italic,
-                    _ => self.font_text,
+                    FontStyle::BOLD => self.font_bold.clone(),
+                    FontStyle::ITALIC => self.font_italic.clone(),
+                    _ => self.font_text.clone(),
                 };
 
                 partials.push(TextPartial::new(

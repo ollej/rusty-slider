@@ -152,7 +152,7 @@ impl TextPartial {
         color: Color,
         line_height: Height,
     ) -> Self {
-        let dimensions = measure_text(text, Some(font), font_size, 1.);
+        let dimensions = measure_text(text, Some(&font), font_size, 1.);
         Self {
             width: dimensions.width,
             height: font_size as Height * line_height,
@@ -170,7 +170,7 @@ impl TextPartial {
             hpos,
             vpos + offset_y,
             TextParams {
-                font: self.font,
+                font: Some(&self.font),
                 font_size: self.font_size,
                 color: self.color,
                 ..Default::default()
@@ -179,7 +179,7 @@ impl TextPartial {
         hpos + self.width
     }
 }
-#[derive(Copy, Clone)]
+#[derive(Clone)]
 pub enum TextBoxStyle {
     Standard,
     Title,
@@ -194,7 +194,7 @@ pub enum TextBoxStyle {
 impl TextBoxStyle {
     fn draw(&self, hpos: Hpos, vpos: Vpos, draw_box: &TextBox) {
         if let TextBoxStyle::Blockquote { size, font, color } = self {
-            self.draw_blockquote(hpos, vpos, draw_box, *size, *font, *color)
+            self.draw_blockquote(hpos, vpos, draw_box, *size, font.clone(), *color)
         }
     }
 
@@ -221,23 +221,23 @@ impl TextBoxStyle {
         color: Color,
     ) {
         let text_params = TextParams {
-            font,
+            font: Some(&font),
             font_size,
             color,
             ..Default::default()
         };
-        let dimensions = measure_text("“", Some(font), font_size, 1.);
+        let dimensions = measure_text("“", Some(&font), font_size, 1.);
         draw_text_ex(
             "“",
             hpos - dimensions.width,
             vpos + font_size as Vpos,
-            text_params,
+            text_params.clone(),
         );
         draw_text_ex(
             "„",
             hpos + draw_box.width_with_padding(),
             vpos + draw_box.height_with_margin(),
-            text_params,
+            text_params.clone(),
         );
     }
 }

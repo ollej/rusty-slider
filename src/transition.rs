@@ -47,10 +47,10 @@ impl Transition {
         self.material.set_uniform("cutoff", progress);
         self.material.set_uniform("fade", self.fade);
         self.material.set_texture("tex_into", into_texture);
-        gl_use_material(self.material);
+        gl_use_material(&self.material);
         clear_background(WHITE);
         draw_texture_ex(
-            base_texture,
+            &base_texture,
             -1.,
             -1.,
             WHITE,
@@ -68,9 +68,6 @@ impl Transition {
     }
 
     pub fn new(transition_tex: Texture2D, fade: f32) -> Self {
-        let fragment_shader = DEFAULT_FRAGMENT_SHADER.to_string();
-        let vertex_shader = DEFAULT_VERTEX_SHADER.to_string();
-
         let pipeline_params = PipelineParams {
             depth_write: true,
             depth_test: Comparison::LessOrEqual,
@@ -78,8 +75,11 @@ impl Transition {
         };
 
         let material = load_material(
-            &vertex_shader,
-            &fragment_shader,
+            ShaderSource {
+                glsl_vertex: Some(DEFAULT_VERTEX_SHADER),
+                glsl_fragment: Some(DEFAULT_FRAGMENT_SHADER),
+                metal_shader: None,
+            },
             MaterialParams {
                 textures: vec!["tex_transition".to_string(), "tex_into".to_string()],
                 uniforms: vec![
