@@ -722,7 +722,7 @@ checksum = "5583e89e108996506031660fe09baa5011b9dd0341b89029313006d1fb508d70"
 
 [[package]]
 name = "rusty-slider"
-version = "0.23.0"
+version = "0.24.0"
 dependencies = [
  "clap",
  "colorsys",
