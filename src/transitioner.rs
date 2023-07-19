@@ -120,7 +120,13 @@ impl Transitioner {
     }
 
     pub fn start(&mut self) {
+        self.transition_progress = 0.;
         self.transitioning = true;
+    }
+
+    pub fn stop(&mut self) {
+        self.transition_progress = 0.;
+        self.transitioning = false;
     }
 
     pub fn current_transition(&self) -> Option<&Transitioning> {
@@ -145,8 +151,7 @@ impl Transitioner {
         }
         self.transition_progress += delta * 2.;
         if self.transition_progress > Self::TRANSITIONING_TIME {
-            self.transition_progress = 0.;
-            self.transitioning = false;
+            self.stop();
         }
     }
 

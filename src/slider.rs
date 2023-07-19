@@ -121,7 +121,7 @@ pub struct Slides {
     active_slide: usize,
     time: Duration,
     render_target: RenderTarget,
-    pub last_texture: Option<Texture2D>,
+    pub previous_texture: Option<Texture2D>,
     demo_transitions: bool,
     transitioner: Option<Transitioner>,
 }
@@ -147,7 +147,7 @@ impl Slides {
             time: 0.,
             active_slide,
             render_target: Self::render_target(),
-            last_texture: None,
+            previous_texture: None,
             demo_transitions,
             transitioner,
         }
@@ -266,7 +266,7 @@ impl Slides {
     fn set_active_slide(&mut self, active_slide: usize) {
         self.active_slide = active_slide;
         self.time = 0.;
-        self.update_last_texture();
+        self.update_previous_texture();
         self.start_transition();
     }
 
@@ -300,9 +300,9 @@ impl Slides {
 
     pub fn texture(&mut self) -> Texture2D {
         if let Some(transitioner) = &mut self.transitioner {
-            if let Some(last_texture) = self.last_texture.clone() {
+            if let Some(previous_texture) = self.previous_texture.clone() {
                 if transitioner.transitioning {
-                    transitioner.draw(last_texture, self.render_target.texture.clone());
+                    transitioner.draw(previous_texture, self.render_target.texture.clone());
                     return transitioner.texture();
                 }
             }
@@ -343,8 +343,12 @@ impl Slides {
         self.slides.get(self.active_slide)
     }
 
-    fn update_last_texture(&mut self) {
-        self.last_texture = Some(Texture2D::from_image(&self.texture().get_texture_data()));
+    fn update_previous_texture(&mut self) {
+        if self.transitioner.is_some() {
+            self.previous_texture = Some(Texture2D::from_image(
+                &self.render_target.texture.get_texture_data(),
+            ));
+        }
     }
 
     fn render_target() -> RenderTarget {
