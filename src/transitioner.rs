@@ -151,15 +151,11 @@ impl Transitioner {
     }
 
     pub fn draw(&mut self, from_texture: Texture2D, to_texture: Texture2D) {
-        let scr_w = screen_width();
-        let scr_h = screen_height();
+        let mut render_target_camera =
+            Camera2D::from_display_rect(Rect::new(0., 0., screen_width(), screen_height()));
+        render_target_camera.render_target = Some(self.render_target.clone());
+        set_camera(&render_target_camera);
 
-        set_camera(&Camera2D {
-            zoom: vec2(1. / scr_w * 2., -1. / scr_h * 2.),
-            target: vec2(scr_w / 2., scr_h / 2.),
-            render_target: Some(self.render_target.clone()),
-            ..Default::default()
-        });
         self.transition
             .draw(to_texture, from_texture, self.transition_progress);
     }

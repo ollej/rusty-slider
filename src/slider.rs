@@ -357,14 +357,9 @@ impl Slides {
     /// (0., 0)     .... (SCR_W, 0.)
     /// (0., SCR_H) .... (SCR_W, SCR_H)
     fn set_camera(&self) {
-        let scr_w = screen_width();
-        let scr_h = screen_height();
-
-        set_camera(&Camera2D {
-            zoom: vec2(1. / scr_w * 2., -1. / scr_h * 2.),
-            target: vec2(scr_w / 2., scr_h / 2.),
-            render_target: Some(self.render_target.clone()),
-            ..Default::default()
-        });
+        let mut render_target_camera =
+            Camera2D::from_display_rect(Rect::new(0., 0., screen_width(), screen_height()));
+        render_target_camera.render_target = Some(self.render_target.clone());
+        set_camera(&render_target_camera)
     }
 }

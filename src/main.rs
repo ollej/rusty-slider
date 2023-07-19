@@ -84,7 +84,12 @@ async fn main() {
         slides.draw();
         let texture = slides.texture();
 
-        set_default_camera();
+        set_camera(&Camera2D::from_display_rect(Rect::new(
+            0.,
+            0.,
+            screen_width(),
+            screen_height(),
+        )));
         clear_background(BLACK);
         if shader_activated {
             gl_use_material(&shader_material);
@@ -96,7 +101,6 @@ async fn main() {
             WHITE,
             DrawTextureParams {
                 dest_size: Some(vec2(screen_width(), screen_height())),
-                flip_y: true,
                 ..Default::default()
             },
         );
