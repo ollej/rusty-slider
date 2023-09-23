@@ -31,7 +31,6 @@ maud = "0.24.0"
 nanoserde = "0.1.30"
 quad-url = "0.1.0"
 regex = "1.5.4"
-simple-easing = "1.0.0"
 strum = { version = "0.24.1", features = ["derive"] }
 strum_macros = "0.24.3"
 syntect = { version = "5.0.0", default-features = false, features = ["default-fancy"] }

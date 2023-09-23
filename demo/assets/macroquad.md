@@ -4,33 +4,13 @@
 
 ## Vad är Macroquad?
 
-Macroquad är ett enkelt och lättanvänt spelramverk i Rust
+Ett enkelt och lättanvänt spelramverk i Rust
 
----
+Innehåller allt för att bygga ett 2D-spel!
 
-## Stödda plattformar
+Utvecklas av Fedor Logachev
 
- * Windows
- * MacOS
- * Linux
- * HTML5 / WebAssembly
- * Android
- * iOS
-
----
-
-## Allt inkluderat
-
- * Immediate mode UI
- * 2D-rendering
- * Audio
- * Ett kommando för att bygga för android
-
----
-
-## Baserat på Miniquad
-
-Miniquad är ett minimalt grafikabstraktionslager
+https://macroquad.rs
 
 ---
 
@@ -42,6 +22,32 @@ Några av Macroquads designmål:
  * Korsplattform
  * Stödjer budgetenheter
  * Hackbar
+
+---
+
+## Allt inkluderat
+
+ * 2D-rendering
+ * Audio
+ * Immediate mode UI
+ * Bygg för Android/iOS/WASM med endast ett kommando
+
+---
+
+## Baserat på Miniquad
+
+Miniquad är ett minimalt grafikabstraktionslager
+
+---
+
+## Stödda plattformar
+
+ * Windows
+ * MacOS
+ * Linux
+ * HTML5 / WebAssembly
+ * Android
+ * iOS
 
 ---
 
@@ -58,6 +64,25 @@ async fn main() {
     }
 }
 ```
+
+---
+
+## Minimalt exempel
+
+ * Importera macroquad
+ * Macro för main-funktionen
+ * Asynkron main-funktion
+ * Rensa bakgrunden i början av loopen
+ * Avsluta med att vänta på nästa frame
+
+---
+
+## Fönsterkonfiguration
+
+ * Macrot skapar ett fönster.
+ * Det går även att konfigurera fönstret.
+ * Använd en funktion som returnerar `Conf`.
+ * Ändra storlek, fullskärm, titel med mera
 
 ---
 
@@ -91,10 +116,22 @@ async fn main() {
 
 ## Visa bild
 
+ * Ladda bild med `load_texture()`
+ * Stödjer endast PNG
+ * Visa bild med `draw_texture()`
+ * Placera med `screen_width()` och `screen_height()`
+ * Använd bakgrundsfärgen `WHITE`
+ * Laddar bilden asynkront
+ * Fungerar båda lokalt och via WebAssembly
+
+---
+
+## Visa bild
+
 ```rust
 use macroquad::prelude::*;
 
-#[macroquad::main("Textur")]
+#[macroquad::main("Bild")]
 async fn main() {
     let texture: Texture2D = load_texture("examples/ferris.png").await.unwrap();
     loop {
@@ -114,13 +151,28 @@ async fn main() {
 
 ## Texture API
 
- * `build_textures_atlas`
- * `draw_texture`
- * `draw_texture_ex`
- * `get_screen_data`
- * `load_image`
- * `load_texture`
- * `render_target`
+Metoder för att arbeta med texturer.
+
+ * `build_textures_atlas()`
+ * `draw_texture( ... )`
+ * `draw_texture_ex( ... )`
+ * `get_screen_data()`
+ * `load_image( ... )`
+ * `load_texture( ... )`
+ * `render_target( ... )`
+
+---
+
+## Rita
+
+Stöd för att rita enklare figurer med bakgrundsfärg.
+
+ * Cirkel
+ * Rektangel
+ * Linje
+ * Hexagon
+ * Triangel
+ * Polygon
 
 ---
 
@@ -134,7 +186,6 @@ async fn main() {
     loop {
         clear_background(LIGHTGRAY);
         draw_rectangle(screen_width() / 2.0 - 60.0, 100.0, 120.0, 60.0, GREEN);
-        draw_text("HEJ!", 20.0, 20.0, 30.0, DARKGRAY);
         next_frame().await
     }
 }
@@ -153,12 +204,63 @@ async fn main() {
 
 ---
 
+## Rita
+
+Rita figurer med konturer.
+
+---
+
 ## Shapes API lines
 
  * `draw_circle_lines( ... )`
  * `draw_poly_lines( ... )`
  * `draw_rectangle_lines( ... )`
  * `draw_triangle_lines( ... )`
+
+---
+
+### Text
+
+Fonter kan användas för att visa text
+
+ * Ladda font med `load_ttf_font()`
+ * Använd `measure_text()` för att räkna ut baslinjen
+ * Visa texten med `draw_text()` eller `draw_text_ex()`
+ * Y-koordinaten börjar uppifrån
+ * Y-koordinaten anger baslinjen
+
+---
+
+## Text
+
+```rust
+use macroquad::prelude::*;
+
+#[macroquad::main("Text")]
+async fn main() {
+    loop {
+        clear_background(LIGHTGRAY);
+        let text = "Hej världen!";
+        let font_size = 30;
+        let font = load_ttf_font("examples/Hack-Regular.ttf").await.ok();
+        let dim = measure_text(text, font, font_size, 1.0);
+        draw_text(text, 30.0, dim.offset_y, font_size as f32, DARKGRAY);
+        next_frame().await
+    }
+}
+```
+
+---
+
+### Text API
+
+ * `camera_font_scale( ... )`
+ * `draw_text( ... )`
+ * `draw_text_ex( ... )`
+ * `get_text_center( ... )`
+ * `load_ttf_font( ... )`
+ * `load_ttf_font_from_bytes( ... )`
+ * `measure_text( ... )`
 
 ---
 
@@ -190,8 +292,8 @@ async fn main() {
 
 ## Tangentbordsinput
 
- * `get_char_pressed -> Option<char>`
- * `get_last_key_pressed -> Option<KeyCode>`
+ * `get_char_pressed() -> Option<char>`
+ * `get_last_key_pressed() -> Option<KeyCode>`
  * `is_key_down(key_code: KeyCode)`
  * `is_key_pressed(key_code: KeyCode)`
  * `is_key_released(key_code: KeyCode)`
@@ -339,6 +441,14 @@ async fn main() {
 
 ---
 
+## Time API
+
+ * `get_fps() -> i32`
+ * `get_frame_time() -> f32`
+ * `get_time() -> f64`
+
+---
+
 ## Färger
 
 ```rust
@@ -364,43 +474,6 @@ async fn main() {
  * `hsl_to_rgb(h: f32, s: f32, l: f32)`
  * `rgb_to_hsl(color: Color) -> (f32, f32, f32)`
  * `macroquad::color::colors::BLACK` ...
-
----
-
-## Time API
-
- * `get_fps() -> i32`
- * `get_frame_time() -> f32`
- * `get_time() -> f64`
-
----
-
-## Partiklar
-
-```rust
-use macroquad::prelude::*;
-use macroquad_particles::{Curve, Emitter, EmitterConfig, ParticleShape};
-
-#[macroquad::main("Particles")]
-async fn main() {
-    let mut emitter = Emitter::new(EmitterConfig {
-        initial_velocity: 500.0,
-        initial_direction_spread: 2. * std::f32::consts::PI,
-        shape: ParticleShape::Circle { subdivisions: 360 },
-        size_curve: Some(Curve {
-            points: vec![(0.0, 0.5), (0.5, 1.0), (1.0, 0.0)],
-            ..Default::default()
-        }),
-        ..Default::default()
-    });
-
-    loop {
-        clear_background(BLACK);
-        emitter.draw(vec2(screen_width() / 2., screen_height() / 2.));
-        next_frame().await
-    }
-}
-```
 
 ---
 
@@ -438,6 +511,37 @@ async fn main() {
 
 ---
 
+## Partiklar
+
+```rust
+use macroquad::prelude::*;
+use macroquad_particles::{Curve, Emitter, EmitterConfig, ParticleShape};
+
+#[macroquad::main("Particles")]
+async fn main() {
+    let mut emitter = Emitter::new(EmitterConfig {
+        initial_velocity: 500.0,
+        initial_direction_spread: 2. * std::f32::consts::PI,
+        shape: ParticleShape::Circle { subdivisions: 360 },
+        size_curve: Some(Curve {
+            points: vec![(0.0, 0.5), (0.5, 1.0), (1.0, 0.0)],
+            ..Default::default()
+        }),
+        ..Default::default()
+    });
+
+    loop {
+        clear_background(BLACK);
+        emitter.draw(vec2(screen_width() / 2., screen_height() / 2.));
+        next_frame().await
+    }
+}
+```
+
+---
+
 ## Olle Wreede
 
-@ollej
+@ollej@hachyderm.io
+
+![Agical](assets/agical-logo.png)
