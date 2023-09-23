@@ -75,10 +75,9 @@ impl Transition {
         };
 
         let material = load_material(
-            ShaderSource {
-                glsl_vertex: Some(DEFAULT_VERTEX_SHADER),
-                glsl_fragment: Some(DEFAULT_FRAGMENT_SHADER),
-                metal_shader: None,
+            ShaderSource::Glsl {
+                vertex: DEFAULT_VERTEX_SHADER,
+                fragment: DEFAULT_FRAGMENT_SHADER,
             },
             MaterialParams {
                 textures: vec!["tex_transition".to_string(), "tex_into".to_string()],

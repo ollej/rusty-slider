@@ -27,10 +27,9 @@ async fn main() {
     let mut slides = Slides::load(options.clone(), theme).await;
     let mut show_help = ShowHelp::new();
     let shader_material = load_material(
-        ShaderSource {
-            glsl_vertex: Some(crt::VERTEX),
-            glsl_fragment: Some(crt::FRAGMENT),
-            metal_shader: None,
+        ShaderSource::Glsl {
+            vertex: crt::VERTEX,
+            fragment: crt::FRAGMENT,
         },
         Default::default(),
     )
