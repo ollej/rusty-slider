@@ -46,7 +46,10 @@ jobs:
           echo "[target.x86_64-pc-windows-gnu]" >> ~/.cargo/config
           echo "linker = \"/usr/bin/x86_64-w64-mingw32-gcc\"" >> ~/.cargo/config
       - uses: Swatinem/rust-cache@v2
-      - uses: actions-rs/cargo@v1
+      - name: Build
+        uses: actions-rs/cargo@v1
         with:
           command: build
           args: --all-targets --target=${{ matrix.config.target }}
+      - name: Machete
+        uses: bnjbvr/cargo-machete@main
