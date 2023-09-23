@@ -166,16 +166,16 @@ impl Slides {
 
         let font_text = load_ttf_font(&theme.font)
             .await
-            .expect("Couldn't load font");
+            .expect(format!("Couldn't load font: {}", theme.font).as_str());
         let font_bold = load_ttf_font(&theme.font_bold)
             .await
-            .expect("Couldn't load font");
+            .expect(format!("Couldn't load bold font: {}", theme.font_bold).as_str());
         let font_italic = load_ttf_font(&theme.font_italic)
             .await
-            .expect("Couldn't load font");
+            .expect(format!("Couldn't load italic font: {}", theme.font_italic).as_str());
         let font_code = load_ttf_font(&theme.font_code)
             .await
-            .expect("Couldn't load font");
+            .expect(format!("Couldn't load code font: {}", theme.font_code).as_str());
         let background = match &theme.background_image {
             Some(path) => Some(
                 load_texture(path)
