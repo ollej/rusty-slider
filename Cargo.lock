@@ -809,7 +809,6 @@ dependencies = [
  "colorsys",
  "convert_case",
  "glob",
- "image",
  "macroquad",
  "markdown",
  "maud",
