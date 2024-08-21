@@ -34,6 +34,7 @@ strum = { version = "0.24.1", features = ["derive"] }
 strum_macros = "0.24.3"
 syntect = { version = "5.0.0", default-features = false, features = ["default-fancy"] }
 tempfile = "3.3.0"
+time = "0.3.36"
 
 [profile.dev]
 debug = 1 # less precise locations
