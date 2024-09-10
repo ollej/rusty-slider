@@ -24,7 +24,7 @@ clap = { version = "4.0.18", features = ["derive"] }
 colorsys = "0.6.5"
 convert_case = "0.6.0"
 glob = "0.3.0"
-macroquad = "0.4"
+macroquad = "=0.4.5"
 markdown = { git = "https://github.com/johannhof/markdown.rs" }
 maud = "0.24.0"
 nanoserde = "0.1.30"

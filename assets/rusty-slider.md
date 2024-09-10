@@ -119,6 +119,6 @@ Support more shaders.
 
 ## License
 
-**Copyright 2022 Olle Wreede**
+**Copyright 2024 Olle Wreede**
 
 Released under the MIT license.
