@@ -82,8 +82,8 @@ impl Transition {
             MaterialParams {
                 textures: vec!["tex_transition".to_string(), "tex_into".to_string()],
                 uniforms: vec![
-                    ("cutoff".to_string(), UniformType::Float1),
-                    ("fade".to_string(), UniformType::Float1),
+                    UniformDesc::new("cutoff", UniformType::Float1),
+                    UniformDesc::new("fade", UniformType::Float1),
                 ],
                 pipeline_params,
             },
