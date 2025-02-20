@@ -12,7 +12,7 @@ use {
 };
 
 use convert_case::{Case, Casing};
-use maud::{html, Markup, PreEscaped, DOCTYPE};
+use maud::{DOCTYPE, Markup, PreEscaped, html};
 use tempfile::tempdir;
 
 #[derive(Parser, Debug)]

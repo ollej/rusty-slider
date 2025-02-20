@@ -1,5 +1,5 @@
 use macroquad::{
-    color::{colors::WHITE, Color},
+    color::{Color, colors::WHITE},
     shapes::draw_rectangle,
     text::draw_text,
     window::{screen_height, screen_width},

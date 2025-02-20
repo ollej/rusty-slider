@@ -13,11 +13,14 @@ impl DrawBox {
         match self {
             DrawBox::Image(draw_box) => {
                 if let Some(path) = draw_box.path() {
-                    if let Ok(texture) = load_texture(&path).await {
-                        draw_box.set_image(texture);
-                        debug!("Image loaded: {}", path);
-                    } else {
-                        error!("Couldn't load image file: {}", path);
+                    match load_texture(&path).await {
+                        Ok(texture) => {
+                            draw_box.set_image(texture);
+                            debug!("Image loaded: {}", path);
+                        }
+                        _ => {
+                            error!("Couldn't load image file: {}", path);
+                        }
                     }
                 }
             }

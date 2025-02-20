@@ -1,5 +1,5 @@
 use crate::prelude::*;
-use macroquad::prelude::{debug, load_string, Color, WHITE};
+use macroquad::prelude::{Color, WHITE, debug, load_string};
 use nanoserde::DeJson;
 use std::path::PathBuf;
 
