@@ -124,6 +124,14 @@ to the release.
 It is possible to override values in the theme file by using the subcommand
 `theme` which has options for every theme value.
 
+#### Example usage
+
+Set the background color to bright red.
+
+```
+rusty_slider theme --background-color "#ff0000"
+```
+
 #### Available theme options
 ````
       --background-image <image path>
