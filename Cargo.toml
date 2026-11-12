@@ -20,7 +20,7 @@ serve-web = "bin/serve-web"
 build-apk = "bin/build-apk"
 
 [dependencies]
-clap = { version = "4.0.18", features = ["derive"] }
+clap = { version = "4.6.7", features = ["derive"] }
 colorsys = "0.7.3"
 convert_case = "0.12.0"
 glob = "0.3.4"
