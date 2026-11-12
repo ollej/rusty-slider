@@ -21,7 +21,7 @@ build-apk = "bin/build-apk"
 
 [dependencies]
 clap = { version = "4.0.18", features = ["derive"] }
-colorsys = "0.6.5"
+colorsys = "0.7.3"
 convert_case = "0.6.0"
 glob = "0.3.0"
 macroquad = "0.4.16"
@@ -29,7 +29,7 @@ markdown = { git = "https://github.com/johannhof/markdown.rs" }
 maud = "0.24.0"
 nanoserde = "0.2.1"
 quad-url = "0.1.0"
-regex = "1.5.4"
+regex = "1.13.1"
 strum = { version = "0.24.1", features = ["derive"] }
 strum_macros = "0.24.3"
 syntect = { version = "5.0.0", default-features = false, features = ["default-fancy"] }
