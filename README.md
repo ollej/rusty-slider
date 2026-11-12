@@ -62,6 +62,8 @@ and `Down`/`J`/`End` keys jump to last slide.
 
 The `S` key saves the current slide as a PNG on disk.
 
+Press `Space` to toggle the shader on and off.
+
 On supported platforms `C` copies the first codeblock to the clipboard.
 
 Use the key `Q` or `Escape` to exit the slideshow.
