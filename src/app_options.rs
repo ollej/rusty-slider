@@ -1,6 +1,6 @@
 use std::path::PathBuf;
 
-use clap::{Parser, command};
+use clap::Parser;
 
 use crate::prelude::Duration;
 

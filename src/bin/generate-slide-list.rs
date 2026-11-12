@@ -268,7 +268,7 @@ impl Filename {
         )
     }
 
-    fn name(&self) -> Cow<str> {
+    fn name(&self) -> Cow<'_, str> {
         match self.path.file_stem() {
             Some(name) => name.to_string_lossy(),
             None => Cow::from(""),
