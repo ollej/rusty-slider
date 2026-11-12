@@ -7,7 +7,8 @@ use crate::{prelude::Duration, theme::ThemeOptions};
 #[derive(Parser, Debug, Clone)]
 #[command(
     name = "rusty-slider",
-    about = "An application to display markdown files as a slideshow."
+    about = "An application to display markdown files as a slideshow.",
+    version
 )]
 pub struct AppOptions {
     /// Path to directory to load slideshow files from
