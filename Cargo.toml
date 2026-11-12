@@ -30,8 +30,8 @@ maud = "0.27.0"
 nanoserde = "0.2.1"
 quad-url = "0.1.0"
 regex = "1.13.1"
-strum = { version = "0.24.1", features = ["derive"] }
-strum_macros = "0.24.3"
+strum = { version = "0.28.0", features = ["derive"] }
+strum_macros = "0.28.0"
 syntect = { version = "5.0.0", default-features = false, features = ["default-fancy"] }
 tempfile = "3.3.0"
 
