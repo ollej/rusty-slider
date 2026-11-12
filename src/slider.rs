@@ -1,10 +1,11 @@
 use crate::prelude::*;
 
+use clap::ValueEnum;
 use macroquad::prelude::*;
 use nanoserde::DeJson;
 use regex::Regex;
 
-#[derive(Copy, Clone, Debug, DeJson)]
+#[derive(ValueEnum, Copy, Clone, Debug, DeJson)]
 #[allow(non_camel_case_types)]
 pub enum DrawAlignment {
     left,

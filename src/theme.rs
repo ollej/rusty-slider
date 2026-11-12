@@ -1,7 +1,93 @@
 use crate::prelude::*;
+use clap::Args;
 use macroquad::prelude::{Color, WHITE, debug, load_string};
 use nanoserde::DeJson;
 use std::path::PathBuf;
+
+#[derive(Args, Debug, Clone)]
+pub struct ThemeOptions {
+    /// Background image
+    #[arg(long, value_name = "image path", value_hint = clap::ValueHint::DirPath)]
+    pub background_image: Option<String>,
+    /// Background color
+    #[arg(long, value_name = "hex color")]
+    pub background_color: Option<String>,
+    /// Heading color
+    #[arg(long, value_name = "hex color")]
+    pub heading_color: Option<String>,
+    /// Text color
+    #[arg(long, value_name = "hex color")]
+    pub text_color: Option<String>,
+    /// Draw alignment
+    #[arg(long, value_enum, value_name = "alignment")]
+    pub align: Option<DrawAlignment>,
+    /// Font for normal text
+    #[arg(long, value_name = "font path", value_hint = clap::ValueHint::DirPath)]
+    pub font: Option<String>,
+    /// Font for bold text
+    #[arg(long, value_name = "hex color", value_hint = clap::ValueHint::DirPath)]
+    pub font_bold: Option<String>,
+    /// Font for italic text
+    #[arg(long, value_name = "hex color", value_hint = clap::ValueHint::DirPath)]
+    pub font_italic: Option<String>,
+    /// Font size for header title
+    #[arg(long, value_name = "number")]
+    pub font_size_header_title: Option<FontSize>,
+    /// Font size for header on slides
+    #[arg(long, value_name = "number")]
+    pub font_size_header_slides: Option<FontSize>,
+    /// Font size for normal text
+    #[arg(long, value_name = "number")]
+    pub font_size_text: Option<FontSize>,
+    /// Vertical offset
+    #[arg(long, value_name = "number")]
+    pub vertical_offset: Option<Vpos>,
+    /// Horizontal offset
+    #[arg(long, value_name = "number")]
+    pub horizontal_offset: Option<Hpos>,
+    /// Line height of text
+    #[arg(long, value_name = "number")]
+    pub line_height: Option<Height>,
+    /// Background color of blockquotes
+    #[arg(long, value_name = "hex color")]
+    pub blockquote_background_color: Option<String>,
+    /// Padding of blockquote box
+    #[arg(long, value_name = "number")]
+    pub blockquote_padding: Option<f32>,
+    /// Character to use for opening quotation mark on blockquotes
+    #[arg(long, value_name = "string")]
+    pub blockquote_left_quote: Option<String>,
+    /// Character to use for closing quotation mark on blockquotes
+    #[arg(long, value_name = "string")]
+    pub blockquote_right_quote: Option<String>,
+    /// Font for code blocks
+    #[arg(long, value_name = "hex color", value_hint = clap::ValueHint::DirPath)]
+    pub font_code: Option<String>,
+    /// Font size for code blocks
+    #[arg(long, value_name = "number")]
+    pub font_code_size: Option<FontSize>,
+    /// Line height for code blocks
+    #[arg(long, value_name = "number")]
+    pub code_line_height: Option<f32>,
+    /// Background color of code blocks
+    #[arg(long, value_name = "hex color")]
+    pub code_background_color: Option<String>,
+    /// Code block color highlighting theme
+    #[arg(long, value_name = "string")]
+    pub code_theme: Option<String>,
+    /// Tab width in code blocks
+    #[arg(long, value_name = "number")]
+    pub code_tab_width: Option<usize>,
+    /// Character to use for bullet points
+    #[arg(long, value_name = "string")]
+    pub bullet: Option<String>,
+    /// Whether to activate shader
+    #[arg(long, value_name = "boolean")]
+    pub shader: Option<bool>,
+    /// Slide transition to use when changing slides
+    #[arg(long, value_enum, value_name = "transition name")]
+    pub transition: Option<Transitioning>,
+}
 
 #[derive(Clone, DeJson)]
 #[nserde(default)]
@@ -87,6 +173,73 @@ impl Theme {
                 }
             },
             Err(_) => Theme::default(),
+        }
+    }
+
+    pub fn with_overrides(&self, values: ThemeOptions) -> Self {
+        Self {
+            background_image: values
+                .background_image
+                .or_else(|| self.background_image.clone()),
+            background_color: values
+                .background_color
+                .map(|c| HexColor::from(c).into())
+                .unwrap_or_else(|| self.background_color),
+            heading_color: values
+                .heading_color
+                .map(|c| HexColor::from(c).into())
+                .unwrap_or_else(|| self.heading_color),
+            text_color: values
+                .text_color
+                .map(|c| HexColor::from(c).into())
+                .unwrap_or_else(|| self.text_color),
+            align: values.align.unwrap_or_else(|| self.align),
+            font: values.font.unwrap_or_else(|| self.font.clone()),
+            font_bold: values.font_bold.unwrap_or_else(|| self.font_bold.clone()),
+            font_italic: values
+                .font_italic
+                .unwrap_or_else(|| self.font_italic.clone()),
+            font_size_header_title: values
+                .font_size_header_title
+                .unwrap_or_else(|| self.font_size_header_title),
+            font_size_header_slides: values
+                .font_size_header_slides
+                .unwrap_or_else(|| self.font_size_header_title),
+            font_size_text: values.font_size_text.unwrap_or_else(|| self.font_size_text),
+            vertical_offset: values
+                .vertical_offset
+                .unwrap_or_else(|| self.vertical_offset),
+            horizontal_offset: values
+                .horizontal_offset
+                .unwrap_or_else(|| self.horizontal_offset),
+            line_height: values.line_height.unwrap_or_else(|| self.line_height),
+            blockquote_background_color: values
+                .blockquote_background_color
+                .map(|c| HexColor::from(c).into())
+                .unwrap_or_else(|| self.blockquote_background_color),
+            blockquote_padding: values
+                .blockquote_padding
+                .unwrap_or_else(|| self.blockquote_padding),
+            blockquote_left_quote: values
+                .blockquote_left_quote
+                .unwrap_or_else(|| self.blockquote_left_quote.clone()),
+            blockquote_right_quote: values
+                .blockquote_right_quote
+                .unwrap_or_else(|| self.blockquote_right_quote.clone()),
+            font_code: values.font_code.unwrap_or_else(|| self.font_code.clone()),
+            font_code_size: values.font_code_size.unwrap_or_else(|| self.font_code_size),
+            code_line_height: values
+                .code_line_height
+                .unwrap_or_else(|| self.code_line_height),
+            code_background_color: values
+                .code_background_color
+                .map(|c| HexColor::from(c).into())
+                .unwrap_or_else(|| self.code_background_color),
+            code_theme: values.code_theme.unwrap_or_else(|| self.code_theme.clone()),
+            code_tab_width: values.code_tab_width.unwrap_or_else(|| self.code_tab_width),
+            bullet: values.bullet.unwrap_or_else(|| self.bullet.clone()),
+            shader: values.shader.unwrap_or_else(|| self.shader),
+            transition: values.transition.or_else(|| self.transition),
         }
     }
 }

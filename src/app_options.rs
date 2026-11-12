@@ -1,19 +1,19 @@
 use std::path::PathBuf;
 
-use clap::Parser;
+use clap::{Parser, Subcommand};
 
-use crate::prelude::Duration;
+use crate::{prelude::Duration, theme::ThemeOptions};
 
 #[derive(Parser, Debug, Clone)]
 #[command(
     name = "rusty-slider",
-    about = "A small tool to display markdown files as a slideshow."
+    about = "An application to display markdown files as a slideshow."
 )]
 pub struct AppOptions {
     /// Path to directory to load slideshow files from
     #[arg(short, long, default_value = "assets")]
     pub directory: PathBuf,
-    /// Markdown files with slides text.
+    /// Markdown file with slides text.
     #[arg(short, long, default_value = "rusty-slider.md")]
     pub slides: PathBuf,
     /// File with theme options.
@@ -37,6 +37,15 @@ pub struct AppOptions {
     /// Slide number to start at
     #[arg(short = 'n', long, default_value = "1", value_parser = clap::value_parser!(u32).range(1..))]
     pub number: u32,
+    /// Theme override
+    #[command(subcommand)]
+    pub theme_override: ThemeOverride,
+}
+
+#[derive(Subcommand, Debug, Clone)]
+pub enum ThemeOverride {
+    /// Override values in the theme file
+    Theme(ThemeOptions),
 }
 
 impl AppOptions {

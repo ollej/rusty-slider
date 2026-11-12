@@ -72,10 +72,22 @@ Press `?` to show a help screen.
 
 ### Command line options
 
+To load slideshow files from another directory, use the option `--directory <path>`.
+
+Slides are read from the path given to the option `--slides <path>`.
+
+To change the file that theme variables are read from, use the option `--theme <path>`.
+
+The option `--assets <path>` is used to change the directory where assets are read from.
+
 Use flag `--automatic N` when starting the application to automatically switch
 slide every N seconds.
 
 The flag `--number N` can be used to start the slideshow at that slide.
+
+The flag `--demo_transitions` will switch transition for every slide.
+
+Use the option `--screenshot <path>` to change which path screenshots are saved to.
 
 ### Run code blocks
 
@@ -106,6 +118,69 @@ Create a file called `assets/default-theme.json` to modify default display value
 
 If you make your own theme file, and want to share it, I'd be happy to add it
 to the release.
+
+### Override theme values
+
+It is possible to override values in the theme file by using the subcommand
+`theme` which has options for every theme value.
+
+#### Available theme options
+````
+      --background-image <image path>
+          Background image
+      --background-color <hex color>
+          Background color
+      --heading-color <hex color>
+          Heading color
+      --text-color <hex color>
+          Text color
+      --align <alignment>
+          Draw alignment [possible values: left, right, center]
+      --font <font path>
+          Font for normal text
+      --font-bold <hex color>
+          Font for bold text
+      --font-italic <hex color>
+          Font for italic text
+      --font-size-header-title <number>
+          Font size for header title
+      --font-size-header-slides <number>
+          Font size for header on slides
+      --font-size-text <number>
+          Font size for normal text
+      --vertical-offset <number>
+          Vertical offset
+      --horizontal-offset <number>
+          Horizontal offset
+      --line-height <number>
+          Line height of text
+      --blockquote-background-color <hex color>
+          Background color of blockquotes
+      --blockquote-padding <number>
+          Padding of blockquote box
+      --blockquote-left-quote <string>
+          Character to use for opening quotation mark on blockquotes
+      --blockquote-right-quote <string>
+          Character to use for closing quotation mark on blockquotes
+      --font-code <hex color>
+          Font for code blocks
+      --font-code-size <number>
+          Font size for code blocks
+      --code-line-height <number>
+          Line height for code blocks
+      --code-background-color <hex color>
+          Background color of code blocks
+      --code-theme <string>
+          Code block color highlighting theme
+      --code-tab-width <number>
+          Tab width in code blocks
+      --bullet <string>
+          Character to use for bullet points
+      --shader <boolean>
+          Whether to activate shader [possible values: true, false]
+      --transition <transition name>
+          Slide transition to use when changing slides [possible values: bignoise, blobs, checkerboard, circleswipe, cubicnoise, curtainsclose, curtainsopen, diagonalleft, diagonalright, fan, halftone, implode, lines, maze, mosaic, noise, plasma, radialin, radialout, smoke, split, starburst, stripes, swipedown, swipeleft, swiperight, swipeup, swirl, triangles, vortex, waves, zebra]
+````
 
 ### Transitions
 
@@ -197,21 +272,25 @@ The command line options can also be used as URL arguments to the
 web demo.
 
 ```
-A small tool to display markdown files as a slideshow.
+An application to display markdown files as a slideshow.
 
-Usage: rusty_slider [OPTIONS]
+Usage: rusty_slider [OPTIONS] [COMMAND]
+
+Commands:
+  theme  Override values in the theme file
+  help   Print this message or the help of the given subcommand(s)
 
 Options:
   -d, --directory <DIRECTORY>    Path to directory to load slideshow files from [default: assets]
-  -s, --slides <SLIDES>          Markdown files with slides text [default: rusty-slider.md]
+  -s, --slides <SLIDES>          Markdown file with slides text [default: rusty-slider.md]
   -t, --theme <THEME>            File with theme options [default: default-theme.json]
   -a, --automatic <AUTOMATIC>    Automatically switch slides every N seconds [default: 0]
       --demo-transitions         Switch transitions for every slide
   -S, --screenshot <SCREENSHOT>  When taking screenshot, store PNG at this path [default: screenshot.png]
       --enable-code-execution    Enable executing code in code blocks
   -A, --assets <ASSETS>          Path to directory where application files are loaded from [default: assets]
-  -n, --number <NUMBER>          Slide number to start at [default: 0]
-  -h, --help                     Print help information
+  -n, --number <NUMBER>          Slide number to start at [default: 1]
+  -h, --help                     Print help
 ```
 
 ## Licenses

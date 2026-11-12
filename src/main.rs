@@ -18,7 +18,12 @@ fn window_conf() -> Conf {
 async fn main() {
     let options = AppOptions::parse_from(get_program_parameters().iter());
 
-    let theme = Theme::load(options.theme_path()).await;
+    let mut theme = Theme::load(options.theme_path()).await;
+    match options.theme_override.clone() {
+        ThemeOverride::Theme(theme_options) => {
+            theme = theme.with_overrides(theme_options);
+        }
+    }
     debug!(
         "background_color: {:?} text_color: {:?} heading_color{:?}",
         theme.background_color, theme.text_color, theme.heading_color,

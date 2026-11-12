@@ -1,4 +1,5 @@
 use crate::prelude::*;
+use clap::ValueEnum;
 use std::{
     collections::HashMap,
     fmt,
@@ -8,7 +9,7 @@ use {macroquad::prelude::*, nanoserde::DeJson};
 use {strum::IntoEnumIterator, strum_macros::EnumIter};
 
 #[allow(non_camel_case_types)]
-#[derive(Copy, Clone, Debug, Hash, Eq, PartialEq, PartialOrd, Ord, DeJson, EnumIter)]
+#[derive(ValueEnum, Copy, Clone, Debug, Hash, Eq, PartialEq, PartialOrd, Ord, DeJson, EnumIter)]
 pub enum Transitioning {
     bignoise,
     blobs,
