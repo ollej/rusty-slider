@@ -24,10 +24,10 @@ clap = { version = "4.0.18", features = ["derive"] }
 colorsys = "0.6.5"
 convert_case = "0.6.0"
 glob = "0.3.0"
-macroquad = "0.4.13"
+macroquad = "0.4.16"
 markdown = { git = "https://github.com/johannhof/markdown.rs" }
 maud = "0.24.0"
-nanoserde = "0.1.30"
+nanoserde = "0.1.37"
 quad-url = "0.1.0"
 regex = "1.5.4"
 strum = { version = "0.24.1", features = ["derive"] }
