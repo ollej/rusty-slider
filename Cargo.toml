@@ -26,7 +26,7 @@ convert_case = "0.12.0"
 glob = "0.3.4"
 macroquad = "0.4.16"
 markdown = { git = "https://github.com/johannhof/markdown.rs" }
-maud = "0.24.0"
+maud = "0.27.0"
 nanoserde = "0.2.1"
 quad-url = "0.1.0"
 regex = "1.13.1"
