@@ -28,7 +28,7 @@ macroquad = "0.4.16"
 markdown = { git = "https://github.com/johannhof/markdown.rs" }
 maud = "0.27.0"
 nanoserde = "0.2.1"
-quad-url = "0.1.0"
+quad-url = "0.1.3"
 regex = "1.13.1"
 strum = { version = "0.28.0", features = ["derive"] }
 strum_macros = "0.28.0"
